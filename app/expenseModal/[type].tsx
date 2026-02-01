@@ -132,7 +132,9 @@ const ExpenseForm = () => {
           markAsSyncedAdmin(_id, _id, userIdAdmin);
         });
       } else {
-        assignBalance(userIdAdmin, transactionData);
+        // Optimistic update should match backend 'assign' behavior
+        const assignData = { ...transactionData, type: 'assign', category: 'Added by Admin' };
+        assignBalance(userIdAdmin, assignData);
         assignBalanceApi(
           userIdAdmin,
           form.details,

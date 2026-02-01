@@ -1,10 +1,9 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Text, TextInput, TouchableOpacity, View, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import api from "@/api/api";
 import { useAdminStore } from "@/store/adminStore";
-import { Feather } from "@expo/vector-icons";
 
 export default function Index() {
 

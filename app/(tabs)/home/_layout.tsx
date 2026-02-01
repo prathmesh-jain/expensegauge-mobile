@@ -5,7 +5,6 @@ import { useColorScheme, View } from "react-native";
 export default function RootLayout() {
   const colorScheme = useColorScheme()
   const backcolor = colorScheme == 'light' ? 'white' : '#111827'
-  const textcolor = colorScheme == 'light' ? '#111827' : 'white'
   return (
     <View style={{ flex: 1, backgroundColor: backcolor }}>
       <Stack>

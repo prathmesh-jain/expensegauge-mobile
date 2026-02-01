@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, Image, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LogoutModal from './LogoutModal';
 import api from '@/api/api';
@@ -11,7 +11,7 @@ import Avatar from '@/components/Avatar';
 import { TextInput } from 'react-native';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useColorScheme, Modal, Platform } from 'react-native';
+import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native';
 
 const UserProfileScreen: React.FC = () => {
   const router = useRouter()
@@ -24,10 +24,12 @@ const UserProfileScreen: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(user || '');
+  const [isSavingName, setIsSavingName] = useState(false);
 
   const handleSaveName = async () => {
     try {
       if (!newName.trim()) return Toast.error("Name cannot be empty");
+      setIsSavingName(true);
       const res = await api.put('/user/update-profile', { name: newName });
       // Update store
       setUser(res.data.name, email!, role!, res.data.profilePicture);
@@ -35,6 +37,8 @@ const UserProfileScreen: React.FC = () => {
       Toast.success("Name updated successfully");
     } catch (error) {
       Toast.error("Failed to update name");
+    } finally {
+      setIsSavingName(false);
     }
   }
 
@@ -104,9 +108,38 @@ const UserProfileScreen: React.FC = () => {
     return { calculatedStart: start, calculatedEnd: end, formattedRange: rangeStr };
   }, [reportType, referenceDate, customStart, customEnd]);
 
+  // Admin specific state
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (role === 'admin' && showReportModal && adminUsers.length === 0) {
+      fetchAdminUsers();
+    }
+  }, [showReportModal, role]);
+
+  const fetchAdminUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      // Fetching users for report selection
+      const res = await api.get('/admin/users?limit=100'); // Fetch a larger batch for selection
+      setAdminUsers(res.data.users || []);
+    } catch (error) {
+      console.error("Failed to fetch users for report selection", error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (reportType === 'custom' && calculatedStart > calculatedEnd) {
       Toast.error("Start date must be before end date");
+      return;
+    }
+
+    if (role === 'admin' && !selectedUserId) {
+      Toast.error("Please select a user");
       return;
     }
 
@@ -117,7 +150,8 @@ const UserProfileScreen: React.FC = () => {
       await api.post('/expense/report/generate', {
         type: 'custom',
         startDate: calculatedStart.toISOString(),
-        endDate: calculatedEnd.toISOString()
+        endDate: calculatedEnd.toISOString(),
+        targetUserId: role === 'admin' ? selectedUserId : undefined
       })
       Toast.success(`Report sent to ${email} `)
     } catch (e) {
@@ -132,18 +166,25 @@ const UserProfileScreen: React.FC = () => {
           <Avatar uri={profilePicture} name={user || 'User'} size={100} />
           <View className="flex-row items-center mt-3 gap-2">
             {isEditing ? (
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center gap-4">
                 <TextInput
                   value={newName}
                   onChangeText={setNewName}
+                  editable={!isSavingName}
                   className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xl font-bold text-gray-900 dark:text-white min-w-[150px] text-center"
                 />
-                <TouchableOpacity onPress={handleSaveName}>
-                  <Feather name="check" size={20} color="#16a34a" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { setIsEditing(false); setNewName(user || '') }}>
-                  <Feather name="x" size={20} color="#dc2626" />
-                </TouchableOpacity>
+                {isSavingName ? (
+                  <ActivityIndicator size="small" color="#1e40af" />
+                ) : (
+                  <View className="flex-row items-center gap-3">
+                    <TouchableOpacity onPress={handleSaveName}>
+                      <Feather name="check" size={22} color="#16a34a" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setIsEditing(false); setNewName(user || '') }}>
+                      <Feather name="x" size={22} color="#dc2626" />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ) : (
               <>
@@ -236,6 +277,40 @@ const UserProfileScreen: React.FC = () => {
                   );
                 })}
               </View>
+
+              {/* Admin User Selection */}
+              {role === 'admin' && (
+                <View className="mb-6">
+                  <Text className="text-gray-600 dark:text-gray-300 mb-2 font-medium">Select User</Text>
+                  {loadingUsers ? (
+                    <ActivityIndicator size="small" color="#4F46E5" />
+                  ) : (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      className="flex-row gap-2"
+                    >
+                      {adminUsers.map((u) => {
+                        const isSelected = selectedUserId === u._id;
+                        return (
+                          <TouchableOpacity
+                            key={u._id}
+                            onPress={() => setSelectedUserId(isSelected ? null : u._id)}
+                            className={`px-3 py-2 rounded-xl border ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700'}`}
+                          >
+                            <Text className={`text-xs ${isSelected ? 'text-white font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
+                              {u.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {adminUsers.length === 0 && (
+                        <Text className="text-gray-400 text-xs italic">No users found</Text>
+                      )}
+                    </ScrollView>
+                  )}
+                </View>
+              )}
 
               {/* Dynamic Inputs */}
               {reportType === 'yearly' && (

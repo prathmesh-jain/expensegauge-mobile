@@ -1,34 +1,35 @@
 import { View, Text, FlatList, Dimensions, useColorScheme, RefreshControl, ScrollView } from 'react-native';
-import { use, useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useExpenseStore } from '../../../store/expenseStore';
 import { LineChart } from 'react-native-chart-kit';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '@/api/api';
 import { ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '@/store/authStore';
 import { Redirect } from 'expo-router';
 import ExpenseItem from '@/app/expenseModal/ExpenseItem';
 import DeleteModal from '../home/DeleteModal';
+
 type Transaction = {
   _id: string;
   amount: number;
-  date: string; // e.g., "Sun Apr 06 2025"
+  date: string;
   details: string;
   type: string;
   category: string;
   isSynced: string | null;
 }
-// Screen width for chart
+
 const screenWidth = Dimensions.get('window').width;
 
 export default function TransactionHistory() {
-  const user = useAuthStore((state) => state.role);
+  const userRole = useAuthStore((state) => state.role);
+  const insets = useSafeAreaInsets();
 
-  if (user === 'admin') {
+  if (userRole === 'admin') {
     return <Redirect href="/history/adminAllUsersView" />;
   }
-  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses } = useExpenseStore();
-  // const expense = useExpenseStore((state) => state.expenses);
+  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, cachedStats, setCachedStats } = useExpenseStore();
   const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
 
   const [offset, setOffset] = useState(0);
@@ -37,6 +38,11 @@ export default function TransactionHistory() {
   const [loading, setLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Stats State
+  const [stats, setStats] = useState<any>(cachedStats || { labels: [], datasets: [] });
+  const [statsLoading, setStatsLoading] = useState(!cachedStats?.labels?.length);
+
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
@@ -51,12 +57,9 @@ export default function TransactionHistory() {
     setExpenses(prev => {
       if (cachedExpenses.length === 0) return [];
 
-      // Get the oldest date in current cache to define the "cached range"
       const oldestCachedTime = new Date(cachedExpenses[cachedExpenses.length - 1].date).getTime();
       const cachedIds = new Set(cachedExpenses.map(exp => exp._id));
 
-      // Items in local state that are NOT in cache and are NOT within the cache's date range
-      // This prevents deleted items (which would be in the cache's range but missing from it) from returning
       const extraExpenses = prev.filter(exp => {
         const isNotCached = !cachedIds.has(exp._id);
         const isOlderThanCache = new Date(exp.date).getTime() < oldestCachedTime;
@@ -66,18 +69,20 @@ export default function TransactionHistory() {
       return [...cachedExpenses, ...extraExpenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     });
   }, [cachedExpenses]);
+
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
       selectedTransaction?._id === transaction._id ? null : transaction
     );
   }
+
   const handleDelete = async () => {
     if (selectedTransaction) {
       try {
-        const response = await api.delete(`/expense/${selectedTransaction._id}`)
+        await api.delete(`/expense/${selectedTransaction._id}`)
         setExpenses(prev => prev.filter((item) => item._id !== selectedTransaction._id))
         removeExpense(selectedTransaction)
-
+        fetchStats(); // Update stats on delete
       } catch (error) {
         console.error(error);
       }
@@ -85,114 +90,86 @@ export default function TransactionHistory() {
     setShowDeleteModal(false)
   }
 
-  // Process transactions for monthly segregation and graph data
+  // Group by Month for List
   const getMonthlyData = () => {
     const monthlyData: { [key: string]: Transaction[] } = {};
-    // ALWAYS sort ASCENDING (oldest to newest) to ensure keys are created in chronological order for the graph
     const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     sortedExpenses.forEach((transaction: Transaction) => {
       const date = new Date(transaction.date);
       const month = date.toLocaleString('default', { month: 'long' });
       const year = date.getFullYear();
-
       const monthYear = `${month.substring(0, 3)} ${year}`;
 
       if (!monthlyData[monthYear]) {
         monthlyData[monthYear] = [];
       }
-      // Since we process in ASC order, unshift makes the list newest-first within each month
       monthlyData[monthYear].unshift(transaction);
     });
 
     return monthlyData;
   };
 
-  const monthlyData = getMonthlyData();
-
-
-  // Graph data (total debit and credit per month)
-  const getGraphData = () => {
-    const labels: string[] = [];
-    const debitData: number[] = [];
-    const creditData: number[] = [];
-
-    Object.keys(monthlyData).forEach((monthYear) => {
-      labels.push(monthYear); // month & year for label
-      const transactions = monthlyData[monthYear];
-      let debitTotal = 0;
-      let creditTotal = 0;
-
-      for (const t of transactions) {
-        if (t.type === "debit") {
-          debitTotal += t.amount;
-        } else if (t.type === "credit") {
-          creditTotal += t.amount;
-        }
-      }
-
-      debitData.push(debitTotal);
-      creditData.push(creditTotal);
-
-    });
-    // 👇 Add dummy starting values to avoid dot-on-axis issue
-    if (debitData.length > 0) debitData.unshift(0);
-    if (creditData.length > 0) creditData.unshift(0);
-    labels.unshift(""); // empty label for the first dummy point
-    return { labels, debitData, creditData };
-  };
+  const monthlyList = getMonthlyData();
 
   const scrollViewRef = useRef<ScrollView>(null);
   const colorScheme = useColorScheme()
 
-  const { labels, debitData, creditData } = getGraphData();
+  const fetchStats = async () => {
+    try {
+      const res = await api.get('/expense/stats/monthly');
+      // Backend returns { labels: [], datasets: [...], raw: { credits: [], debits: [] } }
+      // We need to shape it for the chart
+      const { labels, raw } = res.data;
 
-  // Calculate dynamic width: min width is screenWidth, but if more than 3 months, expand.
-  const chartWidth = Math.max(screenWidth * 0.9, (labels.length - 1) * (screenWidth * 0.3));
+      // Prepend dummy for chart config as per original
+      const chartLabels = ["", ...labels];
+      const debitData = [0, ...(raw.debits || [])];
+      const creditData = [0, ...(raw.credits || [])];
 
-  const chartConfig = {
-    backgroundGradientFrom: '#1E293B',
-    backgroundGradientTo: '#1E293B',
-    decimalPlaces: 0,
-    fromZero: true,
+      const processedStats = {
+        labels: chartLabels,
+        datasets: [
+          { data: debitData, color: () => '#EF4444' },
+          { data: creditData, color: () => '#10B981' }
+        ]
+      };
 
-    color: (opacity = 1) => `${colorScheme == 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`}`,
-    labelColor: (opacity = 1) => `${colorScheme == 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`}`,
-    propsForDots: {
-      r: '5',
-      strokeWidth: '1',
-      stroke: '#ffa726',
-    },
-  };
-  const fetchExpenses = async () => {
+      setStats(processedStats);
+      setCachedStats(processedStats);
+    } catch (e) {
+      console.error("Error fetching stats", e);
+    } finally {
+      setStatsLoading(false);
+    }
+  }
 
-    if (loading || !hasMore) return;
+  const fetchExpenses = async (isRefresh = false) => {
+    if (loading || (!isRefresh && !hasMore)) return;
 
     setLoading(true);
-    setRefreshing(true)
+    if (isRefresh) setRefreshing(true);
+
     try {
       const limit = 10;
-      const response = await api.get(`/expense/get-expense/?offset=${offset}&limit=${limit}`);
+      const currentOffset = isRefresh ? 0 : offset;
+      const response = await api.get(`/expense/get-expense/?offset=${currentOffset}&limit=${limit}`);
 
       const fetched = response.data.expenses;
 
-      setExpenses(prev => {
-        const merged = [...prev, ...fetched];
-        // Deduplicate and sort DESC (newest first)
-        const unique = merged.filter((item, index, self) =>
-          index === self.findIndex((t) => t._id === item._id)
-        );
-        const sorted = unique.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const merged = isRefresh || offset === 0 ? fetched : [...expenses, ...fetched];
+      const unique = merged.filter((item: Transaction, index: number, self: Transaction[]) =>
+        index === self.findIndex((t: Transaction) => t._id === item._id)
+      );
+      const sorted = unique.sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        // Update cache with the most recent items if we are at the top
-        if (offset === 0) {
-          setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance);
-        }
+      setExpenses(sorted);
 
-        return sorted;
-      });
+      if (currentOffset === 0) {
+        setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance);
+      }
 
-      setOffset(prev => prev + limit);
+      setOffset(isRefresh ? limit : offset + limit);
       setHasMore(response.data.hasMore);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
@@ -201,116 +178,126 @@ export default function TransactionHistory() {
       setRefreshing(false)
     }
   };
+
+  const handleRefresh = () => {
+    fetchStats();
+    fetchExpenses(true);
+  };
+
   useEffect(() => {
-    if (expenses.length < 10) {
-      fetchExpenses()
-    }
+    fetchExpenses()
+    fetchStats();
   }, []);
 
-  return (
-    <SafeAreaView className="flex-1 dark:bg-gray-900 p-5 pb-20">
-      {/* Graph Section */}
-      <View className="p-4 pb-0 rounded-xl mb-6 overflow-hidden" style={{ backgroundColor: colorScheme == 'dark' ? '#1E293B' : 'white' }}>
-        {labels.length > 1 ? (
-          <>
-            <Text className="dark:text-white text-lg font-semibold mb-2">Transaction Trends</Text>
-            <ScrollView
-              horizontal
-              ref={scrollViewRef}
-              showsHorizontalScrollIndicator={false}
-              onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-              onScrollBeginDrag={() => setTooltip(null)} // Hide tooltip on scroll
-            >
-              <View style={{ position: 'relative' }}>
-                <LineChart
-                  data={{
-                    labels,
-                    datasets: [
-                      { data: debitData, color: () => '#EF4444' }, // Red for debit
-                      { data: creditData, color: () => '#10B981' }, // Green for credit
-                    ],
+  const chartWidth = Math.max(screenWidth * 0.9, (stats.labels.length - 1) * (screenWidth * 0.3));
+
+  const chartConfig = {
+    backgroundGradientFrom: '#1E293B',
+    backgroundGradientTo: '#1E293B',
+    decimalPlaces: 0,
+    fromZero: true,
+    color: (opacity = 1) => `${colorScheme == 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`}`,
+    labelColor: (opacity = 1) => `${colorScheme == 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`}`,
+    propsForDots: { r: '5', strokeWidth: '1', stroke: '#ffa726' },
+  };
+
+  const renderHeader = () => (
+    <View className="mb-6" style={{ backgroundColor: colorScheme == 'dark' ? '#1E293B' : 'white', borderRadius: 16, padding: 16 }}>
+      {!statsLoading && stats.labels.length > 1 ? (
+        <>
+          <Text className="dark:text-white text-lg font-semibold mb-2">Transaction Trends</Text>
+          <ScrollView
+            horizontal
+            ref={scrollViewRef}
+            showsHorizontalScrollIndicator={false}
+            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+            onScrollBeginDrag={() => setTooltip(null)}
+          >
+            <View style={{ position: 'relative' }}>
+              <LineChart
+                data={stats}
+                width={chartWidth}
+                height={280}
+                chartConfig={chartConfig}
+                bezier
+                transparent
+                style={{ borderRadius: 16, marginHorizontal: -13 }}
+                onDataPointClick={({ x, y, value, dataset }) => {
+                  // dataset.color is a function, we call it to check value
+                  const colorVal = dataset.color ? dataset.color(1) : '';
+                  const type = colorVal === '#EF4444' ? 'Debit' : 'Credit';
+                  if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
+                  setTooltip({ x, y, value, type, visible: true });
+                  tooltipTimeout.current = setTimeout(() => setTooltip(null), 3000);
+                }}
+              />
+
+              {tooltip && tooltip.visible && (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    left: tooltip.x - 45,
+                    top: tooltip.y < 70 ? tooltip.y + 15 : tooltip.y - 65,
+                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: tooltip.type === 'Debit' ? '#EF4444' : '#10B981',
+                    alignItems: 'center',
+                    zIndex: 100,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4.65,
+                    elevation: 8,
                   }}
-                  width={chartWidth}
-                  height={280}
-                  chartConfig={chartConfig}
-                  bezier
-                  transparent
-                  style={{ borderRadius: 16, marginHorizontal: -13 }}
-                  onDataPointClick={({ x, y, value, dataset }) => {
-                    const type = dataset.color!(1) === '#EF4444' ? 'Debit' : 'Credit';
-
-                    if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
-
-                    setTooltip({ x, y, value, type, visible: true });
-
-                    tooltipTimeout.current = setTimeout(() => {
-                      setTooltip(null);
-                    }, 3000);
-                  }}
-                />
-
-                {tooltip && tooltip.visible && (
+                >
+                  <Text style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}>
+                    {tooltip.type}
+                  </Text>
+                  <Text style={{ color: 'white', fontSize: 15, fontWeight: '900', marginTop: 2 }}>
+                    ₹{tooltip.value.toLocaleString('en-IN')}
+                  </Text>
                   <View
-                    pointerEvents="none"
                     style={{
                       position: 'absolute',
-                      left: tooltip.x - 45,
-                      top: tooltip.y < 70 ? tooltip.y + 15 : tooltip.y - 65,
+                      bottom: tooltip.y < 70 ? undefined : -6,
+                      top: tooltip.y < 70 ? -6 : undefined,
+                      width: 12,
+                      height: 12,
                       backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      borderRadius: 12,
-                      borderWidth: 1,
+                      borderRightWidth: 1,
+                      borderBottomWidth: 1,
+                      borderTopWidth: 0,
+                      borderLeftWidth: 0,
                       borderColor: tooltip.type === 'Debit' ? '#EF4444' : '#10B981',
-                      alignItems: 'center',
-                      zIndex: 100,
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 4.65,
-                      elevation: 8,
+                      transform: [{ rotate: tooltip.y < 70 ? '225deg' : '45deg' }],
                     }}
-                  >
-                    <Text style={{ color: 'white', fontSize: 13, fontWeight: 'bold' }}>
-                      {tooltip.type}
-                    </Text>
-                    <Text style={{ color: 'white', fontSize: 15, fontWeight: '900', marginTop: 2 }}>
-                      ₹{tooltip.value.toLocaleString('en-IN')}
-                    </Text>
-                    {/* Arrow */}
-                    <View
-                      style={{
-                        position: 'absolute',
-                        bottom: tooltip.y < 70 ? undefined : -6,
-                        top: tooltip.y < 70 ? -6 : undefined,
-                        width: 12,
-                        height: 12,
-                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                        borderRightWidth: 1,
-                        borderBottomWidth: 1,
-                        borderTopWidth: 0,
-                        borderLeftWidth: 0,
-                        borderColor: tooltip.type === 'Debit' ? '#EF4444' : '#10B981',
-                        transform: [{ rotate: tooltip.y < 70 ? '225deg' : '45deg' }],
-                      }}
-                    />
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </>
+                  />
+                </View>
+              )}
 
-        ) : (
-          <Text className="text-gray-600 dark:text-gray-300 font-semibold text-center py-5 text-lg">No data available</Text>
-        )}
-      </View>
+            </View>
+          </ScrollView>
+        </>
+      ) : (
+        <Text className="text-gray-600 dark:text-gray-300 font-semibold text-center py-5 text-lg">
+          {statsLoading ? "Loading Trends..." : "No data available"}
+        </Text>
+      )}
+    </View>
+  );
 
-
-      {/* Transaction List */}
+  return (
+    <View className="flex-1 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
       <FlatList
-        data={Object.keys(monthlyData).reverse()}
+        data={Object.keys(monthlyList).reverse()} // Newest months first
+        ListHeaderComponent={renderHeader}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 80 }} // Extra padding for tab bar
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={fetchExpenses} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
         renderItem={({ item: monthYear }) => (
           <View className="mb-6">
@@ -319,7 +306,7 @@ export default function TransactionHistory() {
               <Text className='bg-gray-500 h-[0.01px] w-full'></Text>
             </View>
             <FlatList
-              data={monthlyData[monthYear]}
+              data={monthlyList[monthYear]}
               renderItem={({ item }) => (
                 <ExpenseItem
                   item={item}
@@ -335,12 +322,11 @@ export default function TransactionHistory() {
         )}
         keyExtractor={(item) => item}
         showsVerticalScrollIndicator={false}
-        onEndReached={fetchExpenses}
+        onEndReached={() => fetchExpenses()}
         onEndReachedThreshold={0.5}
         ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
       />
       {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
-
-    </SafeAreaView>
+    </View>
   );
 }

@@ -32,6 +32,8 @@ type AdminStore = {
     editUserExpenseByAdmin: (id: string, data: Transaction) => void;
     removeUserExpenseByAdmin: (id: string, data: Transaction) => void;
     markAsSyncedAdmin: (tempId: string, newIdFromBackend: string, userId: String) => void;
+    statsCache: Record<string, any>;
+    setStatsCache: (userId: string, data: any) => void;
     reset: () => void;
 };
 
@@ -166,6 +168,10 @@ export const useAdminStore = create<AdminStore>()(
                     }),
                 }
             }),
+            statsCache: {},
+            setStatsCache: (userId, data) => set((state) => ({
+                statsCache: { ...state.statsCache, [userId]: data }
+            })),
             reset: () =>
                 set((state) => ({
                     cachedUsers: [],

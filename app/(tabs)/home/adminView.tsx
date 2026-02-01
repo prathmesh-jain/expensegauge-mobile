@@ -1,8 +1,7 @@
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { FlatList, RefreshControl, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useExpenseStore } from '../../../store/expenseStore'
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { useAuthStore } from "@/store/authStore";
 import DeleteModal from "./DeleteModal";
@@ -33,7 +32,6 @@ export default function Index() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [refreshing, setRefreshing] = useState(false)
-    const [hasMore, setHasMore] = useState(true);
 
     const router = useRouter();
 
@@ -62,11 +60,11 @@ export default function Index() {
     }
     const colorScheme = useColorScheme();
     const fetchUsers = async () => {
+        if (refreshing) return;
         setRefreshing(true)
         try {
             const response = await api.get(`/admin/users/`);
             setUsers(response.data.users)
-            setHasMore(response.data.hasMore)
             setCachedUsers(response.data.users, response.data.totalUserBalance)
         } catch (error) {
             console.error(error);
@@ -77,7 +75,7 @@ export default function Index() {
     }
 
     useEffect(() => {
-        if (users.length < 10) {
+        if (users.length === 0) {
             fetchUsers()
         }
     }, [])
@@ -101,14 +99,15 @@ export default function Index() {
             {/* List of users */}
             <View className="flex-row justify-between items-center my-4">
                 <Text className="dark:text-white text-gray-800 text-lg font-semibold">List of Users</Text>
-                {hasMore && <TouchableOpacity onPress={() => router.navigate('/history/adminAllUsersView')}>
+                {users.length > 7 && <TouchableOpacity onPress={() => router.navigate('/history/adminAllUsersView')}>
                     <Text className="dark:text-indigo-400 text-indigo-800 dark:font-normal font-semibold text-lg">View All</Text>
                 </TouchableOpacity>}
             </View>
 
             {users[0] &&
                 <FlatList
-                    data={users.slice(0, 10)}
+                    data={users.slice(0, 7)}
+                    showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={fetchUsers} />
                     }

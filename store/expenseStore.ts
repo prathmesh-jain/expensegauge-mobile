@@ -22,6 +22,8 @@ type ExpenseStore = {
   removeExpense: (data: Transaction) => void;
   setCachedExpenses: (data: Transaction[], balance: number) => void;
   markAsSynced: (id: string, newIdFromBackend: string) => void;
+  cachedStats: any;
+  setCachedStats: (data: any) => void;
 };
 
 export const useExpenseStore = create<ExpenseStore>()(
@@ -97,6 +99,8 @@ export const useExpenseStore = create<ExpenseStore>()(
               : e
           ),
         })),
+      cachedStats: { labels: [], datasets: [] },
+      setCachedStats: (data) => set({ cachedStats: data }),
     }),
     {
       name: 'expense-storage',

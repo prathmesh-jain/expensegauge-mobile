@@ -1,9 +1,8 @@
 import { Link, Redirect, useRouter } from "expo-router";
-import { FlatList, RefreshControl, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useExpenseStore } from '../../../store/expenseStore'
 import { useEffect, useState } from "react";
-import { FontAwesome } from '@expo/vector-icons';
 import { useAuthStore } from "@/store/authStore";
 import ExpenseItem from "@/app/expenseModal/ExpenseItem";
 import DeleteModal from "./DeleteModal";
@@ -31,7 +30,6 @@ export default function Index() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
-  const [hasMore, setHasMore] = useState(true);
 
 
   useEffect(() => {
@@ -56,16 +54,15 @@ export default function Index() {
     }
     setShowDeleteModal(false)
   }
-  const colorScheme = useColorScheme();
 
 
   const fetchExpenses = async () => {
+    if (refreshing) return;
     setRefreshing(true)
     try {
       const response = await api.get(`/expense/get-expense/`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setExpenses(newExpenses);
-      setHasMore(response.data.hasMore);
       setCachedExpenses(newExpenses, response.data.totalBalance);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
@@ -75,7 +72,7 @@ export default function Index() {
 
 
   useEffect(() => {
-    if (expenses.length < 10) {
+    if (expenses.length === 0) {
       fetchExpenses()
     }
   }, [])
@@ -108,7 +105,7 @@ export default function Index() {
       {/* Recent Transactions */}
       <View className="flex-row justify-between items-center my-4 mb-2">
         <Text className="dark:text-white text-gray-800 text-lg font-semibold">Recent Transactions</Text>
-        {(hasMore) && <TouchableOpacity onPress={() => router.navigate('/(tabs)/history')}>
+        {expenses.length > 7 && <TouchableOpacity onPress={() => router.navigate('/(tabs)/history')}>
           <Text className="dark:text-indigo-400 text-indigo-800 dark:font-normal font-semibold text-lg">View All</Text>
         </TouchableOpacity>}
       </View>
@@ -116,7 +113,8 @@ export default function Index() {
       {expenses[0] &&
         <FlatList
           className="mb-16"
-          data={expenses.slice(0, 10)}
+          showsVerticalScrollIndicator={false}
+          data={expenses.slice(0, 7)}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={fetchExpenses} />
           }

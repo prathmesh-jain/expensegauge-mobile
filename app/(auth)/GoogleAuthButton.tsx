@@ -37,7 +37,7 @@ export default function GoogleAuthButton({ setStatus, role }: { setStatus: (load
       console.error("Google Sign-In Error:", error);
       // Optional: Add a toast or alert here for user feedback
       if (error.code !== 'SIGN_IN_CANCELLED' && error.code !== 'SIGN_IN_IN_PROGRESS') {
-        alert(error.message || "Google Sign-In failed. Please try again.");
+        alert("Google Sign-In failed. Please try again.");
       }
     } finally {
       setStatus(false);

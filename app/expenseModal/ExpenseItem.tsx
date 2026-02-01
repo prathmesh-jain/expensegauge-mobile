@@ -23,12 +23,13 @@ type Props = {
 export default function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress }: Props) {
   const colorScheme = useColorScheme();
   const isSelected = selectedId === item._id;
-  
+  const isAdminAdded = item.type === "assign" && type === "admin";
+  const isUserAdded = item.type !== "assign" && type === "user";
   return (
     <View className="mb-2">
       <TouchableOpacity
         className="dark:bg-gray-800 bg-white dark:border-0 border border-gray-200 p-4 rounded-lg dark:shadow-none shadow-lg"
-        onPress={() => item.type === "assign" && type == "user" ? null : onSelect(item)}
+        onPress={() => isAdminAdded || isUserAdded ? onSelect(item) : null}
       >
         <View className="flex-row justify-between">
           <Text className="dark:text-gray-100">
@@ -47,7 +48,7 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
         </View>
 
         <View className="flex flex-row items-center mt-1">
-          <Text className="dark:text-gray-400 text-gray-700 text-sm">{item.date}</Text>
+          <Text className="dark:text-gray-400 text-gray-700 text-sm">{new Date(item.date).toDateString()}</Text>
 
           {item.isSynced === "false" && (
             <Text className="text-xs text-red-500 ml-10"> ~ sync pending</Text>

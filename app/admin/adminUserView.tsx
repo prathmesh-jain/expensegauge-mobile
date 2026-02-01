@@ -1,11 +1,11 @@
 import { Link, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 import { useEffect, useState } from "react";
 import api from "@/api/api";
 import { useAdminStore } from "@/store/adminStore";
-import { FontAwesome } from "@expo/vector-icons";
 import DeleteModal from "../(tabs)/home/DeleteModal";
 import ExpenseItem from "../expenseModal/ExpenseItem";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Transaction = {
   _id: string;
@@ -16,19 +16,13 @@ type Transaction = {
   category: string;
   isSynced: string | null;
 };
-type User = {
-  _id: string;
-  netBalance: number;
-  name: string;
-  createdAt: string;
-  expenses: Transaction[];
-};
 
 export default function adminUserView() {
   const { userindex, userId } = useLocalSearchParams<Record<string, string>>()
   const { activeUser, setActiveUser } = useAdminStore();
   const cachedUsers = useAdminStore((state) => state.cachedUsers);
   const { removeUserExpenseByAdmin } = useAdminStore()
+  const insets = useSafeAreaInsets();
 
   // Set active user on mount or param change
   useEffect(() => {
@@ -46,7 +40,6 @@ export default function adminUserView() {
   const user = activeUser;
 
   const [refreshing, setRefreshing] = useState(false)
-  const [hasMore, setHasMore] = useState(true);
   const [expenses, setExpenses] = useState<Transaction[]>(user?.expenses || []);
 
   const fetchUserData = async () => {
@@ -71,15 +64,12 @@ export default function adminUserView() {
 
   useEffect(() => {
     if (user) {
-      // If sorting is needed, we might need to do it here, but usually optimistic UI puts new one at top
-      // which matches the store's [expense, ...others] logic.
       setExpenses(user.expenses);
     }
   }, [user]);
 
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const colorScheme = useColorScheme();
 
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
@@ -103,13 +93,11 @@ export default function adminUserView() {
   }
 
   const fetchExpenses = async () => {
-    if (!user?._id) return;
+    if (!user?._id || refreshing) return;
     setRefreshing(true)
 
     try {
-      const limit = 10;
       const response = await api.get(`/admin/expenses/${user._id}`);
-      setHasMore(response.data.hasMore)
       const sortedExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setExpenses(sortedExpenses);
     } catch (err) {
@@ -119,7 +107,7 @@ export default function adminUserView() {
   };
 
   useEffect(() => {
-    if (user && expenses.length < 10 && !user.expenses.length) {
+    if (user) {
       fetchExpenses()
     }
   }, [user])
@@ -162,14 +150,16 @@ export default function adminUserView() {
       {/* Recent Transactions */}
       <View className="flex-row justify-between items-center my-4">
         <Text className="dark:text-white text-gray-800 text-lg font-semibold">Recent Transactions</Text>
-        {<TouchableOpacity onPress={() => router.navigate(`/admin/adminUserHistory?userindex=${userindex}&userId=${user._id}`)}>
+        {expenses.length > 7 && <TouchableOpacity onPress={() => router.navigate(`/admin/adminUserHistory?userindex=${userindex}&userId=${user._id}`)}>
           <Text className="dark:text-indigo-400 text-indigo-800 dark:font-normal font-semibold text-lg">View All</Text>
         </TouchableOpacity>}
       </View>
 
       {expenses[0] &&
         <FlatList
-          data={expenses.slice(0, 10)}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          data={expenses.slice(0, 7)}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={fetchExpenses} />
           }
