@@ -173,8 +173,12 @@ export const useAdminStore = create<AdminStore>()(
                 statsCache: { ...state.statsCache, [userId]: data }
             })),
             reset: () =>
-                set((state) => ({
+                set(() => ({
                     cachedUsers: [],
+                    activeUser: null,
+                    totalUserBalance: 0,
+                    LastSyncedAt: new Date(Date.now()).toLocaleString(),
+                    statsCache: {},
                 })),
         }),
         {

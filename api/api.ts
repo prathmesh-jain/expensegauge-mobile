@@ -1,10 +1,12 @@
 // api.ts
 import { useAuthStore } from '@/store/authStore';
 import { useExpenseStore } from '@/store/expenseStore';
+import { useAdminStore } from '@/store/adminStore';
 import axios from 'axios';
 import { router } from 'expo-router';
 import { checkConnection } from './network';
 import { addToQueue } from '@/store/offlineQueue';
+import { clearQueue } from '@/store/offlineQueue';
 
 const API_URL = "https://expensegauge-backend.onrender.com/api/v1"
 
@@ -47,7 +49,7 @@ api.interceptors.response.use(
 
     // 2. Queue mutations on ANY retryable error (offline, 5xx, timeout)
     const status = error.response?.status;
-    const isRetryableError = !status || (status >= 500 && status <= 599) || status === 408 || status === 404;
+    const isRetryableError = !status || (status >= 500 && status <= 599) || status === 408;
 
     const isAuthRequest = originalRequest.url?.includes('/user/login') ||
       originalRequest.url?.includes('/user/signup') ||
@@ -87,9 +89,12 @@ api.interceptors.response.use(
       } catch (err) {
         // Refresh failed — logout user
         console.error('Refresh token invalid, logging out');
-        const { setCachedExpenses } = useExpenseStore.getState()
+        const { reset: resetExpenseStore } = useExpenseStore.getState()
+        const { reset: resetAdminStore } = useAdminStore.getState()
+        resetExpenseStore()
+        resetAdminStore()
+        await clearQueue()
         reset()
-        setCachedExpenses([], 0)
         router.replace('/')
         return Promise.reject(err);
       }

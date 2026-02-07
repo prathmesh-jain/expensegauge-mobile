@@ -23,6 +23,7 @@ type ExpenseStore = {
   markAsSynced: (id: string, newIdFromBackend: string) => void;
   cachedStats: any;
   setCachedStats: (data: any) => void;
+  reset: () => void;
 };
 
 export const useExpenseStore = create<ExpenseStore>()(
@@ -100,6 +101,13 @@ export const useExpenseStore = create<ExpenseStore>()(
         })),
       cachedStats: { labels: [], datasets: [] },
       setCachedStats: (data) => set({ cachedStats: data }),
+      reset: () =>
+        set(() => ({
+          cachedExpenses: [],
+          totalBalance: 0,
+          LastSyncedAt: new Date(Date.now()).toLocaleString(),
+          cachedStats: { labels: [], datasets: [] },
+        })),
     }),
     {
       name: 'expense-storage',

@@ -2,6 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const QUEUE_KEY = '@offline_api_queue';
 
+const MAX_QUEUE_LENGTH = 200;
+const MAX_QUEUE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
 export type QueuedRequest = {
   id: string;
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -26,7 +29,12 @@ export const addToQueue = async (request: Omit<QueuedRequest, 'id' | 'timestamp'
     retryCount: 0,
     nextRetryTime: Date.now(),
   };
-  const updatedQueue = [...currentQueue, newItem];
+  const now = Date.now();
+  const prunedByAge = [...currentQueue, newItem].filter((item) => {
+    if (!item.timestamp) return true;
+    return now - item.timestamp <= MAX_QUEUE_AGE_MS;
+  });
+  const updatedQueue = prunedByAge.slice(-MAX_QUEUE_LENGTH);
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
 };
 
@@ -47,6 +55,15 @@ export const updateRequestInQueue = async (updatedRequest: QueuedRequest) => {
     item.id === updatedRequest.id ? updatedRequest : item
   );
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+};
+
+export const hasPendingUserMutationRequests = async (): Promise<boolean> => {
+  const queue = await getQueue();
+  return queue.some((req) => {
+    const isUserMutationType = req.type === 'expense' || req.type === 'balance';
+    const isUserAction = req.action === 'add' || req.action === 'edit' || req.action === 'delete';
+    return isUserMutationType && isUserAction;
+  });
 };
 
 export const clearQueue = async () => {

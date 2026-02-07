@@ -1,20 +1,25 @@
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { Feather } from '@expo/vector-icons'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/api/api'
 import { router } from 'expo-router'
 import { useExpenseStore } from '@/store/expenseStore'
+import { useAdminStore } from '@/store/adminStore'
+import { clearQueue, hasPendingUserMutationRequests } from '@/store/offlineQueue'
 
 const LogoutModal = ({ setShow }: any) => {
     const { reset, refreshToken } = useAuthStore();
     const [loading, setLoading] = useState(false);
-    const handleLogout = async () => {
+    const doLogout = async () => {
         setLoading(true);
         try {
             const response = await api.post(`/user/logout`, { refreshToken })
-            const { setCachedExpenses } = useExpenseStore.getState()
-            setCachedExpenses([], 0)
+            const { reset: resetExpenseStore } = useExpenseStore.getState()
+            const { reset: resetAdminStore } = useAdminStore.getState()
+            resetExpenseStore()
+            resetAdminStore()
+            await clearQueue()
             reset()
             setShow(false)
             router.replace('/')
@@ -24,6 +29,27 @@ const LogoutModal = ({ setShow }: any) => {
             setLoading(false);
         }
     }
+
+    const handleLogout = async () => {
+        try {
+            const hasPending = await hasPendingUserMutationRequests();
+            if (hasPending) {
+                Alert.alert(
+                    'Pending requests',
+                    'There are some pending offline requests. Logging out now may discard them. Do you still want to logout?',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Logout', style: 'destructive', onPress: () => { void doLogout(); } },
+                    ]
+                );
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
+        await doLogout();
+    };
     return (
         <View className='bg-black/70 flex-row items-center justify-center w-screen h-screen absolute top-0 left-0 -ml-6 -mt-6'>
             <View className='bg-white dark:bg-gray-900 flex-col w-10/12 rounded-lg border border-gray-200 dark:border-gray-800 shadow-md'>
