@@ -146,9 +146,8 @@ const UserProfileScreen: React.FC = () => {
     setShowReportModal(false);
     try {
       Toast.info(`Generating ${reportType} Report...`)
-      // Always sending as 'custom' with explicit dates to backend for precision
       await api.post('/expense/report/generate', {
-        type: 'custom',
+        type: reportType,
         startDate: calculatedStart.toISOString(),
         endDate: calculatedEnd.toISOString(),
         targetUserId: role === 'admin' ? selectedUserId : undefined

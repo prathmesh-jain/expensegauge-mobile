@@ -32,9 +32,9 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
         onPress={() => isAdminAdded || isUserAdded ? onSelect(item) : null}
       >
         <View className="flex-row justify-between">
-          <Text className="dark:text-gray-100">
+          <Text className="dark:text-gray-100 flex-1 pr-10" numberOfLines={1}
+            ellipsizeMode="tail">
             {item.details}
-            {item.type === "assign" && <Text className="text-xs">  ~ added by admin</Text>}
           </Text>
 
           <Text
@@ -47,16 +47,27 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
           </Text>
         </View>
 
-        <View className="flex flex-row items-center mt-1">
-          <Text className="dark:text-gray-400 text-gray-700 text-sm">{new Date(item.date).toDateString()}</Text>
+        <View className="flex-row items-center mt-1 justify-between">
+          <Text className="dark:text-gray-400 text-gray-700 text-sm flex-[0.4]" numberOfLines={1}>
+            {new Date(item.date).toDateString()}
+          </Text>
 
           {item.isSynced === "false" && (
-            <Text className="text-xs text-red-500 ml-10"> ~ sync pending</Text>
+            <Text className="text-xs text-red-500 flex-[0.3] text-center">
+              ~ sync pending
+            </Text>
           )}
+
+          <View className="flex-[0.4] items-end">
+            {item.type === "assign" && (
+              <Text className="text-xs dark:text-gray-400 text-gray-500">
+                ~ added by admin
+              </Text>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
 
-      {/* 👉 Bottom buttons when expanded */}
       {isSelected && (
         <View className="flex-row">
           <TouchableOpacity
