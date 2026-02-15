@@ -1,0 +1,2700 @@
+{
+    "stemmer": {},
+    "docs": [
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "wifi",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "ola",
+                "cab"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "notebook"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "taxi",
+                "fare"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "furnitur",
+                "item"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "prepaid",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "atm",
+                "charg"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "diesel"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "electr",
+                "bill"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "lemon",
+                "tomato"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "paneer",
+                "kharida"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "donat",
+                "monei"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "brunch",
+                "out"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "drink",
+                "order"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bike",
+                "petrol"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "rickshaw"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "zomato",
+                "lunch"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "pasta"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "chees",
+                "packet"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "movi",
+                "night"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "sweet",
+                "shop"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "amazon",
+                "shop"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "recharg",
+                "jio"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "zee5"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "covid",
+                "test"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "watch",
+                "film"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "plai",
+                "pubg"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "cinema"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bus",
+                "pass"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "eye",
+                "checkup"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "light",
+                "ka",
+                "paisa"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "chai",
+                "biscuit"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "homework",
+                "help"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "spotifi",
+                "subscript"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "diagnost",
+                "test"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "mother",
+                "dairi"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "auto",
+                "fare"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "bought",
+                "mango"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "tata",
+                "sky"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "pav",
+                "bhaji"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "flipkart",
+                "order"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "order",
+                "maggi"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "studi",
+                "materi"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "paid",
+                "gas"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "gift",
+                "item"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "school",
+                "fee"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "hotstar"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "milkman",
+                "payment"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "decor",
+                "light"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "fashion"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "dental",
+                "clean"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "eat"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "multivitamin"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "netflix",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "street",
+                "food"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "movi",
+                "download"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "unplan"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "broadband"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "doctor",
+                "visit"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "bought",
+                "bsheet"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "ghar",
+                "ka",
+                "khana"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "engin",
+                "book"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "ayurv",
+                "dawa"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "extra",
+                "spend"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "pen",
+                "pencil"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "amazon",
+                "prime"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "music",
+                "app"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "blood",
+                "test"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "univers",
+                "form"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "metro",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "appl",
+                "kharida"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "ola",
+                "ride"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "exam",
+                "form"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "gas",
+                "cylinder"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "book"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "gajar",
+                "aur",
+                "mooli"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "zara",
+                "shop"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "tofu",
+                "bought"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "myntra",
+                "deal"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "sabzi",
+                "li"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "bought",
+                "bhindi"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "phone",
+                "bill"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "fruit",
+                "aur",
+                "sabji"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "wifi",
+                "bill"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "hindi",
+                "class"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "electr",
+                "kharch"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "cash",
+                "withdrawn"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "restaur",
+                "bill"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "hotstar",
+                "ka",
+                "bill"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "internet",
+                "bill"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "refil",
+                "petrol"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "hospit",
+                "fee"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "butter",
+                "bought"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "random",
+                "expens"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "scienc",
+                "practic"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "breakfast",
+                "buffet"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "coach",
+                "center"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "lucki",
+                "draw"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "vadapav"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "onlin",
+                "subscript"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "train",
+                "ticket"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "live",
+                "concert"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "slipper"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "pani",
+                "puri"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "bought",
+                "shoe"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "prime",
+                "movi"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "loan",
+                "repay"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "brand",
+                "cloth"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "first",
+                "aid"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "crite",
+                "card",
+                "payment"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "micin"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "extra",
+                "charg"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "fruit",
+                "salad"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "amul",
+                "milk"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "cash",
+                "topup"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "pant",
+                "shirt"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "diesel",
+                "refil"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "egg",
+                "bought"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "pain",
+                "relief",
+                "sprai"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "watch",
+                "netflix"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "veget",
+                "le",
+                "liya"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "kitchen",
+                "item"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "chole",
+                "bhatur"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "game",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "ps",
+                "plu"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "metro",
+                "card"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "momo",
+                "liy"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "cab",
+                "charg"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "tshirt",
+                "purchas"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "movi",
+                "ticket"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "udemi",
+                "cours"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "doctor",
+                "consult"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "phone",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "travel",
+                "expens"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "chines",
+                "food"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "dawa",
+                "li"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "car",
+                "fuel"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "samosa"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "light",
+                "bill"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "kurti"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "bread",
+                "packet"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "unknown"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "retail",
+                "shop"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "reimburs"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "veget",
+                "shop"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "midnight",
+                "snack"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "mobil",
+                "pack"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "borrow",
+                "monei"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "milk",
+                "bread"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "home",
+                "decor"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "diwali",
+                "shop"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "sanitari",
+                "pad"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "unexpect",
+                "expens"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "chicken",
+                "fry"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "registr"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "cashback",
+                "us"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "bank",
+                "charg"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "auto",
+                "se",
+                "gaya"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "byju"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "share",
+                "auto"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "bijli",
+                "ka",
+                "bill"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "cab",
+                "book"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "pathologi"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "thermomet"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "paid",
+                "electr"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "dudh",
+                "liya"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "book",
+                "pvr"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "ice",
+                "cream"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "board",
+                "exam",
+                "payment"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "milk",
+                "purchas"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bus",
+                "ticket"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "sabji",
+                "kharidi"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "dinner",
+                "dhaba"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "cream"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "lemon",
+                "ginger"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "bui",
+                "veget"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "trouser"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "water",
+                "bill"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "veg",
+                "thali"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "school",
+                "dress"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "fine",
+                "paid"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "lab",
+                "fee"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "bookmyshow"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "dahi",
+                "purchas"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "paid",
+                "water",
+                "suppli"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "pipelin",
+                "charg"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "car",
+                "ka",
+                "petrol"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bus",
+                "se",
+                "gaya"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "ott",
+                "platform"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "cloth"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "curd",
+                "bought"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "cafe",
+                "visit"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "gobi",
+                "aur",
+                "pyaz"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "rakhi",
+                "gift"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "tuition",
+                "payment"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "misc"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "purchas",
+                "onion"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "bought",
+                "game"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "pain",
+                "killer"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "shop",
+                "mall"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "sanit"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "breakfast",
+                "cafe"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "order",
+                "pizza"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "uber",
+                "ride"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "biryani"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "gift",
+                "friend"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "tablet"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "entertain",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "health",
+                "checkup"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "electr",
+                "bill",
+                "paid"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "bp",
+                "machin"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "bijli",
+                "ka",
+                "paisa"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "lassi"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "funzon",
+                "game"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "petrol",
+                "bharwaya"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "ghee",
+                "liya"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "uber",
+                "pool"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "subscript",
+                "fee"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "nestl",
+                "milk"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "spectacl"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "tip"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "park",
+                "fine"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "stationeri"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "daili",
+                "doodh"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "gas",
+                "book",
+                "kiya"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "templ",
+                "donat"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "metro",
+                "se",
+                "gaya"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "swiggi",
+                "order"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "project",
+                "materi"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "cab",
+                "mein",
+                "gaya"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "math",
+                "book"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "onlin",
+                "learn"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "clinic",
+                "fee"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "burger",
+                "khaya"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "exam",
+                "fee"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bike",
+                "ka",
+                "diesel"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "taken",
+                "aloo"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "jean"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "accessori"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "health",
+                "supplem"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "dinner",
+                "friend"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "ssc",
+                "book"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "sabji",
+                "bazaar"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "mask",
+                "purchas"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "atm",
+                "withdraw"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "game",
+                "pass"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "donat"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "postpaid",
+                "bill"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "dth",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "youtub",
+                "premium"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "lunch",
+                "buffet"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "homeopathi"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "top"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "english",
+                "note"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "onlin",
+                "seri"
+            ]
+        },
+        {
+            "label": "Entertainment",
+            "value": [
+                "tv",
+                "serial"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "travel",
+                "offic"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "groceri",
+                "dress"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "banana"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "utensil"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "dairi",
+                "product"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "chai",
+                "tapri"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "chemist"
+            ]
+        },
+        {
+            "label": "Food & Dining",
+            "value": [
+                "juic",
+                "center"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "penalti"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "late",
+                "fine"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": [
+                "miscellan"
+            ]
+        },
+        {
+            "label": "Other",
+            "value": []
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "tomato",
+                "market"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "mobil",
+                "recharg"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "onlin",
+                "class"
+            ]
+        },
+        {
+            "label": "Education",
+            "value": [
+                "coach",
+                "fee"
+            ]
+        },
+        {
+            "label": "Transport",
+            "value": [
+                "bought",
+                "fuel"
+            ]
+        },
+        {
+            "label": "Healthcare",
+            "value": [
+                "clinic"
+            ]
+        },
+        {
+            "label": "Groceries",
+            "value": [
+                "mandi",
+                "se",
+                "kharidi"
+            ]
+        },
+        {
+            "label": "Shopping",
+            "value": [
+                "shop",
+                "spree"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "ghar",
+                "ka",
+                "kiraya"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "ghar",
+                "ka",
+                "bhada"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "hous",
+                "rent"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "flat",
+                "rent"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "rent",
+                "hous"
+            ]
+        },
+        {
+            "label": "Bills & Utilities",
+            "value": [
+                "room",
+                "rent"
+            ]
+        }
+    ],
+    "lastAdded": 282,
+    "features": {
+        "wifi": 1,
+        "recharg": 1,
+        "ola": 1,
+        "cab": 1,
+        "notebook": 1,
+        "taxi": 1,
+        "fare": 1,
+        "furnitur": 1,
+        "item": 1,
+        "prepaid": 1,
+        "atm": 1,
+        "charg": 1,
+        "diesel": 1,
+        "electr": 1,
+        "bill": 1,
+        "lemon": 1,
+        "tomato": 1,
+        "paneer": 1,
+        "kharida": 1,
+        "donat": 1,
+        "monei": 1,
+        "brunch": 1,
+        "out": 1,
+        "drink": 1,
+        "order": 1,
+        "bike": 1,
+        "petrol": 1,
+        "rickshaw": 1,
+        "zomato": 1,
+        "lunch": 1,
+        "pasta": 1,
+        "chees": 1,
+        "packet": 1,
+        "movi": 1,
+        "night": 1,
+        "sweet": 1,
+        "shop": 1,
+        "amazon": 1,
+        "jio": 1,
+        "zee5": 1,
+        "covid": 1,
+        "test": 1,
+        "watch": 1,
+        "film": 1,
+        "plai": 1,
+        "pubg": 1,
+        "cinema": 1,
+        "bus": 1,
+        "pass": 1,
+        "eye": 1,
+        "checkup": 1,
+        "light": 1,
+        "ka": 1,
+        "paisa": 1,
+        "chai": 1,
+        "biscuit": 1,
+        "homework": 1,
+        "help": 1,
+        "spotifi": 1,
+        "subscript": 1,
+        "diagnost": 1,
+        "mother": 1,
+        "dairi": 1,
+        "auto": 1,
+        "bought": 1,
+        "mango": 1,
+        "tata": 1,
+        "sky": 1,
+        "pav": 1,
+        "bhaji": 1,
+        "flipkart": 1,
+        "maggi": 1,
+        "studi": 1,
+        "materi": 1,
+        "paid": 1,
+        "gas": 1,
+        "gift": 1,
+        "school": 1,
+        "fee": 1,
+        "hotstar": 1,
+        "milkman": 1,
+        "payment": 1,
+        "decor": 1,
+        "fashion": 1,
+        "dental": 1,
+        "clean": 1,
+        "eat": 1,
+        "multivitamin": 1,
+        "netflix": 1,
+        "street": 1,
+        "food": 1,
+        "download": 1,
+        "unplan": 1,
+        "broadband": 1,
+        "doctor": 1,
+        "visit": 1,
+        "bsheet": 1,
+        "ghar": 1,
+        "khana": 1,
+        "engin": 1,
+        "book": 1,
+        "ayurv": 1,
+        "dawa": 1,
+        "extra": 1,
+        "spend": 1,
+        "pen": 1,
+        "pencil": 1,
+        "prime": 1,
+        "music": 1,
+        "app": 1,
+        "blood": 1,
+        "univers": 1,
+        "form": 1,
+        "metro": 1,
+        "appl": 1,
+        "ride": 1,
+        "exam": 1,
+        "cylinder": 1,
+        "gajar": 1,
+        "aur": 1,
+        "mooli": 1,
+        "zara": 1,
+        "tofu": 1,
+        "myntra": 1,
+        "deal": 1,
+        "sabzi": 1,
+        "li": 1,
+        "bhindi": 1,
+        "phone": 1,
+        "fruit": 1,
+        "sabji": 1,
+        "hindi": 1,
+        "class": 1,
+        "kharch": 1,
+        "cash": 1,
+        "withdrawn": 1,
+        "restaur": 1,
+        "internet": 1,
+        "refil": 1,
+        "hospit": 1,
+        "butter": 1,
+        "random": 1,
+        "expens": 1,
+        "scienc": 1,
+        "practic": 1,
+        "breakfast": 1,
+        "buffet": 1,
+        "coach": 1,
+        "center": 1,
+        "lucki": 1,
+        "draw": 1,
+        "vadapav": 1,
+        "onlin": 1,
+        "train": 1,
+        "ticket": 1,
+        "live": 1,
+        "concert": 1,
+        "slipper": 1,
+        "pani": 1,
+        "puri": 1,
+        "shoe": 1,
+        "loan": 1,
+        "repay": 1,
+        "brand": 1,
+        "cloth": 1,
+        "first": 1,
+        "aid": 1,
+        "crite": 1,
+        "card": 1,
+        "micin": 1,
+        "salad": 1,
+        "amul": 1,
+        "milk": 1,
+        "topup": 1,
+        "pant": 1,
+        "shirt": 1,
+        "egg": 1,
+        "pain": 1,
+        "relief": 1,
+        "sprai": 1,
+        "veget": 1,
+        "le": 1,
+        "liya": 1,
+        "kitchen": 1,
+        "chole": 1,
+        "bhatur": 1,
+        "game": 1,
+        "ps": 1,
+        "plu": 1,
+        "momo": 1,
+        "liy": 1,
+        "tshirt": 1,
+        "purchas": 1,
+        "udemi": 1,
+        "cours": 1,
+        "consult": 1,
+        "travel": 1,
+        "chines": 1,
+        "car": 1,
+        "fuel": 1,
+        "samosa": 1,
+        "kurti": 1,
+        "bread": 1,
+        "unknown": 1,
+        "retail": 1,
+        "reimburs": 1,
+        "midnight": 1,
+        "snack": 1,
+        "mobil": 1,
+        "pack": 1,
+        "borrow": 1,
+        "home": 1,
+        "diwali": 1,
+        "sanitari": 1,
+        "pad": 1,
+        "unexpect": 1,
+        "chicken": 1,
+        "fry": 1,
+        "registr": 1,
+        "cashback": 1,
+        "us": 1,
+        "bank": 1,
+        "se": 1,
+        "gaya": 1,
+        "byju": 1,
+        "share": 1,
+        "bijli": 1,
+        "pathologi": 1,
+        "thermomet": 1,
+        "dudh": 1,
+        "pvr": 1,
+        "ice": 1,
+        "cream": 1,
+        "board": 1,
+        "kharidi": 1,
+        "dinner": 1,
+        "dhaba": 1,
+        "ginger": 1,
+        "bui": 1,
+        "trouser": 1,
+        "water": 1,
+        "veg": 1,
+        "thali": 1,
+        "dress": 1,
+        "fine": 1,
+        "lab": 1,
+        "bookmyshow": 1,
+        "dahi": 1,
+        "suppli": 1,
+        "pipelin": 1,
+        "ott": 1,
+        "platform": 1,
+        "curd": 1,
+        "cafe": 1,
+        "gobi": 1,
+        "pyaz": 1,
+        "rakhi": 1,
+        "tuition": 1,
+        "misc": 1,
+        "onion": 1,
+        "killer": 1,
+        "mall": 1,
+        "sanit": 1,
+        "pizza": 1,
+        "uber": 1,
+        "biryani": 1,
+        "friend": 1,
+        "tablet": 1,
+        "entertain": 1,
+        "health": 1,
+        "bp": 1,
+        "machin": 1,
+        "lassi": 1,
+        "funzon": 1,
+        "bharwaya": 1,
+        "ghee": 1,
+        "pool": 1,
+        "nestl": 1,
+        "spectacl": 1,
+        "tip": 1,
+        "park": 1,
+        "stationeri": 1,
+        "daili": 1,
+        "doodh": 1,
+        "kiya": 1,
+        "templ": 1,
+        "swiggi": 1,
+        "project": 1,
+        "mein": 1,
+        "math": 1,
+        "learn": 1,
+        "clinic": 1,
+        "burger": 1,
+        "khaya": 1,
+        "taken": 1,
+        "aloo": 1,
+        "jean": 1,
+        "accessori": 1,
+        "supplem": 1,
+        "ssc": 1,
+        "bazaar": 1,
+        "mask": 1,
+        "withdraw": 1,
+        "postpaid": 1,
+        "dth": 1,
+        "youtub": 1,
+        "premium": 1,
+        "homeopathi": 1,
+        "top": 1,
+        "english": 1,
+        "note": 1,
+        "seri": 1,
+        "tv": 1,
+        "serial": 1,
+        "offic": 1,
+        "groceri": 1,
+        "banana": 1,
+        "utensil": 1,
+        "product": 1,
+        "tapri": 1,
+        "chemist": 1,
+        "juic": 1,
+        "penalti": 1,
+        "late": 1,
+        "miscellan": 1,
+        "market": 1,
+        "mandi": 1,
+        "spree": 1,
+        "kiraya": 1,
+        "bhada": 1,
+        "hous": 1,
+        "rent": 1,
+        "flat": 1,
+        "room": 1
+    },
+    "classFeatures": {
+        "Bills & Utilities": {
+            "0": 3,
+            "1": 7,
+            "9": 2,
+            "11": 2,
+            "13": 5,
+            "14": 10,
+            "38": 2,
+            "51": 3,
+            "52": 6,
+            "53": 3,
+            "66": 2,
+            "67": 2,
+            "74": 5,
+            "75": 4,
+            "93": 2,
+            "97": 3,
+            "100": 2,
+            "117": 2,
+            "128": 3,
+            "133": 2,
+            "137": 2,
+            "208": 3,
+            "209": 2,
+            "226": 3,
+            "240": 3,
+            "248": 2,
+            "249": 2,
+            "284": 2,
+            "303": 2,
+            "304": 2,
+            "328": 2,
+            "329": 2,
+            "330": 3,
+            "331": 5,
+            "332": 2,
+            "333": 2
+        },
+        "Transport": {
+            "1": 2,
+            "2": 3,
+            "3": 5,
+            "5": 2,
+            "6": 3,
+            "11": 2,
+            "12": 4,
+            "25": 3,
+            "26": 5,
+            "27": 2,
+            "47": 4,
+            "48": 2,
+            "52": 3,
+            "63": 4,
+            "64": 2,
+            "100": 2,
+            "113": 4,
+            "115": 3,
+            "138": 3,
+            "142": 2,
+            "153": 2,
+            "154": 3,
+            "168": 2,
+            "196": 3,
+            "198": 3,
+            "199": 3,
+            "222": 4,
+            "223": 5,
+            "225": 2,
+            "264": 3,
+            "274": 2,
+            "276": 2,
+            "288": 2,
+            "314": 2
+        },
+        "Education": {
+            "4": 2,
+            "56": 2,
+            "57": 2,
+            "59": 2,
+            "72": 2,
+            "73": 3,
+            "77": 3,
+            "78": 5,
+            "81": 3,
+            "99": 2,
+            "100": 5,
+            "105": 2,
+            "106": 2,
+            "111": 2,
+            "112": 3,
+            "116": 4,
+            "131": 2,
+            "132": 3,
+            "143": 2,
+            "144": 2,
+            "147": 3,
+            "148": 2,
+            "152": 4,
+            "193": 2,
+            "194": 2,
+            "218": 2,
+            "224": 2,
+            "233": 2,
+            "243": 2,
+            "245": 2,
+            "257": 2,
+            "281": 2,
+            "287": 2,
+            "289": 2,
+            "290": 2,
+            "299": 2,
+            "309": 2,
+            "310": 2
+        },
+        "Shopping": {
+            "7": 2,
+            "8": 4,
+            "24": 2,
+            "36": 7,
+            "37": 2,
+            "51": 2,
+            "64": 3,
+            "70": 2,
+            "76": 3,
+            "82": 3,
+            "83": 2,
+            "96": 2,
+            "121": 2,
+            "123": 2,
+            "124": 2,
+            "157": 2,
+            "160": 2,
+            "163": 2,
+            "164": 3,
+            "174": 2,
+            "175": 2,
+            "183": 2,
+            "191": 2,
+            "192": 2,
+            "201": 2,
+            "204": 2,
+            "211": 2,
+            "212": 2,
+            "239": 2,
+            "243": 2,
+            "256": 2,
+            "261": 2,
+            "296": 2,
+            "297": 2,
+            "308": 2,
+            "315": 2,
+            "317": 2,
+            "327": 2
+        },
+        "Other": {
+            "10": 3,
+            "11": 4,
+            "19": 4,
+            "20": 3,
+            "59": 2,
+            "74": 2,
+            "76": 2,
+            "78": 2,
+            "81": 2,
+            "92": 2,
+            "103": 3,
+            "104": 2,
+            "134": 3,
+            "135": 2,
+            "141": 2,
+            "142": 3,
+            "149": 2,
+            "150": 2,
+            "161": 2,
+            "162": 2,
+            "167": 2,
+            "168": 2,
+            "173": 2,
+            "203": 2,
+            "205": 2,
+            "210": 2,
+            "215": 2,
+            "219": 2,
+            "220": 2,
+            "221": 2,
+            "244": 4,
+            "258": 2,
+            "266": 2,
+            "279": 2,
+            "280": 2,
+            "285": 2,
+            "302": 2,
+            "322": 2,
+            "323": 2,
+            "324": 2
+        },
+        "Groceries": {
+            "15": 3,
+            "16": 3,
+            "17": 2,
+            "18": 3,
+            "31": 2,
+            "32": 3,
+            "36": 2,
+            "61": 2,
+            "62": 3,
+            "64": 7,
+            "65": 2,
+            "80": 2,
+            "81": 2,
+            "114": 2,
+            "118": 2,
+            "119": 4,
+            "120": 2,
+            "122": 2,
+            "125": 2,
+            "126": 2,
+            "127": 2,
+            "129": 3,
+            "130": 4,
+            "140": 2,
+            "170": 2,
+            "171": 2,
+            "172": 5,
+            "176": 2,
+            "180": 4,
+            "181": 2,
+            "182": 4,
+            "192": 4,
+            "202": 3,
+            "222": 2,
+            "229": 2,
+            "232": 2,
+            "234": 3,
+            "237": 2,
+            "238": 2,
+            "247": 2,
+            "252": 2,
+            "254": 2,
+            "255": 2,
+            "259": 2,
+            "272": 2,
+            "275": 2,
+            "277": 2,
+            "282": 2,
+            "283": 2,
+            "294": 2,
+            "295": 2,
+            "300": 2,
+            "316": 2,
+            "318": 2,
+            "325": 2,
+            "326": 2
+        },
+        "Food & Dining": {
+            "14": 2,
+            "21": 2,
+            "22": 2,
+            "23": 2,
+            "24": 5,
+            "28": 2,
+            "29": 3,
+            "30": 2,
+            "35": 2,
+            "36": 2,
+            "52": 2,
+            "54": 3,
+            "55": 2,
+            "68": 2,
+            "69": 2,
+            "71": 2,
+            "86": 2,
+            "89": 2,
+            "90": 3,
+            "95": 2,
+            "97": 2,
+            "98": 2,
+            "136": 2,
+            "145": 3,
+            "146": 3,
+            "148": 2,
+            "151": 2,
+            "158": 2,
+            "159": 2,
+            "184": 2,
+            "185": 2,
+            "189": 2,
+            "190": 2,
+            "197": 2,
+            "200": 2,
+            "206": 2,
+            "207": 2,
+            "216": 2,
+            "217": 2,
+            "231": 2,
+            "232": 2,
+            "235": 3,
+            "236": 2,
+            "241": 2,
+            "242": 2,
+            "253": 3,
+            "263": 2,
+            "265": 2,
+            "266": 2,
+            "286": 2,
+            "292": 2,
+            "293": 2,
+            "319": 2,
+            "321": 2
+        },
+        "Entertainment": {
+            "1": 4,
+            "14": 2,
+            "33": 5,
+            "34": 2,
+            "37": 2,
+            "39": 2,
+            "42": 3,
+            "43": 2,
+            "44": 2,
+            "45": 2,
+            "46": 2,
+            "48": 2,
+            "52": 2,
+            "58": 2,
+            "59": 2,
+            "64": 2,
+            "79": 3,
+            "88": 3,
+            "91": 2,
+            "100": 2,
+            "107": 3,
+            "108": 2,
+            "109": 2,
+            "152": 2,
+            "154": 2,
+            "155": 2,
+            "156": 2,
+            "186": 5,
+            "187": 2,
+            "188": 2,
+            "230": 2,
+            "246": 2,
+            "250": 2,
+            "251": 2,
+            "268": 2,
+            "273": 2,
+            "305": 2,
+            "306": 2,
+            "311": 2,
+            "312": 2,
+            "313": 2
+        },
+        "Healthcare": {
+            "40": 2,
+            "41": 4,
+            "49": 2,
+            "50": 3,
+            "60": 2,
+            "78": 3,
+            "84": 2,
+            "85": 2,
+            "87": 2,
+            "94": 3,
+            "95": 2,
+            "101": 2,
+            "102": 3,
+            "110": 2,
+            "126": 2,
+            "139": 2,
+            "165": 2,
+            "166": 2,
+            "169": 2,
+            "177": 3,
+            "178": 2,
+            "179": 2,
+            "192": 2,
+            "195": 2,
+            "213": 2,
+            "214": 2,
+            "227": 2,
+            "228": 2,
+            "260": 2,
+            "262": 2,
+            "267": 2,
+            "269": 3,
+            "270": 2,
+            "271": 2,
+            "278": 2,
+            "291": 3,
+            "298": 2,
+            "301": 2,
+            "307": 2,
+            "320": 2
+        }
+    },
+    "classTotals": {
+        "Bills & Utilities": 34,
+        "Transport": 31,
+        "Education": 30,
+        "Shopping": 30,
+        "Other": 31,
+        "Groceries": 41,
+        "Food & Dining": 35,
+        "Entertainment": 29,
+        "Healthcare": 30
+    },
+    "totalExamples": 283,
+    "smoothing": 1
+}

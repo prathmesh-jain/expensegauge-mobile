@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "ExpenseGauge",
+    "slug": "expensegauge",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "expensegauge",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/app-icon.png",
+        "backgroundColor": "#111827"
+      },
+      "splash": {
+        "image": "./assets/images/iconLight.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#ffffff",
+        "dark": {
+          "image": "./assets/images/icon2.png",
+          "backgroundColor": "#111827"
+        }
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.expensegauge"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon2.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-iconLight.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "image": "./assets/images/icon2.png",
+            "backgroundColor": "#111827"
+          }
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6c001630-77eb-4f12-a202-849abb140b88"
+      }
+    },
+    "owner": "spider22"
+  }
+}
