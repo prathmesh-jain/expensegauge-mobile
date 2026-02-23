@@ -8,6 +8,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { useAuthStore } from '@/store/authStore';
 import ExpenseItem from '@/app/expenseModal/ExpenseItem';
 import DeleteModal from '../home/DeleteModal';
+import { processQueue } from '@/api/syncQueue';
 
 type Transaction = {
   _id: string;
@@ -16,8 +17,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null;
+  isSynced: boolean;
+  clientId?: string;
 }
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -164,7 +167,10 @@ export default function TransactionHistory() {
 
       if (currentOffset === 0) {
         setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance);
+        // Force sync immediately after refresh to flush any pending mutations
+        processQueue(true);
       }
+
 
       setOffset(isRefresh ? limit : offset + limit);
       setHasMore(response.data.hasMore);

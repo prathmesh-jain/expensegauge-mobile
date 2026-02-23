@@ -1,3 +1,4 @@
+//expenseapi.ts
 import api from "./api"; // your axios instance
 import { Toast } from "toastify-react-native";
 
@@ -8,15 +9,20 @@ export type Transaction = {
     details: string;
     type: string;
     category: string;
-    isSynced: string | null;
+    isSynced: boolean;
+    clientId?: string;
 };
+
 
 // -------------------- USER APIs --------------------
 
 // Add new expense (user)
 export const addExpenseApi = async (data: Transaction) => {
     try {
-        const response = await api.post("/expense/add", { ...data, clientId: data._id }, {
+        const response = await api.post("/expense/add", {
+            ...data,
+            clientId: data.clientId || data._id
+        }, {
             headers: {
                 "x-meta": JSON.stringify({
                     localId: data._id,
@@ -25,6 +31,7 @@ export const addExpenseApi = async (data: Transaction) => {
                 }),
             },
         });
+
 
         if (response.data.offline) {
             Toast.info("Offline — expense will sync later.");

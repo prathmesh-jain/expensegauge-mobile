@@ -15,8 +15,10 @@ type Transaction = {
     details: string;
     type: string;
     category: string;
-    isSynced: string | null;
+    isSynced: boolean;
+    clientId?: string;
 };
+
 type User = {
     _id: string;
     netBalance: number;
@@ -34,6 +36,14 @@ export default function Index() {
     const [refreshing, setRefreshing] = useState(false)
 
     const router = useRouter();
+
+    // Redirect if not in admin mode
+    useEffect(() => {
+        const { role, viewMode } = useAuthStore.getState();
+        if (role !== 'admin' || viewMode !== 'admin') {
+            router.replace('/(tabs)/home');
+        }
+    }, [router]);
 
     useEffect(() => {
         setUsers(cachedUsers)

@@ -1,4 +1,3 @@
-// api.ts
 import { useAuthStore } from '@/store/authStore';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAdminStore } from '@/store/adminStore';
@@ -27,6 +26,18 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token: string) => {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
 let onQueueAdded: (() => void) | null = null;
 export const setOnQueueAdded = (cb: () => void) => {
   onQueueAdded = cb;
@@ -34,72 +45,112 @@ export const setOnQueueAdded = (cb: () => void) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const { refreshToken, setTokens, reset } = useAuthStore.getState()
+  async (error: any) => {
+    const { refreshToken, setTokens, reset } = useAuthStore.getState();
     const originalRequest = error.config;
 
-    // 1. Skip if specifically told to, or if it's already a retry (to avoid loops)
-    if (originalRequest.headers?.['x-skip-queue']) {
+    // Skip if no request config or if specifically told to skip queue (internal sync requests)
+    if (!originalRequest || originalRequest.headers?.['x-skip-queue']) {
       return Promise.reject(error);
     }
 
     const isConnected = await checkConnection();
     const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(originalRequest.method?.toUpperCase() || '');
 
-    // 2. Queue mutations on ANY retryable error (offline, 5xx, timeout)
+    // 1. Detect network/offline errors (no error.response)
+    // Also treat 5xx, 408, 429 as retryable candidates for mutation queuing
     const status = error.response?.status;
-    const isRetryableError = !status || (status >= 500 && status <= 599) || status === 408;
+    const isNoResponse = !error.response;
+    const isRetryableError = isNoResponse || (status && (status >= 500 || status === 408 || status === 429));
 
     const isAuthRequest = originalRequest.url?.includes('/user/login') ||
       originalRequest.url?.includes('/user/signup') ||
-      originalRequest.url?.includes('/user/google-login');
+      originalRequest.url?.includes('/user/google-login') ||
+      originalRequest.url?.includes('/user/refresh');
 
-    if (isMutation && (!isConnected || isRetryableError) && !isAuthRequest) {
-      console.error(`Queueing ${originalRequest.method} request due to ${isConnected ? 'retryable error' : 'offline status'}`);
+    // Handle offline/network failure for mutations: Queue and return a successful offline response
+    if (isMutation && isRetryableError && !isAuthRequest) {
+      console.log(`[Offline-First] Queueing ${originalRequest.method} request due to ${isNoResponse ? 'network failure' : 'server error ' + status}`);
 
-      const metadata = originalRequest.headers?.['x-meta']
-        ? JSON.parse(originalRequest.headers['x-meta'])
-        : {};
+      let metadata = {};
+      try {
+        const rawMeta = originalRequest.headers?.['x-meta'];
+        if (rawMeta) {
+          metadata = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta;
+        }
+      } catch (e) {
+        console.warn('Failed to parse x-meta header', e);
+      }
 
       await addToQueue({
         method: originalRequest.method?.toUpperCase() as any,
         url: originalRequest.url!,
-        data: originalRequest.data ? JSON.parse(originalRequest.data) : undefined,
+        data: originalRequest.data ? (typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data) : undefined,
         ...metadata,
       });
 
-      // Trigger the sync processor immediately if something was added
+      // Trigger the sync processor to check if it can run
       onQueueAdded?.();
 
-      return Promise.resolve({ data: { offline: true } });
+      // Return a standard response object that the UI can recognize as "offline success"
+      return Promise.resolve({
+        data: { offline: true, pendingSync: true },
+        status: 202, // Accepted
+        statusText: 'Accepted (Offline)',
+        headers: {},
+        config: originalRequest
+      });
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const res = await axios.post(`${API_URL}/user/refresh`, {
-          refreshToken,
+    // 2. Handle Authentication only when the server actually responds with 401
+    if (status === 401 && !isAuthRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(api(originalRequest));
+          });
         });
-        const newAccessToken = res.data.accessToken;
-        const newRefreshToken = res.data.refreshToken;
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const res = await axios.post(`${API_URL}/user/refresh`, { refreshToken }, { timeout: 30000 });
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data;
+
         setTokens(newAccessToken, newRefreshToken);
+        isRefreshing = false;
+        onRefreshed(newAccessToken);
+
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
-      } catch (err) {
-        // Refresh failed — logout user
-        console.error('Refresh token invalid, logging out');
-        const { reset: resetExpenseStore } = useExpenseStore.getState()
-        const { reset: resetAdminStore } = useAdminStore.getState()
-        resetExpenseStore()
-        resetAdminStore()
-        await clearQueue()
-        reset()
-        router.replace('/')
-        return Promise.reject(err);
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshSubscribers = [];
+
+        // ONLY log out if the refresh call itself failed with a clear 4xx response
+        // If it's a network error/timeout during refresh, DO NOT log out.
+        if (axios.isAxiosError(refreshError) && refreshError.response && refreshError.response.status === 401) {
+          console.error('[Auth] Refresh token failed with 401, logging out');
+          const { reset: resetExpenseStore } = useExpenseStore.getState();
+          const { reset: resetAdminStore } = useAdminStore.getState();
+          resetExpenseStore();
+          resetAdminStore();
+          // Keep the offline queue persisted
+          reset();
+          router.replace('/');
+        } else {
+          console.warn('[Auth] Refresh failed (likely network/timeout), maintaining session');
+        }
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 )
+
 
 export default api;

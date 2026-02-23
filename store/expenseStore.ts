@@ -1,3 +1,4 @@
+//expensestore.ts
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,8 +10,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null
+  isSynced: boolean;
+  clientId?: string;
 };
+
 
 type ExpenseStore = {
   cachedExpenses: Transaction[];
@@ -34,14 +37,20 @@ export const useExpenseStore = create<ExpenseStore>()(
       LastSyncedAt: new Date(Date.now()).toLocaleString(),
       addExpense: (data) =>
         set((state) => {
+          const newTransaction = {
+            ...data,
+            isSynced: false,
+            clientId: data.clientId || data._id // Ensure clientId is set
+          };
           return {
             ...state,
-            cachedExpenses: [data, ...state.cachedExpenses].sort(
+            cachedExpenses: [newTransaction, ...state.cachedExpenses].sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
             ),
             totalBalance: data.type == 'debit' ? state.totalBalance - data.amount : state.totalBalance + data.amount,
           }
         }),
+
       editExpense: (data) =>
         set((state) => {
           let diffAmount = 0
@@ -85,20 +94,65 @@ export const useExpenseStore = create<ExpenseStore>()(
           };
         }),
       setCachedExpenses: (data, balance) => set((state) => {
+        // Data Reconciliation: Preserve local unsynced transactions
+        const unsyncedLocal = state.cachedExpenses.filter(e => e.isSynced === false);
+
+        // Deduplication using clientId and _id
+        const merged = [...data];
+
+        unsyncedLocal.forEach(localItem => {
+          // Find if this local item matches an existing item in the incoming data
+          const index = merged.findIndex(m =>
+            m._id === localItem._id ||
+            (localItem.clientId && m.clientId === localItem.clientId)
+          );
+
+          if (index !== -1) {
+            // Version Check:
+            // If the backend has the same clientId, then backend record is up-to-date.
+            // If clientIds differ, local version is a newer pending edit.
+            if (localItem.clientId && merged[index].clientId === localItem.clientId) {
+              // Same version found in backend; discard local unsynced copy 
+              // (Keep the backend's synced item in merged)
+            } else {
+              // Backend is stale or ID matches but version is different; keep local unsynced version
+              merged[index] = localItem;
+            }
+          } else {
+            merged.push(localItem);
+          }
+        });
+
+        const sorted = merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
         return {
-          cachedExpenses: data,
+          cachedExpenses: sorted,
           LastSyncedAt: new Date(Date.now()).toLocaleString(),
           totalBalance: balance
         }
       }),
+
+
       markAsSynced: (tempId, newIdFromBackend) =>
-        set((state) => ({
-          cachedExpenses: state.cachedExpenses.map((e) =>
-            e._id === tempId
-              ? { ...e, _id: newIdFromBackend, isSynced: 'true' }
-              : e
-          ),
-        })),
+        set((state) => {
+          // Deduplication: Check if an item with newIdFromBackend already exists (excluding the tempId item itself)
+          const alreadyExists = state.cachedExpenses.some((e) => e._id === newIdFromBackend && e._id !== tempId);
+
+
+          if (alreadyExists) {
+            return {
+              cachedExpenses: state.cachedExpenses.filter((e) => e._id !== tempId),
+            };
+          }
+
+          return {
+            cachedExpenses: state.cachedExpenses.map((e) =>
+              e._id === tempId ? { ...e, _id: newIdFromBackend, isSynced: true } : e
+            ),
+          };
+        }),
+
+
       cachedStats: { labels: [], datasets: [] },
       setCachedStats: (data) => set({ cachedStats: data }),
       reset: () =>

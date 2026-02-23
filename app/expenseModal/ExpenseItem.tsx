@@ -9,8 +9,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null
+  isSynced: boolean;
+  clientId?: string;
 };
+
 
 type Props = {
   item: Transaction;
@@ -48,15 +50,16 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
         </View>
 
         <View className="flex-row items-center mt-1 justify-between">
-          <Text className="dark:text-gray-400 text-gray-700 text-sm flex-[0.4]" numberOfLines={1}>
+          <Text className="dark:text-gray-400 text-gray-700 text-xs flex-[0.4]" numberOfLines={1}>
             {new Date(item.date).toDateString()}
           </Text>
 
-          {item.isSynced === "false" && (
+          {item.isSynced === false && (
             <Text className="text-xs text-red-500 flex-[0.3] text-center">
               ~ sync pending
             </Text>
           )}
+
 
           <View className="flex-[0.4] items-end">
             {item.type === "assign" && (
@@ -86,8 +89,9 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
           <Link
             href={{
               pathname: `/expenseModal/[type]`,
-              params: { ...item },
+              params: { ...item, isSynced: String(item.isSynced) },
             }}
+
             asChild
           >
             <TouchableOpacity

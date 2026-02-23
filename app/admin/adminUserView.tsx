@@ -14,8 +14,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null;
+  isSynced: boolean;
+  clientId?: string;
 };
+
 
 export default function adminUserView() {
   const { userindex, userId } = useLocalSearchParams<Record<string, string>>()
@@ -53,7 +55,7 @@ export default function adminUserView() {
     const targetId = userId || user?._id;
     if (!targetId || refreshing) return;
     setRefreshing(true)
-    if(!expenses || expenses.length === 0) {
+    if (!expenses || expenses.length === 0) {
       setInitialLoading(true)
     }
     try {
@@ -141,25 +143,25 @@ export default function adminUserView() {
           <ActivityIndicator size="large" />
         </View>
       ) : expenses[0] &&
-        <FlatList
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-          data={expenses.slice(0, 7)}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={fetchExpenses} />
-          }
-          renderItem={({ item }) => (
-            <ExpenseItem
-              item={item}
-              selectedId={selectedTransaction?._id || null}
-              type="admin"
-              onSelect={handleTransactionPress}
-              onDeletePress={() => setShowDeleteModal(true)
-              }
-            />
-          )}
-          keyExtractor={item => item._id}
-        />}
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        data={expenses.slice(0, 7)}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={fetchExpenses} />
+        }
+        renderItem={({ item }) => (
+          <ExpenseItem
+            item={item}
+            selectedId={selectedTransaction?._id || null}
+            type="admin"
+            onSelect={handleTransactionPress}
+            onDeletePress={() => setShowDeleteModal(true)
+            }
+          />
+        )}
+        keyExtractor={item => item._id}
+      />}
       {!initialLoading && !expenses[0] &&
         <View className="flex flex-row justify-center items-center p-3">
           <Text className="text-xl dark:text-white ">No transactions to show</Text>

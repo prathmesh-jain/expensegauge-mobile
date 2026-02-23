@@ -26,12 +26,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     // 1️⃣ Run immediately on startup
-    processQueue();
+    processQueue(true);
 
     // 2️⃣ Subscribe to network changes
     const unsubscribe = NetInfo.addEventListener(async (state) => {
       if (state.isConnected) {
-        await processQueue();
+        await processQueue(true);
       }
     });
 

@@ -17,8 +17,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null;
+  isSynced: boolean;
+  clientId?: string;
 }
+
 type User = {
   _id: string;
   netBalance: number;

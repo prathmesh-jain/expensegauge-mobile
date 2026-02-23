@@ -78,6 +78,8 @@ const ExpenseForm = () => {
     }
   }, [_id]);
 
+
+
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
@@ -103,16 +105,20 @@ const ExpenseForm = () => {
   };
 
   const buildTransaction = useCallback(
-    (overrides = {}) => ({
-      _id: _id || Date.now().toString(),
-      type,
-      details: form.details,
-      amount: parseFloat(form.amount),
-      category: form.category,
-      date: form.date.toDateString(),
-      isSynced: "false",
-      ...overrides,
-    }),
+    (overrides = {}) => {
+      const transactionId = _id || Date.now().toString();
+      return {
+        _id: transactionId,
+        type,
+        details: form.details,
+        amount: parseFloat(form.amount),
+        category: form.category,
+        date: form.date.toDateString(),
+        isSynced: false,
+        clientId: Date.now().toString(), // Unique ID for this specific version/attempt
+        ...overrides,
+      };
+    },
     [_id, type, form]
   );
 
@@ -121,6 +127,17 @@ const ExpenseForm = () => {
   const handleAdminSubmit = () => {
     if (!form.details || !form.amount) {
       Toast.error("Please enter details and amount");
+      return;
+    }
+
+    const isRedundant = _id &&
+      form.details === (params.details || "") &&
+      parseFloat(form.amount) === parseFloat(params.amount || "0") &&
+      form.category === (params.category || "") &&
+      form.date.toDateString() === new Date(params.date || "").toDateString();
+
+    if (isRedundant) {
+      router.back();
       return;
     }
 
@@ -155,6 +172,17 @@ const ExpenseForm = () => {
   const handleUserSubmit = () => {
     if (!form.details || !form.amount) {
       Toast.error("Please enter details and amount");
+      return;
+    }
+
+    const isRedundant = _id &&
+      form.details === (params.details || "") &&
+      parseFloat(form.amount) === parseFloat(params.amount || "0") &&
+      form.category === (params.category || "") &&
+      form.date.toDateString() === new Date(params.date || "").toDateString();
+
+    if (isRedundant) {
+      router.back();
       return;
     }
 

@@ -9,8 +9,10 @@ type Transaction = {
     details: string;
     type: string;
     category: string;
-    isSynced: string | null;
+    isSynced: boolean;
+    clientId?: string;
 };
+
 type User = {
     _id: string;
     netBalance: number;
@@ -54,35 +56,99 @@ export const useAdminStore = create<AdminStore>()(
                     const nextBalance = user.netBalance;
                     const diff = nextBalance - prevBalance;
 
+                    // Data Reconciliation for user expenses
+                    const reconcileExpenses = (localExpenses: Transaction[], incomingExpenses: Transaction[]) => {
+                        const unsyncedLocal = localExpenses.filter(e => e.isSynced === false);
+                        const merged = [...incomingExpenses];
+                        unsyncedLocal.forEach(localItem => {
+                            const index = merged.findIndex(m =>
+                                m._id === localItem._id ||
+                                (localItem.clientId && m.clientId === localItem.clientId)
+                            );
+                            if (index !== -1) {
+                                // Dynamic ClientId Comparison
+                                if (localItem.clientId && merged[index].clientId === localItem.clientId) {
+                                    // Backend has matched this specific version; use backend item (effectively syncing)
+                                } else {
+                                    // Local version is newer or backend is stale; override with local unsynced
+                                    merged[index] = localItem;
+                                }
+                            } else {
+                                merged.push(localItem);
+                            }
+                        });
+
+
+                        return merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                    };
+
+
+                    const updatedActiveUser = activeMatch
+                        ? {
+                            ...state.activeUser!,
+                            ...user,
+                            expenses: user.expenses
+                                ? reconcileExpenses(state.activeUser!.expenses, user.expenses)
+                                : state.activeUser!.expenses,
+                        }
+                        : state.activeUser;
+
+                    const updatedCachedUsers = state.cachedUsers.map((u) =>
+                        u._id === user._id
+                            ? {
+                                ...u,
+                                ...user,
+                                expenses: user.expenses
+                                    ? reconcileExpenses(u.expenses, user.expenses)
+                                    : u.expenses,
+                            }
+                            : u
+                    );
+
                     return {
                         ...state,
-                        activeUser: state.activeUser?._id === user._id
-                            ? {
-                                ...state.activeUser,
-                                ...user,
-                                expenses: user.expenses ?? state.activeUser.expenses,
-                            }
-                            : state.activeUser,
-                        cachedUsers: state.cachedUsers.map((u) =>
-                            u._id === user._id
-                                ? {
-                                    ...u,
-                                    ...user,
-                                    expenses: user.expenses ?? u.expenses,
-                                }
-                                : u
-                        ),
+                        activeUser: updatedActiveUser,
+                        cachedUsers: updatedCachedUsers,
                         totalUserBalance: state.totalUserBalance + ((existing || activeMatch) ? diff : 0),
                     };
                 }),
             setCachedUsers: (data: User[], balance) => set((state) => ({
-                cachedUsers: data.slice(0, 5).map(user => ({
-                    ...user,
-                    expenses: (user.expenses || []).slice(0, 10)
-                })),
+                cachedUsers: data.slice(0, 5).map(incomingUser => {
+                    const existing = state.cachedUsers.find(u => u._id === incomingUser._id);
+                    const incomingExpenses = (incomingUser.expenses || []).slice(0, 10);
+
+                    if (!existing) return { ...incomingUser, expenses: incomingExpenses };
+
+                    const unsyncedLocal = existing.expenses.filter(e => e.isSynced === false);
+                    const merged = [...incomingExpenses];
+                    unsyncedLocal.forEach(localItem => {
+                        const index = merged.findIndex(m =>
+                            m._id === localItem._id ||
+                            (localItem.clientId && m.clientId === localItem.clientId)
+                        );
+                        if (index !== -1) {
+                            if (localItem.clientId && merged[index].clientId === localItem.clientId) {
+                                // Match found, keep backend version
+                            } else {
+                                merged[index] = localItem;
+                            }
+                        } else {
+                            merged.push(localItem);
+                        }
+                    });
+
+
+
+
+                    return {
+                        ...incomingUser,
+                        expenses: merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10)
+                    };
+                }),
                 totalUserBalance: balance,
                 LastSyncedAt: new Date(Date.now()).toLocaleString()
             })),
+
             addUser: (data) =>
                 set((state) => {
                     const normalized = { ...data, expenses: (data.expenses || []) };
@@ -177,28 +243,36 @@ export const useAdminStore = create<AdminStore>()(
                 }
             }),
             markAsSyncedAdmin: (tempId, newIdFromBackend, userId) => set((state) => {
+                const reconcileUserExpenses = (expenses: Transaction[]) => {
+                    const alreadyExists = expenses.some((e) => e._id === newIdFromBackend && e._id !== tempId);
+
+                    if (alreadyExists) {
+                        return expenses.filter((e) => e._id !== tempId);
+                    }
+                    return expenses.map((e) =>
+                        e._id === tempId ? { ...e, _id: newIdFromBackend, isSynced: true } : e
+                    );
+
+                };
+
                 return {
                     ...state,
                     activeUser: state.activeUser?._id === userId ? {
                         ...state.activeUser,
-                        expenses: state.activeUser.expenses.map((e) =>
-                            e._id === tempId
-                                ? { ...e, _id: newIdFromBackend, isSynced: 'true' }
-                                : e)
+                        expenses: reconcileUserExpenses(state.activeUser.expenses)
                     } : state.activeUser,
                     cachedUsers: state.cachedUsers.map((item) => {
                         if (item._id === userId) {
                             return {
-                                ...item, expenses: item.expenses.map((e) =>
-                                    e._id === tempId
-                                        ? { ...e, _id: newIdFromBackend, isSynced: 'true' }
-                                        : e)
-                            }
+                                ...item,
+                                expenses: reconcileUserExpenses(item.expenses)
+                            };
                         }
-                        return item
+                        return item;
                     }),
-                }
+                };
             }),
+
             statsCache: {},
             setStatsCache: (userId, data) => set((state) => ({
                 statsCache: { ...state.statsCache, [userId]: data }

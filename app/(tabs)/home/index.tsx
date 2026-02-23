@@ -7,6 +7,8 @@ import { useAuthStore } from "@/store/authStore";
 import ExpenseItem from "@/app/expenseModal/ExpenseItem";
 import DeleteModal from "./DeleteModal";
 import api from "@/api/api";
+import { processQueue } from "@/api/syncQueue";
+
 
 type Transaction = {
   _id: string;
@@ -15,8 +17,10 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
-  isSynced: string | null
+  isSynced: boolean;
+  clientId?: string;
 };
+
 
 export default function Index() {
   const { role, viewMode } = useAuthStore()
@@ -60,6 +64,8 @@ export default function Index() {
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setExpenses(newExpenses);
       setCachedExpenses(newExpenses, response.data.totalBalance);
+      // Force sync immediately after refresh to flush any pending mutations
+      processQueue(true);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
     }
