@@ -31,8 +31,11 @@ export default function GoogleAuthButton({ setStatus, role }: { setStatus: (load
 
       setTokens(res.data.accessToken, res.data.refreshToken);
       setUser(res.data.name, res.data.email, res.data.role ?? "user", res.data.profilePicture);
-
-      router.replace("/(tabs)/home");
+      if (res.data.role === 'admin') {
+        router.replace("/(tabs)/home/adminView");
+      } else {
+        router.replace("/(tabs)/home");
+      }
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       // Optional: Add a toast or alert here for user feedback

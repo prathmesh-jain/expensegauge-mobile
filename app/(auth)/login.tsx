@@ -110,13 +110,21 @@ export default function Login() {
         const response = await api.post(`/user/login`, { email, password }) // Changed from username to email
         setTokens(response.data.accessToken, response.data.refreshToken);
         setUser(response.data.name, response.data.email, response.data.role, response.data.profilePicture); // Changed username to email
-        router.navigate('/(tabs)/home');
+        if (response.data.role === 'admin') {
+          router.replace("/(tabs)/home/adminView");
+        } else {
+          router.replace("/(tabs)/home");
+        }
       }
       else {
         const response = await api.post(`/user/signup`, { name, email, password, role: role }) // Changed from username to email
         setTokens(response.data.accessToken, response.data.refreshToken);
         setUser(name, email, role, response.data.profilePicture); // Changed username to email
-        router.navigate('/(tabs)/home');
+        if (response.data.role === 'admin') {
+          router.replace("/(tabs)/home/adminView");
+        } else {
+          router.replace("/(tabs)/home");
+        }
       }
     } catch (error: any) {
       console.error("error : ", error);

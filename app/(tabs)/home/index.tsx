@@ -23,7 +23,6 @@ type Transaction = {
 
 
 export default function Index() {
-  const { role, viewMode } = useAuthStore()
   const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance } = useExpenseStore();
   const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
 
