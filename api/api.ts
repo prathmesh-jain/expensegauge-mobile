@@ -2,6 +2,9 @@ import { useAuthStore } from '@/store/authStore';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAdminStore } from '@/store/adminStore';
 import axios from 'axios';
+import * as Updates from 'expo-updates';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { checkConnection } from './network';
 import { addToQueue } from '@/store/offlineQueue';
@@ -23,6 +26,11 @@ api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
+
+  config.headers['x-app-version'] = Constants.expoConfig?.version || '1.0.0';
+  config.headers['x-ota-version'] = Updates.updateId || 'none';
+  config.headers['x-platform'] = Platform.OS;
+
   return config
 })
 

@@ -8,6 +8,9 @@ import NetInfo from "@react-native-community/netinfo";
 import { processQueue } from "@/api/syncQueue";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import api from "@/api/api";
+import { Provider as PaperProvider } from 'react-native-paper';
+import UpdateService from "@/helper/UpdateService";
+import UpdatePrompt from "@/components/UpdatePrompt";
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
@@ -45,39 +48,44 @@ export default function RootLayout() {
       console.error("Error fetching profile on app start:", err.message);
     });
 
+    UpdateService.checkForUpdates();
+
     return () => unsubscribe();
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: backcolor }}>
-      <Stack>
-        <Stack.Screen
-          name="(auth)"
-          options={{ headerShown: false, statusBarStyle: statusColor }}
-        />
-        <Stack.Screen
-          name="(tabs)"
-          options={{ headerShown: false, statusBarStyle: statusColor }}
-        />
-        <Stack.Screen
-          name="admin"
-          options={{
-            headerShown: false,
-            statusBarStyle: statusColor,
-            animation: "slide_from_right",
-          }}
-        />
-        <Stack.Screen
-          name="expenseModal/[type]"
-          options={{
-            headerShown: false,
-            presentation: "transparentModal",
-            animation: "fade_from_bottom",
-            statusBarStyle: statusColor,
-          }}
-        />
-      </Stack>
-      <ToastManager useModal={false} theme={colorScheme} />
-    </View>
+    <PaperProvider>
+      <View style={{ flex: 1, backgroundColor: backcolor }}>
+        <Stack>
+          <Stack.Screen
+            name="(auth)"
+            options={{ headerShown: false, statusBarStyle: statusColor }}
+          />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ headerShown: false, statusBarStyle: statusColor }}
+          />
+          <Stack.Screen
+            name="admin"
+            options={{
+              headerShown: false,
+              statusBarStyle: statusColor,
+              animation: "slide_from_right",
+            }}
+          />
+          <Stack.Screen
+            name="expenseModal/[type]"
+            options={{
+              headerShown: false,
+              presentation: "transparentModal",
+              animation: "fade_from_bottom",
+              statusBarStyle: statusColor,
+            }}
+          />
+        </Stack>
+        <ToastManager useModal={false} theme={colorScheme} />
+        <UpdatePrompt />
+      </View>
+    </PaperProvider>
   );
 }
