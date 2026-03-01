@@ -2,13 +2,10 @@ import { useAuthStore } from '@/store/authStore';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAdminStore } from '@/store/adminStore';
 import axios from 'axios';
-import * as Updates from 'expo-updates';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { checkConnection } from './network';
 import { addToQueue } from '@/store/offlineQueue';
-import { clearQueue } from '@/store/offlineQueue';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
@@ -28,7 +25,6 @@ api.interceptors.request.use((config) => {
   }
 
   config.headers['x-app-version'] = Constants.expoConfig?.version || '1.0.0';
-  config.headers['x-ota-version'] = Updates.updateId || 'none';
   config.headers['x-platform'] = Platform.OS;
 
   return config
@@ -62,7 +58,6 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const isConnected = await checkConnection();
     const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(originalRequest.method?.toUpperCase() || '');
 
     // 1. Detect network/offline errors (no error.response)

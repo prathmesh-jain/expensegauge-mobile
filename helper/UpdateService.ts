@@ -8,7 +8,7 @@ class UpdateService {
 
         try {
             // 1. Check Backend for update instructions
-            const response = await api.get('/api/v1/update/check');
+            const response = await api.get('/update/check');
             const data = response.data;
 
             if (!data.updateAvailable) {
@@ -21,7 +21,6 @@ class UpdateService {
                 updateType: data.updateType,
                 forceUpdate: data.forceUpdate,
                 latestAppVersion: data.latestAppVersion,
-                latestOtaVersion: data.latestOtaVersion,
                 apkUrl: data.apkUrl,
                 playStoreUrl: data.playStoreUrl,
                 message: data.message,

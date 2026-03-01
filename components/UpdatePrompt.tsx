@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Linking, Platform } from 'react-native';
 import { Modal, Portal, Text, Button, Snackbar } from 'react-native-paper';
 import { useUpdateStore } from '../store/updateStore';
@@ -29,7 +29,13 @@ const UpdatePrompt = () => {
     };
 
     // 1. Forced Update Modal
-    const showModal = forceUpdate && isUpdateAvailable;
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        if (isUpdateAvailable) {
+            setShowModal(true);
+        }
+    }, [isUpdateAvailable]);
 
     // 2. OTA Ready Snackbar
     const showOtaReady = isUpdateReady && !forceUpdate;
@@ -39,7 +45,6 @@ const UpdatePrompt = () => {
             <Portal>
                 <Modal
                     visible={showModal}
-                    dismissable={false}
                     contentContainerStyle={styles.modalContainer}
                 >
                     <Text style={styles.title}>Update Required</Text>
@@ -47,8 +52,15 @@ const UpdatePrompt = () => {
                         {message || `A new version (${latestAppVersion}) is required to continue using the app.`}
                     </Text>
                     <Button mode="contained" onPress={handleUpdate} style={styles.button}>
-                        Update Now
+                        <Text style={{ color: 'white' }}>
+                            Update Now
+                        </Text>
                     </Button>
+                    {!forceUpdate && <Button mode="contained" onPress={() => setShowModal(false)} style={styles.button2}>
+                        <Text style={{ color: 'white' }}>
+                            Not Now
+                        </Text>
+                    </Button>}
                 </Modal>
             </Portal>
 
@@ -86,8 +98,15 @@ const styles = StyleSheet.create({
         color: '#4B5563',
     },
     button: {
+        borderRadius: 12,
         marginTop: 8,
         backgroundColor: '#3b82f6',
+        color: 'white',
+    },
+    button2: {
+        borderRadius: 12,
+        marginTop: 10,
+        backgroundColor: 'green',
     },
 });
 

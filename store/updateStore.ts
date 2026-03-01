@@ -7,7 +7,6 @@ interface UpdateState {
     forceUpdate: boolean;
     updateType: 'OTA' | 'APK' | 'PlayStore' | 'none';
     latestAppVersion: string;
-    latestOtaVersion: string;
     apkUrl: string;
     playStoreUrl: string;
     message: string;
@@ -23,7 +22,6 @@ export const useUpdateStore = create<UpdateState>((set) => ({
     forceUpdate: false,
     updateType: 'none',
     latestAppVersion: '',
-    latestOtaVersion: '',
     apkUrl: '',
     playStoreUrl: '',
     message: '',
@@ -36,7 +34,6 @@ export const useUpdateStore = create<UpdateState>((set) => ({
         forceUpdate: false,
         updateType: 'none',
         latestAppVersion: '',
-        latestOtaVersion: '',
         apkUrl: '',
         playStoreUrl: '',
         message: '',
