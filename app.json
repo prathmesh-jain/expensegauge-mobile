@@ -58,6 +58,12 @@
         "projectId": "6c001630-77eb-4f12-a202-849abb140b88"
       }
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "owner": "spider22"
   }
 }
