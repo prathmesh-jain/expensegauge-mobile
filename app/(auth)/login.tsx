@@ -176,7 +176,7 @@ export default function Login() {
             {error.emailError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.emailError}</Text>}
 
             <TextInput
-              className={`dark:bg-gray-800 bg-white text-white p-4 rounded-lg text-lg ${passwordInvalid ? 'border-2 border-red-500' : ''}`}
+              className={`dark:bg-gray-800 bg-white dark:text-white p-4 rounded-lg text-lg ${passwordInvalid ? 'border-2 border-red-500' : ''}`}
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
               onChangeText={(text) => {
