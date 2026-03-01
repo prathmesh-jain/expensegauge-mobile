@@ -55,19 +55,19 @@ export default function AdminPreviewScreen() {
   }
   const slides = [
     {
-      title: 'Manage Users',
-      image: colorScheme==='dark'?require("../../assets/images/admin_preview1.jpg"):require("../../assets/images/admin_preview1_light.jpg"),
-      description: 'See and manage all registered users easily.'
+      title: 'Track Expenses Globally',
+      image: colorScheme==='dark'?require("../../assets/images/admin-dark-1.jpg"):require("../../assets/images/admin-light-1.jpg"),
+      description: 'Oversee all user expenses with rich analytics.'
     },
     {
       title: 'Register new users',
-      image: colorScheme==='dark'?require("../../assets/images/admin_preview2.jpg"):require("../../assets/images/admin_preview2_light.jpg"),
+      image: colorScheme==='dark'?require("../../assets/images/admin-dark-2.jpg"):require("../../assets/images/admin-light-2.jpg"),
       description: 'Register new users and track thier expenses'
     },
     {
-      title: 'Track Expenses Globally',
-      image: colorScheme==='dark'?require("../../assets/images/admin_preview3.jpg"):require("../../assets/images/admin_preview3_light.jpg"),
-      description: 'Oversee all user expenses with rich analytics.'
+      title: 'Manage Users',
+      image: colorScheme==='dark'?require("../../assets/images/admin-dark-3.jpg"):require("../../assets/images/admin-light-3.jpg"),
+      description: 'See and manage all registered users easily.'
     }
   ]
   
