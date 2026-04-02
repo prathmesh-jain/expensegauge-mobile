@@ -1,13 +1,14 @@
 import { Link, useRouter } from "expo-router";
-import { FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, RefreshControl, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useExpenseStore } from '../../../store/expenseStore'
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import ExpenseItem from "@/app/expenseModal/ExpenseItem";
 import DeleteModal from "./DeleteModal";
 import api from "@/api/api";
 import { processQueue } from "@/api/syncQueue";
+import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
 
 
 type Transaction = {
@@ -17,23 +18,59 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
+  afterBalance?: number;
   isSynced: boolean;
   clientId?: string;
 };
 
+const isExpenseInRange = (date: string, range: string) => {
+  if (range === "all_time") return true;
+  const expenseDate = new Date(date);
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  if (range === "current_month") {
+    return expenseDate >= currentMonthStart && expenseDate < nextMonthStart;
+  }
+  if (range === "last_month") {
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return expenseDate >= lastMonthStart && expenseDate < currentMonthStart;
+  }
+  if (range === "last_3_months") {
+    const lastThreeMonthsStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    return expenseDate >= lastThreeMonthsStart && expenseDate < nextMonthStart;
+  }
+  return true;
+};
+
 
 export default function Index() {
-  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance } = useExpenseStore();
+  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses } = useExpenseStore();
   const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
 
   const user = useAuthStore((state) => state.name);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
+  const [expenseRange, setExpenseRanges] = useState("all_time")
+  const [rangeBalance, setRangeBalance] = useState(0)
+
+  const ranges = [
+    { label: "Current Month", value: "current_month" },
+    { label: "Last Month", value: "last_month" },
+    { label: "Last 3 Months", value: "last_3_months" },
+    { label: "All Time", value: "all_time" },
+  ];
 
   useEffect(() => {
-    setExpenses(cachedExpenses)
-  }, [cachedExpenses])
+    const filteredCached = cachedExpenses.filter((item) => isExpenseInRange(item.date, expenseRange));
+    setExpenses(filteredCached);
+    const cachedRangeBalance = filteredCached.reduce((sum, exp) => (
+      exp.type === "debit" ? sum - exp.amount : sum + exp.amount
+    ), 0);
+    setRangeBalance(cachedRangeBalance);
+  }, [cachedExpenses, expenseRange])
   const router = useRouter();
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
@@ -59,10 +96,13 @@ export default function Index() {
     if (refreshing) return;
     setRefreshing(true)
     try {
-      const response = await api.get(`/expense/get-expense/`);
+      const response = await api.get(`/expense/get-expense/?range=${expenseRange}&offset=0&limit=50`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setExpenses(newExpenses);
-      setCachedExpenses(newExpenses, response.data.totalBalance);
+      setRangeBalance(response.data.rangeBalance ?? 0);
+      if (expenseRange === "all_time") {
+        setCachedExpenses(newExpenses, response.data.totalBalance);
+      }
       // Force sync immediately after refresh to flush any pending mutations
       processQueue(true);
     } catch (err) {
@@ -73,10 +113,13 @@ export default function Index() {
 
 
   useEffect(() => {
-    if (expenses.length === 0) {
-      fetchExpenses()
-    }
-  }, [])
+    fetchExpenses()
+  }, [expenseRange])
+  const colorScheme = useColorScheme();
+  const dropdownRef = useRef<IDropdownRef>(null);
+
+  const backcolor = colorScheme === "light" ? "white" : "#111827";
+  const textColor = colorScheme === "light" ? "black" : "#d1d5db";
 
   return (
     <SafeAreaView className="flex-1 p-4 dark:bg-gray-900">
@@ -84,8 +127,44 @@ export default function Index() {
         <Text className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Hello {user?.split(' ')[0]} 👋</Text>
       </View>
       <View className="dark:bg-indigo-600 bg-white rounded-xl p-6 mb-6 dark:border-0 border border-gray-300">
-        <Text className="dark:text-white text-slate-800 text-lg">Total Balance</Text>
-        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{totalBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
+        <View className="flex-row items-center">
+          <Text className="dark:text-white text-slate-800 text-lg">Total Balance</Text>
+          <TouchableOpacity
+            onPress={() => {
+              dropdownRef.current?.open();
+            }}
+            className="rounded-lg w-1/2 dark:text-white text-slate-800"
+          >
+            <Dropdown
+              ref={dropdownRef}
+              data={ranges}
+              labelField="label"
+              valueField="value"
+              value={expenseRange}
+              onChange={(item) => setExpenseRanges(item.value)}
+              dropdownPosition="bottom"
+              style={{
+                borderRadius: 8,
+                paddingInline: 24,
+                height: "auto",
+                pointerEvents: "none",
+                width: 'auto'
+              }}
+              containerStyle={{
+                backgroundColor: backcolor,
+                marginBottom: 30,
+                borderWidth: 0,
+                elevation: 20,
+              }}
+              selectedTextStyle={{ color: textColor, fontSize: 14 }}
+              itemTextStyle={{ color: textColor, fontSize: 14 }}
+              placeholderStyle={{ color: "#d1d5db" }}
+              activeColor={backcolor}
+              iconColor={textColor}
+            />
+          </TouchableOpacity>
+        </View>
+        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{rangeBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
         {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
       </View>
 

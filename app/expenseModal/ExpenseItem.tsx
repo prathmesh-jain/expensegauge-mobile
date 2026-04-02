@@ -9,6 +9,7 @@ type Transaction = {
   details: string;
   type: string;
   category: string;
+  afterBalance?: number;
   isSynced: boolean;
   clientId?: string;
 };
@@ -69,6 +70,12 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
             )}
           </View>
         </View>
+
+        {typeof item.afterBalance === "number" && (
+          <Text className="dark:text-indigo-300 text-indigo-700 text-xs mt-2">
+            Balance after txn: ₹{item.afterBalance.toLocaleString("en-IN")}
+          </Text>
+        )}
       </TouchableOpacity>
 
       {isSelected && (
