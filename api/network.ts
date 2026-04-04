@@ -3,12 +3,13 @@ import NetInfo from '@react-native-community/netinfo';
 
 export const addNetworkListener = (onChange: (isConnected: boolean) => void) => {
   const unsubscribe = NetInfo.addEventListener(state => {
-    onChange(!!state.isConnected);
+    const online = state.isInternetReachable ?? state.isConnected;
+    onChange(!!online);
   });
   return unsubscribe;
 };
 
-export const checkConnection = async (): Promise<boolean> => {
+export const checkConnection = async (): Promise<boolean|null> => {
   const state = await NetInfo.fetch();
-  return !!state.isConnected;
+  return state.isInternetReachable ?? state.isConnected;
 };

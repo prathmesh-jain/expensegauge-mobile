@@ -32,8 +32,6 @@ export default function adminUserView() {
     if (userId) foundUser = cachedUsers.find(u => u._id === userId) || null;
     else if (userindex) foundUser = cachedUsers[parseInt(userindex)] || null;
 
-    // Only set if we found one or if we need to clear it (though clearing might be handled elsewhere)
-    // Actually, we usually want to start with what we have.
     if (foundUser) {
       setActiveUser(foundUser);
     }
@@ -43,7 +41,7 @@ export default function adminUserView() {
 
   const [refreshing, setRefreshing] = useState(false)
   const [expenses, setExpenses] = useState<Transaction[]>(user?.expenses || []);
-  const [initialLoading, setInitialLoading] = useState(!(user?.expenses && user.expenses.length > 0));
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     if (user?.expenses) {
@@ -162,7 +160,7 @@ export default function adminUserView() {
         )}
         keyExtractor={item => item._id}
       />}
-      {!initialLoading && !expenses[0] &&
+      {!initialLoading && expenses.length === 0 &&
         <View className="flex flex-row justify-center items-center p-3">
           <Text className="text-xl dark:text-white ">No transactions to show</Text>
         </View>

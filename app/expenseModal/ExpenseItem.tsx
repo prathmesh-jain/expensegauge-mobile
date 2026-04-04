@@ -73,7 +73,7 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
 
         {typeof item.afterBalance === "number" && (
           <Text className="dark:text-indigo-300 text-indigo-700 text-xs mt-2">
-            Balance after txn: ₹{item.afterBalance.toLocaleString("en-IN")}
+            Available Balance: ₹{item.afterBalance.toLocaleString("en-IN")}
           </Text>
         )}
       </TouchableOpacity>

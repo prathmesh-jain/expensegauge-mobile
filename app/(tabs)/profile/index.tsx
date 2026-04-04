@@ -170,9 +170,9 @@ const UserProfileScreen: React.FC = () => {
       return;
     }
 
+    Toast.info(`Generating ${reportType} Report...`)
     setShowReportModal(false);
     try {
-      Toast.info(`Generating ${reportType} Report...`)
       await api.post('/expense/report/generate', {
         type: reportType,
         startDate: calculatedStart.toISOString(),

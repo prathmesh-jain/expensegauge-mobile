@@ -1,16 +1,16 @@
 import { Stack } from "expo-router";
 import "../global.css";
 import { useColorScheme, View, Appearance } from "react-native";
-import ToastManager from "toastify-react-native";
+import ToastManager, { Toast } from "toastify-react-native";
 import { useThemeStore } from "@/store/themeStore";
 import { useEffect } from "react";
-import NetInfo from "@react-native-community/netinfo";
 import { processQueue } from "@/api/syncQueue";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import api from "@/api/api";
 import { Provider as PaperProvider } from 'react-native-paper';
 import UpdateService from "@/helper/UpdateService";
 import UpdatePrompt from "@/components/UpdatePrompt";
+import { addNetworkListener, checkConnection } from "@/api/network";
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
@@ -28,17 +28,26 @@ export default function RootLayout() {
   const statusColor = colorScheme == "light" ? "dark" : "light";
 
   useEffect(() => {
-    // 1️⃣ Run immediately on startup
+    const notifyOfflineOnStartup = async () => {
+      const isConnected = await checkConnection();
+      if (!isConnected) {
+        Toast.info("You are offline. Sync will happen when connection returns.");
+      }
+    };
+
+    notifyOfflineOnStartup();
+
+    // Run immediately on startup
     processQueue(true);
 
-    // 2️⃣ Subscribe to network changes
-    const unsubscribe = NetInfo.addEventListener(async (state) => {
-      if (state.isConnected) {
+    // Subscribe to network changes
+    const unsubscribe = addNetworkListener(async (isConnected) => {
+      if (isConnected) {
         await processQueue(true);
       }
     });
 
-    // 3️⃣ Subscribe to new queue items
+    // Subscribe to new queue items
     const { setOnQueueAdded } = require("@/api/api");
     setOnQueueAdded(() => {
       processQueue();

@@ -145,7 +145,7 @@ export default function Index() {
               dropdownPosition="bottom"
               style={{
                 borderRadius: 8,
-                paddingInline: 24,
+                paddingInline: 15,
                 height: "auto",
                 pointerEvents: "none",
                 width: 'auto'
