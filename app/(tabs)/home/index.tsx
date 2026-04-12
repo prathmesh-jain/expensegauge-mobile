@@ -23,27 +23,6 @@ type Transaction = {
   clientId?: string;
 };
 
-const isExpenseInRange = (date: string, range: string) => {
-  if (range === "all_time") return true;
-  const expenseDate = new Date(date);
-  const now = new Date();
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-  if (range === "current_month") {
-    return expenseDate >= currentMonthStart && expenseDate < nextMonthStart;
-  }
-  if (range === "last_month") {
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    return expenseDate >= lastMonthStart && expenseDate < currentMonthStart;
-  }
-  if (range === "last_3_months") {
-    const lastThreeMonthsStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-    return expenseDate >= lastThreeMonthsStart && expenseDate < nextMonthStart;
-  }
-  return true;
-};
-
 
 export default function Index() {
   const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses } = useExpenseStore();
@@ -63,14 +42,6 @@ export default function Index() {
     { label: "All Time", value: "all_time" },
   ];
 
-  useEffect(() => {
-    const filteredCached = cachedExpenses.filter((item) => isExpenseInRange(item.date, expenseRange));
-    setExpenses(filteredCached);
-    const cachedRangeBalance = filteredCached.reduce((sum, exp) => (
-      exp.type === "debit" ? sum - exp.amount : sum + exp.amount
-    ), 0);
-    setRangeBalance(cachedRangeBalance);
-  }, [cachedExpenses, expenseRange])
   const router = useRouter();
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(

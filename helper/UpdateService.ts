@@ -47,6 +47,7 @@ class UpdateService {
                 setUpdateStatus({ isDownloading: true });
 
                 await Updates.fetchUpdateAsync();
+                await Updates.reloadAsync();
 
                 console.log('[UpdateService] OTA Update downloaded and ready');
                 setUpdateStatus({ isDownloading: false, isUpdateReady: true });
