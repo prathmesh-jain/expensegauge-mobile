@@ -9,6 +9,8 @@ import DeleteModal from "./DeleteModal";
 import api from "@/api/api";
 import { processQueue } from "@/api/syncQueue";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
+import { Toast } from "toastify-react-native";
+import { checkConnection } from "@/api/network";
 
 
 type Transaction = {
@@ -25,15 +27,13 @@ type Transaction = {
 
 
 export default function Index() {
-  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses } = useExpenseStore();
+  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance, selectedRange, setSelectedRange } = useExpenseStore();
   const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
 
   const user = useAuthStore((state) => state.name);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
-  const [expenseRange, setExpenseRanges] = useState("all_time")
-  const [rangeBalance, setRangeBalance] = useState(0)
 
   const ranges = [
     { label: "Current Month", value: "current_month" },
@@ -43,6 +43,16 @@ export default function Index() {
   ];
 
   const router = useRouter();
+  const handleRangeChange = async (range: string) => {
+    if (range === selectedRange) return;
+    const isConnected = await checkConnection();
+    if (!isConnected) {
+      Toast.info("You are offline. Range can be changed only when back online.");
+      return;
+    }
+    setSelectedRange(range);
+  };
+
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
       selectedTransaction?._id === transaction._id ? null : transaction
@@ -67,13 +77,10 @@ export default function Index() {
     if (refreshing) return;
     setRefreshing(true)
     try {
-      const response = await api.get(`/expense/get-expense/?range=${expenseRange}&offset=0&limit=50`);
+      const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setExpenses(newExpenses);
-      setRangeBalance(response.data.rangeBalance ?? 0);
-      if (expenseRange === "all_time") {
-        setCachedExpenses(newExpenses, response.data.totalBalance);
-      }
+      setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0);
       // Force sync immediately after refresh to flush any pending mutations
       processQueue(true);
     } catch (err) {
@@ -85,7 +92,7 @@ export default function Index() {
 
   useEffect(() => {
     fetchExpenses()
-  }, [expenseRange])
+  }, [selectedRange])
   const colorScheme = useColorScheme();
   const dropdownRef = useRef<IDropdownRef>(null);
 
@@ -111,8 +118,10 @@ export default function Index() {
               data={ranges}
               labelField="label"
               valueField="value"
-              value={expenseRange}
-              onChange={(item) => setExpenseRanges(item.value)}
+              value={selectedRange}
+              onChange={(item) => {
+                handleRangeChange(item.value);
+              }}
               dropdownPosition="bottom"
               style={{
                 borderRadius: 8,
@@ -135,7 +144,7 @@ export default function Index() {
             />
           </TouchableOpacity>
         </View>
-        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{rangeBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
+        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{totalBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
         {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
       </View>
 

@@ -14,15 +14,45 @@ type Transaction = {
   clientId?: string;
 };
 
+const getSignedAmount = (item: Transaction) =>
+  item.type === 'debit' ? -item.amount : item.amount;
+
+const isExpenseInRange = (date: string, range: string) => {
+  if (range === 'all_time') return true;
+
+  const expenseDate = new Date(date);
+  if (Number.isNaN(expenseDate.getTime())) return false;
+
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  if (range === 'current_month') {
+    return expenseDate >= currentMonthStart && expenseDate < nextMonthStart;
+  }
+  if (range === 'last_month') {
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return expenseDate >= lastMonthStart && expenseDate < currentMonthStart;
+  }
+  if (range === 'last_3_months') {
+    const lastThreeMonthsStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    return expenseDate >= lastThreeMonthsStart && expenseDate < nextMonthStart;
+  }
+
+  return true;
+};
+
 
 type ExpenseStore = {
   cachedExpenses: Transaction[];
   totalBalance: number;
+  selectedRange: string;
   LastSyncedAt: string;
   addExpense: (data: Transaction) => void;
   editExpense: (data: Transaction) => void;
   removeExpense: (data: Transaction) => void;
   setCachedExpenses: (data: Transaction[], balance: number) => void;
+  setSelectedRange: (range: string) => void;
   markAsSynced: (id: string, newIdFromBackend: string) => void;
   cachedStats: any;
   setCachedStats: (data: any) => void;
@@ -34,6 +64,7 @@ export const useExpenseStore = create<ExpenseStore>()(
     (set) => ({
       cachedExpenses: [],
       totalBalance: 0,
+      selectedRange: 'all_time',
       LastSyncedAt: new Date(Date.now()).toLocaleString(),
       addExpense: (data) =>
         set((state) => {
@@ -42,33 +73,39 @@ export const useExpenseStore = create<ExpenseStore>()(
             isSynced: false,
             clientId: data.clientId || data._id // Ensure clientId is set
           };
+          const inSelectedRange = isExpenseInRange(newTransaction.date, state.selectedRange);
           return {
             ...state,
             cachedExpenses: [newTransaction, ...state.cachedExpenses].sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
             ),
-            totalBalance: data.type == 'debit' ? state.totalBalance - data.amount : state.totalBalance + data.amount,
+            totalBalance: inSelectedRange
+              ? state.totalBalance + getSignedAmount(newTransaction)
+              : state.totalBalance,
           }
         }),
 
       editExpense: (data) =>
         set((state) => {
-          let diffAmount = 0
+          const existing = state.cachedExpenses.find((item) => item._id === data._id);
+          if (!existing) return state;
+
+          const oldInRange = isExpenseInRange(existing.date, state.selectedRange);
+          const newInRange = isExpenseInRange(data.date, state.selectedRange);
+
+          let nextBalance = state.totalBalance;
+          if (oldInRange) nextBalance -= getSignedAmount(existing);
+          if (newInRange) nextBalance += getSignedAmount(data);
+
           return {
             ...state,
             cachedExpenses: state.cachedExpenses.map((item) => {
               if (item._id === data._id) {
-                // Correctly calculate total balance based on type
-                if (item.type === 'debit') {
-                  diffAmount = item.amount - data.amount
-                } else {
-                  diffAmount = data.amount - item.amount
-                }
                 return { ...data }
               }
               return item
             }),
-            totalBalance: state.totalBalance + diffAmount
+            totalBalance: nextBalance
           }
         }),
       removeExpense: (data) =>
@@ -83,9 +120,9 @@ export const useExpenseStore = create<ExpenseStore>()(
           );
 
           const updatedBalance =
-            itemToRemove.type === "debit"
-              ? state.totalBalance + itemToRemove.amount
-              : state.totalBalance - itemToRemove.amount;
+            isExpenseInRange(itemToRemove.date, state.selectedRange)
+              ? state.totalBalance - getSignedAmount(itemToRemove)
+              : state.totalBalance;
 
           return {
             ...state,
@@ -131,6 +168,7 @@ export const useExpenseStore = create<ExpenseStore>()(
           totalBalance: balance
         }
       }),
+      setSelectedRange: (range) => set({ selectedRange: range }),
 
 
       markAsSynced: (tempId, newIdFromBackend) =>
@@ -159,6 +197,7 @@ export const useExpenseStore = create<ExpenseStore>()(
         set(() => ({
           cachedExpenses: [],
           totalBalance: 0,
+          selectedRange: 'all_time',
           LastSyncedAt: new Date(Date.now()).toLocaleString(),
           cachedStats: { labels: [], datasets: [] },
         })),
