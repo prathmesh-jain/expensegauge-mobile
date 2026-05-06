@@ -39,6 +39,8 @@ const categories = [
   { label: "Other", value: "Other" },
 ];
 
+const createLocalId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 // ------------------ Component ------------------
 const ExpenseForm = () => {
   const { _id, type, userIdAdmin, ...params } = useLocalSearchParams<Record<string, string>>();
@@ -106,7 +108,7 @@ const ExpenseForm = () => {
 
   const buildTransaction = useCallback(
     (overrides = {}) => {
-      const transactionId = _id || Date.now().toString();
+      const transactionId = _id || createLocalId();
       return {
         _id: transactionId,
         type,
@@ -115,7 +117,7 @@ const ExpenseForm = () => {
         category: form.category,
         date: form.date.toDateString(),
         isSynced: false,
-        clientId: Date.now().toString(), // Unique ID for this specific version/attempt
+        clientId: createLocalId(), // Unique ID for this specific version/attempt
         ...overrides,
       };
     },
