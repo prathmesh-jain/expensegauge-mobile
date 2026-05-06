@@ -3,7 +3,7 @@ import "../global.css";
 import { useColorScheme, View, Appearance } from "react-native";
 import ToastManager, { Toast } from "toastify-react-native";
 import { useThemeStore } from "@/store/themeStore";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { processQueue } from "@/api/syncQueue";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import api from "@/api/api";
@@ -22,6 +22,7 @@ GoogleSignin.configure({
 
 export default function RootLayout() {
   const theme = useThemeStore((state) => state.theme);
+  const previousConnection = useRef<boolean | null>(null);
   Appearance.setColorScheme(theme);
   const colorScheme = useColorScheme();
   const backcolor = colorScheme == "light" ? "white" : "#111827";
@@ -42,6 +43,16 @@ export default function RootLayout() {
 
     // Subscribe to network changes
     const unsubscribe = addNetworkListener(async (isConnected) => {
+      if (previousConnection.current === true && !isConnected) {
+        Toast.info("You are offline. Sync will happen when connection returns.");
+      }
+
+      if (previousConnection.current === false && isConnected) {
+        Toast.info("Back online. Syncing pending changes.");
+      }
+
+      previousConnection.current = isConnected;
+
       if (isConnected) {
         await processQueue(true);
       }
