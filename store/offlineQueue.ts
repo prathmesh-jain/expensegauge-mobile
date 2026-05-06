@@ -4,6 +4,7 @@ const QUEUE_KEY = '@offline_api_queue';
 
 const MAX_QUEUE_LENGTH = 200;
 const MAX_QUEUE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+let queueWriteLock = Promise.resolve();
 
 export type QueuedRequest = {
   id: string;
@@ -20,22 +21,33 @@ export type QueuedRequest = {
   action?: 'add' | 'edit' | 'delete' | 'other';
 };
 
+const withQueueLock = async <T>(operation: () => Promise<T>): Promise<T> => {
+  const runAfterPrevious = queueWriteLock.then(operation, operation);
+  queueWriteLock = runAfterPrevious.then(
+    () => undefined,
+    () => undefined
+  );
+  return runAfterPrevious;
+};
+
 export const addToQueue = async (request: Omit<QueuedRequest, 'id' | 'timestamp' | 'retryCount' | 'nextRetryTime'>) => {
-  const currentQueue = await getQueue();
-  const newItem: QueuedRequest = {
-    ...request,
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    timestamp: Date.now(),
-    retryCount: 0,
-    nextRetryTime: Date.now(),
-  };
-  const now = Date.now();
-  const prunedByAge = [...currentQueue, newItem].filter((item) => {
-    if (!item.timestamp) return true;
-    return now - item.timestamp <= MAX_QUEUE_AGE_MS;
+  await withQueueLock(async () => {
+    const currentQueue = await getQueue();
+    const newItem: QueuedRequest = {
+      ...request,
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      timestamp: Date.now(),
+      retryCount: 0,
+      nextRetryTime: Date.now(),
+    };
+    const now = Date.now();
+    const prunedByAge = [...currentQueue, newItem].filter((item) => {
+      if (!item.timestamp) return true;
+      return now - item.timestamp <= MAX_QUEUE_AGE_MS;
+    });
+    const updatedQueue = prunedByAge.slice(-MAX_QUEUE_LENGTH);
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
   });
-  const updatedQueue = prunedByAge.slice(-MAX_QUEUE_LENGTH);
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
 };
 
 export const getQueue = async (): Promise<QueuedRequest[]> => {
@@ -44,17 +56,21 @@ export const getQueue = async (): Promise<QueuedRequest[]> => {
 };
 
 export const removeFromQueue = async (id: string) => {
-  const currentQueue = await getQueue();
-  const updatedQueue = currentQueue.filter(item => item.id !== id);
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+  await withQueueLock(async () => {
+    const currentQueue = await getQueue();
+    const updatedQueue = currentQueue.filter(item => item.id !== id);
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+  });
 };
 
 export const updateRequestInQueue = async (updatedRequest: QueuedRequest) => {
-  const currentQueue = await getQueue();
-  const updatedQueue = currentQueue.map(item =>
-    item.id === updatedRequest.id ? updatedRequest : item
-  );
-  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+  await withQueueLock(async () => {
+    const currentQueue = await getQueue();
+    const updatedQueue = currentQueue.map(item =>
+      item.id === updatedRequest.id ? updatedRequest : item
+    );
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+  });
 };
 
 export const hasPendingUserMutationRequests = async (): Promise<boolean> => {
