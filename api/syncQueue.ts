@@ -10,21 +10,43 @@ const BASE_DELAY = 1000; // 1s
 const MAX_DELAY = 60000; // 60s
 
 let isProcessingQueue = false;
+let processingPromise: Promise<QueueProcessResult> | null = null;
 
-export const processQueue = async (force: boolean = false) => {
-  if (isProcessingQueue) return;
+export type QueueProcessResult = {
+  completed: boolean;
+  pending: number;
+};
+
+export const processQueue = async (force: boolean = false): Promise<QueueProcessResult> => {
+  if (processingPromise) return processingPromise;
+
+  processingPromise = runQueueProcessor(force).finally(() => {
+    processingPromise = null;
+  });
+
+  return processingPromise;
+};
+
+const runQueueProcessor = async (force: boolean = false): Promise<QueueProcessResult> => {
+  const getStatus = async (): Promise<QueueProcessResult> => {
+    const pending = (await getQueue()).length;
+    return { completed: pending === 0, pending };
+  };
+
+  if (isProcessingQueue) return getStatus();
   isProcessingQueue = true;
 
   const isConnected = await checkConnection();
+  const queue = await getQueue();
+
   if (!isConnected) {
     isProcessingQueue = false;
-    return;
+    return { completed: queue.length === 0, pending: queue.length };
   }
 
-  const queue = await getQueue();
   if (queue.length === 0) {
     isProcessingQueue = false;
-    return;
+    return { completed: true, pending: 0 };
   }
 
   try {
@@ -35,11 +57,15 @@ export const processQueue = async (force: boolean = false) => {
     for (const request of queue) {
       // 1. Skip if it's not time to retry or if there's no connection
       // If 'force' is true, we ignore the backoff timer.
-      if (!force && request.nextRetryTime && request.nextRetryTime > now) continue;
+      if (!force && request.nextRetryTime && request.nextRetryTime > now) {
+        continue;
+      }
 
 
       // Double check connection inside the loop in case it dropped
-      if (!(await checkConnection())) break;
+      if (!(await checkConnection())) {
+        break;
+      }
 
       try {
         const res = await api.request({
@@ -118,5 +144,7 @@ export const processQueue = async (force: boolean = false) => {
   } finally {
     isProcessingQueue = false;
   }
+
+  return getStatus();
 };
 

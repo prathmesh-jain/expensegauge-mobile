@@ -36,6 +36,7 @@ export default function TransactionHistory() {
   const [hasMore, setHasMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -153,6 +154,18 @@ export default function TransactionHistory() {
     try {
       const limit = 10;
       const currentOffset = isRefresh ? 0 : offset;
+      if (currentOffset === 0) {
+        setSyncMessage("Checking pending offline changes...");
+        const syncResult = await processQueue(true);
+        if (!syncResult.completed) {
+          setSyncMessage(
+            `${syncResult.pending} pending change${syncResult.pending === 1 ? "" : "s"} still syncing. Refreshing...`
+          );
+        } else {
+          setSyncMessage("Refreshing expenses...");
+        }
+      }
+
       const response = await api.get(`/expense/get-expense/?offset=${currentOffset}&limit=${limit}`);
 
       const fetched = response.data.expenses;
@@ -163,19 +176,22 @@ export default function TransactionHistory() {
       );
       const sorted = unique.sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      setExpenses(sorted);
-
       if (currentOffset === 0) {
         setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance);
-        // Force sync immediately after refresh to flush any pending mutations
-        processQueue(true);
+        setExpenses(useExpenseStore.getState().cachedExpenses);
+      } else {
+        setExpenses(sorted);
       }
 
 
       setOffset(isRefresh ? limit : offset + limit);
       setHasMore(response.data.hasMore);
+      setSyncMessage(null);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
+      if (isRefresh || offset === 0) {
+        setSyncMessage("Could not refresh. Showing cached expenses.");
+      }
     } finally {
       setLoading(false);
       setRefreshing(false)
@@ -206,6 +222,11 @@ export default function TransactionHistory() {
 
   const renderHeader = () => (
     <View className="mb-6" style={{ backgroundColor: colorScheme == 'dark' ? '#1E293B' : 'white', borderRadius: 16, padding: 16 }}>
+      {syncMessage && (
+        <Text className="dark:text-indigo-200 text-indigo-700 text-sm font-semibold mb-3">
+          {syncMessage}
+        </Text>
+      )}
       {!statsLoading && stats.labels.length > 1 ? (
         <>
           <Text className="dark:text-white text-lg font-semibold mb-2">Transaction Trends</Text>

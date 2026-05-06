@@ -34,6 +34,7 @@ export default function Index() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const ranges = [
     { label: "Current Month", value: "current_month" },
@@ -76,20 +77,34 @@ export default function Index() {
   const fetchExpenses = async () => {
     if (refreshing) return;
     setRefreshing(true)
+    setSyncMessage("Checking pending offline changes...");
     try {
+      const syncResult = await processQueue(true);
+      if (!syncResult.completed) {
+        setSyncMessage(
+          `${syncResult.pending} pending change${syncResult.pending === 1 ? "" : "s"} still syncing. Refreshing...`
+        );
+      } else {
+        setSyncMessage("Refreshing expenses...");
+      }
+
       const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      setExpenses(newExpenses);
       setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0);
-      // Force sync immediately after refresh to flush any pending mutations
-      processQueue(true);
+      setExpenses(useExpenseStore.getState().cachedExpenses);
+      setSyncMessage(null);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
+      setSyncMessage("Could not refresh. Showing cached expenses.");
+    } finally {
+      setRefreshing(false)
     }
-    setRefreshing(false)
   };
 
-
+  useEffect(()=>{
+    setExpenses(cachedExpenses)
+  },[cachedExpenses])
+  
   useEffect(() => {
     fetchExpenses()
   }, [selectedRange])
@@ -146,6 +161,11 @@ export default function Index() {
         </View>
         <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{totalBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
         {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
+        {syncMessage && (
+          <Text className="dark:text-indigo-100 text-indigo-700 text-sm font-semibold mt-2">
+            {syncMessage}
+          </Text>
+        )}
       </View>
 
       <View className="flex-row justify-between mb-6">
