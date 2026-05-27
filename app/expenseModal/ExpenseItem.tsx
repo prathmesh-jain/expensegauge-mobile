@@ -1,19 +1,8 @@
 import { View, Text, TouchableOpacity, useColorScheme } from "react-native";
 import { FontAwesome } from '@expo/vector-icons';
 import { Link } from "expo-router";
-// import { Transaction } from "../types"; // you can adjust path
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  afterBalance?: number;
-  isSynced: boolean;
-  clientId?: string;
-};
-
+import React from "react";
+import { Transaction } from "@/types";
 
 type Props = {
   item: Transaction;
@@ -23,7 +12,7 @@ type Props = {
   onDeletePress: () => void;
 };
 
-export default function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress }: Props) {
+export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress }: Props) {
   const colorScheme = useColorScheme();
   const isSelected = selectedId === item._id;
   const isAdminAdded = item.type === "assign" && type === "admin";
@@ -117,4 +106,4 @@ export default function ExpenseItem({ item, selectedId, type = "user", onSelect,
       )}
     </View>
   );
-}
+})

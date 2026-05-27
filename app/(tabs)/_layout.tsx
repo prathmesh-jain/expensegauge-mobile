@@ -1,8 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { Pressable, Text, useColorScheme, View } from "react-native";
-
-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";

@@ -1,6 +1,5 @@
-import { View, Text, FlatList, Dimensions, useColorScheme, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, useColorScheme, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
-import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '@/api/api';
 import { ActivityIndicator } from 'react-native-paper';
@@ -8,28 +7,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import DeleteModal from '../home/DeleteModal';
 import { useAdminStore } from '@/store/adminStore';
-
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string; // e.g., "Sun Apr 06 2025"
-  details: string;
-  type: string;
-  category: string;
-  isSynced: boolean;
-  clientId?: string;
-}
-
-type User = {
-  _id: string;
-  netBalance: number;
-  name: string;
-  createdAt: string;
-  expenses: Transaction[];
-};
+import { User } from "@/types";
 
 export default function TransactionHistory() {
-  const { deleteUser, setCachedUsers, totalUserBalance, cachedUsers, LastSyncedAt } = useAdminStore();
+  const { deleteUser, setCachedUsers, cachedUsers } = useAdminStore();
 
   const [users, setUsers] = useState<User[]>(cachedUsers);
   const [offset, setOffset] = useState(0);

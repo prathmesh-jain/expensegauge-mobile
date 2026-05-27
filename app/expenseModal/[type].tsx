@@ -15,7 +15,6 @@ import { Feather } from "@expo/vector-icons";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Toast } from "toastify-react-native";
-
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
 import { predictCategory } from "@/helper/categoryDetector";

@@ -11,19 +11,8 @@ import { processQueue } from "@/api/syncQueue";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
 import { Toast } from "toastify-react-native";
 import { checkConnection } from "@/api/network";
+import { Transaction } from "@/types";
 
-
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  afterBalance?: number;
-  isSynced: boolean;
-  clientId?: string;
-};
 
 
 export default function Index() {
@@ -104,7 +93,7 @@ export default function Index() {
   useEffect(()=>{
     setExpenses(cachedExpenses)
   },[cachedExpenses])
-  
+
   useEffect(() => {
     fetchExpenses()
   }, [selectedRange])

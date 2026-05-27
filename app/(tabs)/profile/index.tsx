@@ -22,7 +22,6 @@ const UserProfileScreen: React.FC = () => {
   const role = useAuthStore((state) => state.role);
   const viewMode = useAuthStore((state) => state.viewMode);
   const setViewMode = useAuthStore((state) => state.setViewMode);
-  const setTokens = useAuthStore((state) => state.setTokens);
 
   const inAdminMode = role === 'admin' && viewMode === 'admin';
 
@@ -30,7 +29,6 @@ const UserProfileScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(user || '');
   const [isSavingName, setIsSavingName] = useState(false);
-  const [isUpgradingToAdmin, setIsUpgradingToAdmin] = useState(false);
 
   const handleSaveName = async () => {
     try {
@@ -247,19 +245,14 @@ const UserProfileScreen: React.FC = () => {
               <Pressable
                 className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100"
                 onPress={handleUpgradeToAdmin}
-                disabled={isUpgradingToAdmin}
               >
                 <Text className="text-base text-gray-700 dark:text-gray-200 py-6">
                   Register for Admin View
                 </Text>
                 <View className="flex-row items-center py-6 px-1">
-                  {isUpgradingToAdmin ? (
-                    <ActivityIndicator size="small" color={isDark ? '#FFFFFF' : '#111827'} />
-                  ) : (
-                    <Text className="text-base text-gray-500 dark:text-gray-300">
-                      <Feather name='chevron-right' size={15} />
-                    </Text>
-                  )}
+                  <Text className="text-base text-gray-500 dark:text-gray-300">
+                    <Feather name='chevron-right' size={15} />
+                  </Text>
                 </View>
               </Pressable>
             )}

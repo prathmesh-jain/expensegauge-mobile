@@ -9,25 +9,8 @@ import { useAdminStore } from '@/store/adminStore';
 import ExpenseItem from '../expenseModal/ExpenseItem';
 import DeleteModal from '../(tabs)/home/DeleteModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Transaction } from "@/types";
 
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  isSynced: boolean;
-  clientId?: string;
-}
-
-type User = {
-  _id: string;
-  netBalance: number;
-  name: string;
-  createdAt: string;
-  expenses: Transaction[];
-};
 
 const screenWidth = Dimensions.get('window').width;
 

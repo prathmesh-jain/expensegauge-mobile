@@ -1,17 +1,7 @@
 //expenseapi.ts
 import api from "./api"; // your axios instance
 import { Toast } from "toastify-react-native";
-
-export type Transaction = {
-    _id: string;
-    amount: number;
-    date: string;
-    details: string;
-    type: string;
-    category: string;
-    isSynced: boolean;
-    clientId?: string;
-};
+import { Transaction } from "@/types";
 
 
 // -------------------- USER APIs --------------------

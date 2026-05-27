@@ -1,35 +1,22 @@
 import { View, Text, FlatList, Dimensions, useColorScheme, RefreshControl, ScrollView } from 'react-native';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useExpenseStore } from '../../../store/expenseStore';
 import { LineChart } from 'react-native-chart-kit';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '@/api/api';
 import { ActivityIndicator } from 'react-native-paper';
-import { useAuthStore } from '@/store/authStore';
 import ExpenseItem from '@/app/expenseModal/ExpenseItem';
 import DeleteModal from '../home/DeleteModal';
 import { processQueue } from '@/api/syncQueue';
-
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  isSynced: boolean;
-  clientId?: string;
-}
+import { Transaction } from "@/types";
 
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function TransactionHistory() {
-  const userRole = useAuthStore((state) => state.role);
-  const viewMode = useAuthStore((state) => state.viewMode);
   const insets = useSafeAreaInsets();
 
-  const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, cachedStats, setCachedStats } = useExpenseStore();
+  const { setCachedExpenses, removeExpense, cachedExpenses, cachedStats, setCachedStats } = useExpenseStore();
   const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
 
   const [offset, setOffset] = useState(0);
@@ -91,27 +78,49 @@ export default function TransactionHistory() {
     setShowDeleteModal(false)
   }
 
-  // Group by Month for List
-  const getMonthlyData = () => {
-    const monthlyData: { [key: string]: Transaction[] } = {};
-    const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const flatData = useMemo(() => {
+    const grouped: Record<string, Transaction[]> = {};
 
-    sortedExpenses.forEach((transaction: Transaction) => {
+    expenses.forEach((transaction) => {
       const date = new Date(transaction.date);
-      const month = date.toLocaleString('default', { month: 'long' });
+
+      const month = date.toLocaleString("default", {
+        month: "long",
+      });
+
       const year = date.getFullYear();
+
       const monthYear = `${month.substring(0, 3)} ${year}`;
 
-      if (!monthlyData[monthYear]) {
-        monthlyData[monthYear] = [];
+      if (!grouped[monthYear]) {
+        grouped[monthYear] = [];
       }
-      monthlyData[monthYear].unshift(transaction);
+
+      grouped[monthYear].push(transaction);
     });
 
-    return monthlyData;
-  };
+    const result: any[] = [];
 
-  const monthlyList = getMonthlyData();
+    Object.keys(grouped)
+      .reverse()
+      .forEach((monthYear) => {
+        result.push({
+          type: "header",
+          id: `header-${monthYear}`,
+          title: monthYear,
+        });
+
+        grouped[monthYear].forEach((expense) => {
+          result.push({
+            type: "item",
+            id: expense._id,
+            data: expense,
+          });
+        });
+      });
+
+    return result;
+  }, [expenses]);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const colorScheme = useColorScheme()
@@ -314,41 +323,68 @@ export default function TransactionHistory() {
     </View>
   );
 
+  const handleDeletePress = useCallback(() => {
+    setShowDeleteModal(true);
+  }, []);
+
+  const renderTransactionItem = useCallback(
+    ({ item }: any) => {
+      if (item.type === "header") {
+        return (
+          <View className="mb-3 mt-6">
+            <View className="flex-row items-center">
+              <Text className="dark:text-white text-lg font-semibold pr-3">
+                {item.title}
+              </Text>
+
+              <View className="bg-gray-500 h-[0.5px] flex-1" />
+            </View>
+          </View>
+        );
+      }
+
+      return (
+        <ExpenseItem
+          item={item.data}
+          selectedId={selectedTransaction?._id || null}
+          type="user"
+          onSelect={handleTransactionPress}
+          onDeletePress={handleDeletePress}
+        />
+      );
+    },
+    [selectedTransaction]
+  );
+
   return (
     <View className="flex-1 dark:bg-gray-900" style={{ paddingTop: insets.top }}>
       <FlatList
-        data={Object.keys(monthlyList).reverse()} // Newest months first
+        data={flatData}
+        renderItem={renderTransactionItem}
+        keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 80 }} // Extra padding for tab bar
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 80,
+        }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
         }
-        renderItem={({ item: monthYear }) => (
-          <View className="mb-6">
-            <View className='flex-row items-center'>
-              <Text className="dark:text-white text-lg font-semibold mb-2 pr-3">{monthYear}</Text>
-              <Text className='bg-gray-500 h-[0.01px] w-full'></Text>
-            </View>
-            <FlatList
-              data={monthlyList[monthYear]}
-              renderItem={({ item }) => (
-                <ExpenseItem
-                  item={item}
-                  selectedId={selectedTransaction?._id || null}
-                  type="user"
-                  onSelect={handleTransactionPress}
-                  onDeletePress={() => setShowDeleteModal(true)}
-                />
-              )}
-              keyExtractor={(item) => item._id}
-            />
-          </View>
-        )}
-        keyExtractor={(item) => item}
         showsVerticalScrollIndicator={false}
         onEndReached={() => fetchExpenses()}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
+        ListFooterComponent={
+          loading ? <ActivityIndicator size="large" /> : null
+        }
+
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews
+        updateCellsBatchingPeriod={50}
       />
       {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
     </View>

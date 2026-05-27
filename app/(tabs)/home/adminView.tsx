@@ -7,25 +7,7 @@ import { useAuthStore } from "@/store/authStore";
 import DeleteModal from "./DeleteModal";
 import { useAdminStore } from "@/store/adminStore";
 import api from "@/api/api";
-
-type Transaction = {
-    _id: string;
-    amount: number;
-    date: string;
-    details: string;
-    type: string;
-    category: string;
-    isSynced: boolean;
-    clientId?: string;
-};
-
-type User = {
-    _id: string;
-    netBalance: number;
-    name: string;
-    createdAt: string;
-    expenses: Transaction[];
-};
+import { User } from "@/types";
 
 export default function Index() {
     const { deleteUser, setCachedUsers, totalUserBalance, cachedUsers, LastSyncedAt } = useAdminStore();

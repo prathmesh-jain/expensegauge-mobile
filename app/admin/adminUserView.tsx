@@ -6,17 +6,8 @@ import { useAdminStore } from "@/store/adminStore";
 import DeleteModal from "../(tabs)/home/DeleteModal";
 import ExpenseItem from "../expenseModal/ExpenseItem";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Transaction } from "@/types";
 
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  isSynced: boolean;
-  clientId?: string;
-};
 
 
 export default function adminUserView() {
