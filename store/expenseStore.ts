@@ -17,7 +17,7 @@ type Transaction = {
 const getSignedAmount = (item: Transaction) =>
   item.type === 'debit' ? -item.amount : item.amount;
 
-const isExpenseInRange = (date: string, range: string) => {
+export const isExpenseInRange = (date: string, range: string) => {
   if (range === 'all_time') return true;
 
   const expenseDate = new Date(date);
@@ -161,11 +161,24 @@ export const useExpenseStore = create<ExpenseStore>()(
         });
 
         const sorted = merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const incomingIds = new Set(data.map((item) => item._id));
+        const incomingClientIds = new Set(data.map((item) => item.clientId).filter(Boolean));
+        const pendingBalanceDelta = unsyncedLocal.reduce((sum, localItem) => {
+          const alreadyIncluded =
+            incomingIds.has(localItem._id) ||
+            (localItem.clientId && incomingClientIds.has(localItem.clientId));
+
+          if (alreadyIncluded || !isExpenseInRange(localItem.date, state.selectedRange)) {
+            return sum;
+          }
+
+          return sum + getSignedAmount(localItem);
+        }, 0);
 
         return {
           cachedExpenses: sorted,
           LastSyncedAt: new Date(Date.now()).toLocaleString(),
-          totalBalance: balance
+          totalBalance: balance + pendingBalanceDelta
         }
       }),
       setSelectedRange: (range) => set({ selectedRange: range }),

@@ -1,8 +1,8 @@
 import { Link, useRouter } from "expo-router";
 import { FlatList, RefreshControl, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useExpenseStore } from '../../../store/expenseStore'
-import { useEffect, useRef, useState } from "react";
+import { isExpenseInRange, useExpenseStore } from '../../../store/expenseStore'
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import ExpenseItem from "@/app/expenseModal/ExpenseItem";
 import DeleteModal from "./DeleteModal";
@@ -17,7 +17,10 @@ import { Transaction } from "@/types";
 
 export default function Index() {
   const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance, selectedRange, setSelectedRange } = useExpenseStore();
-  const [expenses, setExpenses] = useState<Transaction[]>(cachedExpenses);
+  const expenses = useMemo(
+    () => cachedExpenses.filter((expense) => isExpenseInRange(expense.date, selectedRange)),
+    [cachedExpenses, selectedRange]
+  );
 
   const user = useAuthStore((state) => state.name);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -51,8 +54,7 @@ export default function Index() {
   const handleDelete = async () => {
     if (selectedTransaction) {
       try {
-        const response = await api.delete(`/expense/${selectedTransaction._id}`)
-        setExpenses(prev => prev.filter((item) => item._id !== selectedTransaction._id))
+        await api.delete(`/expense/${selectedTransaction._id}`)
         removeExpense(selectedTransaction)
 
       } catch (error) {
@@ -80,7 +82,6 @@ export default function Index() {
       const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0);
-      setExpenses(useExpenseStore.getState().cachedExpenses);
       setSyncMessage(null);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
@@ -89,10 +90,6 @@ export default function Index() {
       setRefreshing(false)
     }
   };
-
-  useEffect(()=>{
-    setExpenses(cachedExpenses)
-  },[cachedExpenses])
 
   useEffect(() => {
     fetchExpenses()
