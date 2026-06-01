@@ -51,7 +51,7 @@ type ExpenseStore = {
   addExpense: (data: Transaction) => void;
   editExpense: (data: Transaction) => void;
   removeExpense: (data: Transaction) => void;
-  setCachedExpenses: (data: Transaction[], balance: number) => void;
+  setCachedExpenses: (data: Transaction[], balance: number, balanceRange?: string) => void;
   setSelectedRange: (range: string) => void;
   markAsSynced: (id: string, newIdFromBackend: string) => void;
   cachedStats: any;
@@ -130,7 +130,7 @@ export const useExpenseStore = create<ExpenseStore>()(
             totalBalance: updatedBalance,
           };
         }),
-      setCachedExpenses: (data, balance) => set((state) => {
+      setCachedExpenses: (data, balance, balanceRange) => set((state) => {
         // Data Reconciliation: Preserve local unsynced transactions
         const unsyncedLocal = state.cachedExpenses.filter(e => e.isSynced === false);
 
@@ -163,12 +163,14 @@ export const useExpenseStore = create<ExpenseStore>()(
         const sorted = merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const incomingIds = new Set(data.map((item) => item._id));
         const incomingClientIds = new Set(data.map((item) => item.clientId).filter(Boolean));
+        const effectiveBalanceRange = balanceRange ?? state.selectedRange;
+        const shouldUpdateBalance = effectiveBalanceRange === state.selectedRange;
         const pendingBalanceDelta = unsyncedLocal.reduce((sum, localItem) => {
           const alreadyIncluded =
             incomingIds.has(localItem._id) ||
             (localItem.clientId && incomingClientIds.has(localItem.clientId));
 
-          if (alreadyIncluded || !isExpenseInRange(localItem.date, state.selectedRange)) {
+          if (alreadyIncluded || !isExpenseInRange(localItem.date, effectiveBalanceRange)) {
             return sum;
           }
 
@@ -178,7 +180,9 @@ export const useExpenseStore = create<ExpenseStore>()(
         return {
           cachedExpenses: sorted,
           LastSyncedAt: new Date(Date.now()).toLocaleString(),
-          totalBalance: balance + pendingBalanceDelta
+          totalBalance: shouldUpdateBalance
+            ? balance + pendingBalanceDelta
+            : state.totalBalance
         }
       }),
       setSelectedRange: (range) => set({ selectedRange: range }),

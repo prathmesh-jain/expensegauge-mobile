@@ -186,7 +186,7 @@ export default function TransactionHistory() {
       const sorted = unique.sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       if (currentOffset === 0) {
-        setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance);
+        setCachedExpenses(sorted.slice(0, 21), response.data.totalBalance, 'all_time');
         setExpenses(useExpenseStore.getState().cachedExpenses);
       } else {
         setExpenses(sorted);

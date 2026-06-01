@@ -81,7 +81,7 @@ export default function Index() {
 
       const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0);
+      setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0, selectedRange);
       setSyncMessage(null);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
