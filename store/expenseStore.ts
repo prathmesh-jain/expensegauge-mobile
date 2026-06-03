@@ -2,20 +2,35 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Transaction } from '@/types';
 
-type Transaction = {
-  _id: string;
-  amount: number;
-  date: string;
-  details: string;
-  type: string;
-  category: string;
-  isSynced: boolean;
-  clientId?: string;
-};
 
 const getSignedAmount = (item: Transaction) =>
   item.type === 'debit' ? -item.amount : item.amount;
+
+const getTime = (value?: string) => {
+  if (!value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const compareExpensesNewestFirst = (
+  a: { date: string; createdAt?: string },
+  b: { date: string; createdAt?: string }
+) => {
+  const dateDiff = getTime(b.date) - getTime(a.date);
+  if (dateDiff !== 0) return dateDiff;
+  return getTime(b.createdAt) - getTime(a.createdAt);
+};
+
+export const sortExpensesNewestFirst = <T extends { date: string; createdAt?: string }>(expenses: T[]) =>
+  [...expenses].sort(compareExpensesNewestFirst);
+
+const insertExpenseNewestFirst = <T extends { date: string; createdAt?: string }>(expenses: T[], expense: T) => {
+  const insertAt = expenses.findIndex((item) => compareExpensesNewestFirst(expense, item) < 0);
+  if (insertAt === -1) return [...expenses, expense];
+  return [...expenses.slice(0, insertAt), expense, ...expenses.slice(insertAt)];
+};
 
 export const isExpenseInRange = (date: string, range: string) => {
   if (range === 'all_time') return true;
@@ -71,14 +86,13 @@ export const useExpenseStore = create<ExpenseStore>()(
           const newTransaction = {
             ...data,
             isSynced: false,
+            createdAt: data.createdAt || new Date().toISOString(),
             clientId: data.clientId || data._id // Ensure clientId is set
           };
           const inSelectedRange = isExpenseInRange(newTransaction.date, state.selectedRange);
           return {
             ...state,
-            cachedExpenses: [newTransaction, ...state.cachedExpenses].sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            ),
+            cachedExpenses: insertExpenseNewestFirst(state.cachedExpenses, newTransaction),
             totalBalance: inSelectedRange
               ? state.totalBalance + getSignedAmount(newTransaction)
               : state.totalBalance,
@@ -99,12 +113,12 @@ export const useExpenseStore = create<ExpenseStore>()(
 
           return {
             ...state,
-            cachedExpenses: state.cachedExpenses.map((item) => {
+            cachedExpenses: sortExpensesNewestFirst(state.cachedExpenses.map((item) => {
               if (item._id === data._id) {
                 return { ...data }
               }
               return item
-            }),
+            })),
             totalBalance: nextBalance
           }
         }),
@@ -160,7 +174,7 @@ export const useExpenseStore = create<ExpenseStore>()(
           }
         });
 
-        const sorted = merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const sorted = sortExpensesNewestFirst(merged);
         const incomingIds = new Set(data.map((item) => item._id));
         const incomingClientIds = new Set(data.map((item) => item.clientId).filter(Boolean));
         const effectiveBalanceRange = balanceRange ?? state.selectedRange;

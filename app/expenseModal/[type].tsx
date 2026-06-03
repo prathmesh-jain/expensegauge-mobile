@@ -115,6 +115,7 @@ const ExpenseForm = () => {
         amount: parseFloat(form.amount),
         category: form.category,
         date: form.date.toDateString(),
+        createdAt: new Date().toISOString(),
         isSynced: false,
         clientId: createLocalId(), // Unique ID for this specific version/attempt
         ...overrides,

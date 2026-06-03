@@ -8,6 +8,8 @@ export type Transaction = {
     afterBalance?: number;
     isSynced: boolean;
     clientId?: string;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
 export type User = {
