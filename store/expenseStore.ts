@@ -39,9 +39,14 @@ export const isExpenseInRange = (date: string, range: string) => {
   if (Number.isNaN(expenseDate.getTime())) return false;
 
   const now = new Date();
+  const currentDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const nextDayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
+  if (range === 'current_day') {
+    return expenseDate >= currentDayStart && expenseDate < nextDayStart;
+  }
   if (range === 'current_month') {
     return expenseDate >= currentMonthStart && expenseDate < nextMonthStart;
   }

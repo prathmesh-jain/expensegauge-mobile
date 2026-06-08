@@ -29,6 +29,7 @@ export default function Index() {
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const ranges = [
+    { label: "Today", value: "current_day" },
     { label: "Current Month", value: "current_month" },
     { label: "Last Month", value: "last_month" },
     { label: "Last 3 Months", value: "last_3_months" },
@@ -106,13 +107,13 @@ export default function Index() {
         <Text className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Hello {user?.split(' ')[0]} 👋</Text>
       </View>
       <View className="dark:bg-indigo-600 bg-white rounded-xl p-6 mb-6 dark:border-0 border border-gray-300">
-        <View className="flex-row items-center">
+        <View className="flex-row items-center justify-between">
           <Text className="dark:text-white text-slate-800 text-lg">Total Balance</Text>
           <TouchableOpacity
             onPress={() => {
               dropdownRef.current?.open();
             }}
-            className="rounded-lg w-1/2 dark:text-white text-slate-800"
+            className="rounded-lg w-1/2 dark:text-white text-slate-800 shadow-2xl shadow-gray-400 dark:shadow-gray-900 dark:bg-indigo-600 bg-white p-1"
           >
             <Dropdown
               ref={dropdownRef}
