@@ -110,10 +110,8 @@ export default function Index() {
         <View className="flex-row items-center justify-between">
           <Text className="dark:text-white text-slate-800 text-lg">Total Balance</Text>
           <TouchableOpacity
-            onPress={() => {
-              dropdownRef.current?.open();
-            }}
-            className="rounded-lg w-1/2 dark:text-white text-slate-800 shadow-2xl shadow-gray-400 dark:shadow-gray-900 dark:bg-indigo-600 bg-white p-1"
+            onPress={() => dropdownRef.current?.open()}
+            className="self-start bg-gray-100 dark:bg-indigo-500 px-3 py-1 rounded-full"
           >
             <Dropdown
               ref={dropdownRef}
@@ -121,26 +119,24 @@ export default function Index() {
               labelField="label"
               valueField="value"
               value={selectedRange}
-              onChange={(item) => {
-                handleRangeChange(item.value);
-              }}
-              dropdownPosition="bottom"
+              onChange={(item) => handleRangeChange(item.value)}
               style={{
-                borderRadius: 8,
-                paddingInline: 15,
-                height: "auto",
+                minWidth: 130,
                 pointerEvents: "none",
-                width: 'auto'
+              }}
+              selectedTextStyle={{
+                color: textColor,
+                fontSize: 13,
+                fontWeight: "600",
               }}
               containerStyle={{
                 backgroundColor: backcolor,
-                marginBottom: 30,
+                borderRadius: 12,
                 borderWidth: 0,
-                elevation: 20,
               }}
-              selectedTextStyle={{ color: textColor, fontSize: 14 }}
-              itemTextStyle={{ color: textColor, fontSize: 14 }}
-              placeholderStyle={{ color: "#d1d5db" }}
+              itemTextStyle={{
+                color: textColor,
+              }}
               activeColor={backcolor}
               iconColor={textColor}
             />
