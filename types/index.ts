@@ -10,6 +10,7 @@ export type Transaction = {
     clientId?: string;
     createdAt?: string;
     updatedAt?: string;
+    sourceId?: string | null;
 };
 
 export type User = {

@@ -10,9 +10,11 @@ type Props = {
   type?: "admin" | "user";
   onSelect: (transaction: Transaction) => void;
   onDeletePress: () => void;
+  showAccountName?: boolean;
+  accountName?: string;
 };
 
-export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress }: Props) {
+export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress, showAccountName, accountName }: Props) {
   const colorScheme = useColorScheme();
   const isSelected = selectedId === item._id;
   const isAdminAdded = item.type === "assign" && type === "admin";
@@ -60,11 +62,18 @@ export default React.memo(function ExpenseItem({ item, selectedId, type = "user"
           </View>
         </View>
 
-        {typeof item.afterBalance === "number" && (
-          <Text className="dark:text-indigo-300 text-indigo-700 text-xs mt-2">
-            Available Balance: ₹{item.afterBalance.toLocaleString("en-IN")}
-          </Text>
-        )}
+        <View className="flex-row items-center mt-1 gap-2">
+          {typeof item.afterBalance === "number" && (
+            <Text className="dark:text-indigo-300 text-indigo-700 text-xs">
+              Available Balance: ₹{item.afterBalance.toLocaleString("en-IN")}
+            </Text>
+          )}
+          {showAccountName && accountName && (
+            <Text className="dark:text-gray-500 text-gray-400 text-xs ml-auto">
+              {accountName}
+            </Text>
+          )}
+        </View>
       </TouchableOpacity>
 
       {isSelected && (
