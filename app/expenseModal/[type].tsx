@@ -314,7 +314,7 @@ const ExpenseForm = () => {
     <SafeAreaView className="flex-1 bg-slate-700/60 justify-end">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="dark:bg-gray-900 bg-white w-full rounded-lg p-5 items-center" style={{ paddingBottom: containerPadding }}>
-          <View className="mb-10 relative w-full">
+          <View className="mb-6 relative w-full">
             <Text className="text-center text-xl dark:text-gray-200">
               Enter the {type} details
             </Text>
@@ -322,6 +322,20 @@ const ExpenseForm = () => {
               <Feather name="x" size={25} color={textColor} className="absolute right-0 top-0" />
             </Link>
           </View>
+
+          {/* Bulk Add Link — only for regular user credit/debit */}
+          {!userIdAdmin && !_id && (
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/expenseModal/bulkAdd' as any, params: { type, preselectedSourceId: form.sourceId || '' } })}
+              className="flex-row items-center justify-center mb-4 py-2 px-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 w-full"
+            >
+              <Feather name="layers" size={16} color="#6366f1" />
+              <Text className="text-indigo-600 dark:text-indigo-300 font-semibold text-sm ml-2">
+                Bulk {type === 'credit' ? 'Credit' : 'Debit'}
+              </Text>
+              <Feather name="chevron-right" size={14} color="#6366f1" style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
+          )}
 
           {/* Details */}
           <TextInput
