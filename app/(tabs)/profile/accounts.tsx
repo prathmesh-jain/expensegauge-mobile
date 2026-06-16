@@ -175,6 +175,7 @@ export default function AccountSettings() {
       const result = await deleteAccountApi(deleteTarget._id, selectedTransferId);
       if (result.success) {
         removeAccount(deleteTarget._id);
+        await loadAccounts(); // Reload to reflect updated balances on target account
         Toast.success(result.message || 'Account deleted');
         setShowDeleteModal(false);
         setDeleteTarget(null);
@@ -314,24 +315,26 @@ export default function AccountSettings() {
                   )}
                 </View>
 
-                {/* Actions - Hidden for system accounts */}
-                {!account.isSystem && (
-                  <View className="flex-row gap-3 items-center">
-                    {!account.isDefault && (
-                      <TouchableOpacity onPress={() => handleSetDefault(account)} hitSlop={8}>
-                        <Feather name="star" size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => openEditModal(account)} hitSlop={8}>
-                      <Feather name="edit-2" size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
+                {/* Actions */}
+                <View className="flex-row gap-3 items-center">
+                  {!account.isDefault && (
+                    <TouchableOpacity onPress={() => handleSetDefault(account)} hitSlop={8}>
+                      <Feather name="star" size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
                     </TouchableOpacity>
-                    {!account.isDefault && (
-                      <TouchableOpacity onPress={() => openDeleteModal(account)} hitSlop={8}>
-                        <Feather name="trash-2" size={18} color="#ef4444" />
+                  )}
+                  {!account.isSystem && (
+                    <>
+                      <TouchableOpacity onPress={() => openEditModal(account)} hitSlop={8}>
+                        <Feather name="edit-2" size={18} color={isDark ? '#9ca3af' : '#6b7280'} />
                       </TouchableOpacity>
-                    )}
-                  </View>
-                )}
+                      {!account.isDefault && (
+                        <TouchableOpacity onPress={() => openDeleteModal(account)} hitSlop={8}>
+                          <Feather name="trash-2" size={18} color="#ef4444" />
+                        </TouchableOpacity>
+                      )}
+                    </>
+                  )}
+                </View>
               </View>
             </TouchableOpacity>
           ))}

@@ -102,6 +102,14 @@ export default function RootLayout() {
               statusBarStyle: statusColor,
             }}
           />
+          <Stack.Screen
+            name="expenseModal/bulkAdd"
+            options={{
+              headerShown: false,
+              animation: "slide_from_bottom",
+              statusBarStyle: statusColor,
+            }}
+          />
         </Stack>
         <ToastManager useModal={false} theme={colorScheme} />
         <UpdatePrompt />

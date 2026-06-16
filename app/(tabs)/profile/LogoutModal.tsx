@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-na
 import React, { useState } from 'react'
 import { Feather } from '@expo/vector-icons'
 import { useAuthStore } from '@/store/authStore'
+import { useAccountStore } from '@/store/accountStore'
 import api from '@/api/api'
 import { router } from 'expo-router'
 import { useExpenseStore } from '@/store/expenseStore'
@@ -17,8 +18,10 @@ const LogoutModal = ({ setShow }: any) => {
             const response = await api.post(`/user/logout`, { refreshToken })
             const { reset: resetExpenseStore } = useExpenseStore.getState()
             const { reset: resetAdminStore } = useAdminStore.getState()
+            const { reset: resetAccountStore } = useAccountStore.getState()
             resetExpenseStore()
             resetAdminStore()
+            resetAccountStore()
             await clearQueue()
             reset()
             setShow(false)
