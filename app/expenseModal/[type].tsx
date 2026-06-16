@@ -157,6 +157,7 @@ const ExpenseForm = () => {
   const handleCategoryDetect = () => {
     const detected = predictCategory(form.details);
     if (detected) updateForm("category", detected);
+    return detected || "";
   };
 
   const handleAccountChange = (value: string) => {
@@ -272,11 +273,12 @@ const ExpenseForm = () => {
       Toast.error("Please enter details and amount");
       return;
     }
+    const detectedCat = !form.category ? handleCategoryDetect() : form.category;
 
     const isRedundant = _id &&
       form.details === (params.details || "") &&
       parseFloat(form.amount) === parseFloat(params.amount || "0") &&
-      form.category === (params.category || "") &&
+      detectedCat === (params.category || "") &&
       form.date.toDateString() === new Date(params.date || "").toDateString();
 
     if (isRedundant) {
@@ -285,7 +287,7 @@ const ExpenseForm = () => {
     }
 
     try {
-      const transactionData = buildTransaction();
+      const transactionData = buildTransaction({ category: detectedCat });
       if (_id) {
         editExpense(transactionData);
         editExpenseApi(transactionData).then(() => {

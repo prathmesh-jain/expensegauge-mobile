@@ -32,6 +32,7 @@ export default function Index() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [accountBalance, setAccountBalance] = useState<number | null>(null);
 
   const ranges = [
     { label: "Today", value: "current_day" },
@@ -72,6 +73,7 @@ export default function Index() {
   const fetchExpenses = async () => {
     if (refreshing) return;
     setRefreshing(true)
+    setAccountBalance(null);
     setSyncMessage("Checking pending offline changes...");
     try {
       const syncResult = await processQueue(true);
@@ -86,6 +88,7 @@ export default function Index() {
       const accountParam = selectedAccountId ? `&sourceId=${selectedAccountId}` : '';
       const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50${accountParam}`);
       const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      setAccountBalance(response.data.accountBalance ?? null);
       setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0, selectedRange);
       setSyncMessage(null);
     } catch (err) {
@@ -123,12 +126,14 @@ export default function Index() {
 
   const showAccountNames = !selectedAccountId && accounts.length > 1;
 
+  // Use account's currentBalance from API when a specific account is selected; otherwise totalBalance
+  const displayedBalance = accountBalance !== null ? accountBalance : totalBalance;
+
   const getAccountName = (sourceId?: string | null) => {
     if (!sourceId) return '';
     const acc = accounts.find((a) => a._id === sourceId);
     return acc?.name || '';
   };
-
   return (
     <SafeAreaView className="flex-1 p-4 dark:bg-gray-900">
       <View className="px-2 py-2">
@@ -136,7 +141,7 @@ export default function Index() {
       </View>
 
       {/* Account Filter Chips — shown when user has at least one account */}
-      {accounts.length > 0 && (
+      {accounts.length > 1 && (
         <View className="mb-3">
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 4, gap: 8 }}>
             {accountChips.map((acc) => {
@@ -201,7 +206,7 @@ export default function Index() {
             />
           </TouchableOpacity>
         </View>
-        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{totalBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
+        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{displayedBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
         {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
         {syncMessage && (
           <Text className="dark:text-indigo-100 text-indigo-700 text-sm font-semibold mt-2">
