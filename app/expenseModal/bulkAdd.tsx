@@ -557,9 +557,6 @@ export default function BulkAddPage() {
                 ₹{total.toLocaleString('en-IN')}
               </Text>
             </View>
-            <Text className="dark:text-gray-400 text-gray-500 text-xs text-center mb-3">
-              {transactions.length} transaction{transactions.length === 1 ? '' : 's'}
-            </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={() => { setMode('input'); }}
