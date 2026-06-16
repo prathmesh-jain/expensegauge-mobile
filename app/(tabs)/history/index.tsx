@@ -152,7 +152,7 @@ export default function TransactionHistory() {
   const fetchStats = async () => {
     setStatsLoading(true);
     const requestId = ++statsRequestRef.current;
-    
+
     try {
       const params = new URLSearchParams();
       if (selectedAccountId) {
@@ -161,15 +161,15 @@ export default function TransactionHistory() {
       if (selectedRange && selectedRange !== 'all_time') {
         params.append('range', selectedRange);
       }
-      
+
       const queryString = params.toString();
       const res = await api.get(`/expense/stats/monthly${queryString ? '?' + queryString : ''}`);
-      
+
       // Discard stale responses
       if (requestId !== statsRequestRef.current) {
         return;
       }
-      
+
       const { labels, raw } = res.data;
 
       const chartLabels = ["", ...labels];
@@ -207,7 +207,7 @@ export default function TransactionHistory() {
 
     setLoading(true);
     if (isRefresh) setRefreshing(true);
-    
+
     const requestId = ++expensesRequestRef.current;
 
     try {
@@ -228,7 +228,7 @@ export default function TransactionHistory() {
       const rangeParam = selectedRange !== 'all_time' ? `&range=${selectedRange}` : '';
       const accountParam = selectedAccountId ? `&sourceId=${selectedAccountId}` : '';
       const response = await api.get(`/expense/get-expense/?offset=${currentOffset}&limit=${limit}${rangeParam}${accountParam}`);
-      
+
       // Discard stale responses
       if (requestId !== expensesRequestRef.current) {
         return;
@@ -322,7 +322,7 @@ export default function TransactionHistory() {
             style={{ minWidth: 120, pointerEvents: "none" }}
             selectedTextStyle={{ color: textColor, fontSize: 13, fontWeight: "600" }}
             containerStyle={{ backgroundColor: backcolor, borderRadius: 12, borderWidth: 0 }}
-            itemTextStyle={{ color: textColor }}
+            itemTextStyle={{ color: textColor, fontSize: 13 }}
             activeColor={backcolor}
             iconColor={textColor}
           />

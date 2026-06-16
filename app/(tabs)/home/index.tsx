@@ -191,6 +191,7 @@ export default function Index() {
               }}
               itemTextStyle={{
                 color: textColor,
+                fontSize: 13
               }}
               activeColor={backcolor}
               iconColor={textColor}
