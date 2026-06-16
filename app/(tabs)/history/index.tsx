@@ -309,7 +309,7 @@ export default function TransactionHistory() {
         {/* Range Dropdown */}
         <TouchableOpacity
           onPress={() => rangeDropdownRef.current?.open()}
-          className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-full flex-row items-center"
+          className="bg-gray-200 dark:bg-gray-800 px-3 py-2 rounded-full flex-row items-center"
           style={{ minWidth: 130 }}
         >
           <Dropdown
@@ -329,7 +329,7 @@ export default function TransactionHistory() {
         </TouchableOpacity>
 
         {/* Account Filter Chips */}
-        {accounts.length > 0 && (
+        {accounts.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
             {accountChips.map((acc) => {
               const isSelected = acc._id === selectedAccountId;
