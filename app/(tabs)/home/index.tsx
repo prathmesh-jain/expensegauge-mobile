@@ -43,15 +43,6 @@ export default function Index() {
   ];
 
   const router = useRouter();
-  const handleRangeChange = async (range: string) => {
-    if (range === selectedRange) return;
-    const isConnected = await checkConnection();
-    if (!isConnected) {
-      Toast.info("You are offline. Range can be changed only when back online.");
-      return;
-    }
-    setSelectedRange(range);
-  };
 
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
@@ -183,7 +174,7 @@ export default function Index() {
               labelField="label"
               valueField="value"
               value={selectedRange}
-              onChange={(item) => handleRangeChange(item.value)}
+              onChange={(item) => setSelectedRange(item.value)}
               style={{
                 minWidth: 130,
                 pointerEvents: "none",
