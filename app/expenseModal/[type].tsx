@@ -8,6 +8,9 @@ import {
   Keyboard,
   Platform,
   useColorScheme,
+  Modal,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
@@ -24,6 +27,8 @@ import {
   editUserExpenseAdminApi,
   assignBalanceApi,
 } from "@/api/expenseApi";
+import { useAccountStore, AccountSource } from "@/store/accountStore";
+import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 
 // ------------------ Constants ------------------
 const categories = [
@@ -38,6 +43,16 @@ const categories = [
   { label: "Other", value: "Other" },
 ];
 
+const ACCOUNT_TYPES: { label: string; value: AccountSource['type'] }[] = [
+  { label: "Bank", value: "bank" },
+  { label: "Cash", value: "cash" },
+  { label: "Wallet", value: "wallet" },
+  { label: "Credit Card", value: "credit_card" },
+  { label: "Business", value: "business" },
+];
+
+const ADD_NEW_VALUE = "__add_new__";
+
 const createLocalId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 // ------------------ Component ------------------
@@ -48,8 +63,10 @@ const ExpenseForm = () => {
 
   const { addExpense, editExpense, markAsSynced } = useExpenseStore();
   const { assignBalance, editUserExpenseByAdmin, markAsSyncedAdmin } = useAdminStore();
+  const { accounts, setAccounts, addAccount, getDefaultAccount } = useAccountStore();
 
   const dropdownRef = useRef<IDropdownRef>(null);
+  const accountDropdownRef = useRef<IDropdownRef>(null);
   const timeoutRef = useRef<number | null>(null);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -61,13 +78,52 @@ const ExpenseForm = () => {
     details: "",
     category: "",
     date: new Date(),
+    sourceId: "" as string,
   });
 
   const updateForm = (field: keyof typeof form, value: any) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  // ------------------ Lifecycle ------------------
+  // New account modal state
+  const [showNewAccountModal, setShowNewAccountModal] = useState(false);
+  const [newAccName, setNewAccName] = useState("");
+  const [newAccType, setNewAccType] = useState<AccountSource['type']>("bank");
+  const [newAccBalance, setNewAccBalance] = useState("0");
+  const [savingAccount, setSavingAccount] = useState(false);
 
+  // Build dropdown items for accounts
+  const accountItems = [
+    ...accounts.map((a) => ({
+      label: a.isDefault ? `${a.name} (Default)` : a.name,
+      value: a._id,
+      sublabel: a.type,
+    })),
+    { label: "+ Add New Account", value: ADD_NEW_VALUE, sublabel: "" },
+  ];
+
+  // Load accounts on mount
+  useEffect(() => {
+    if (accounts.length === 0) {
+      fetchAccountsApi().then((fetched) => {
+        if (fetched.length > 0) setAccounts(fetched);
+      });
+    }
+  }, []);
+
+  // Set default sourceId when accounts are available (use preselectedSourceId if provided)
+  useEffect(() => {
+    if (!form.sourceId && accounts.length > 0) {
+      const preselected = (params as any).preselectedSourceId;
+      if (preselected) {
+        updateForm("sourceId", preselected);
+      } else {
+        const def = getDefaultAccount();
+        if (def) updateForm("sourceId", def._id);
+      }
+    }
+  }, [accounts]);
+
+  // ------------------ Lifecycle ------------------
   useEffect(() => {
     if (_id) {
       setForm({
@@ -75,11 +131,10 @@ const ExpenseForm = () => {
         details: params.details || "",
         category: params.category || "",
         date: new Date(params.date),
+        sourceId: params.sourceId || "",
       });
     }
   }, [_id]);
-
-
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -99,10 +154,52 @@ const ExpenseForm = () => {
   }, []);
 
   // ------------------ Handlers ------------------
-
   const handleCategoryDetect = () => {
     const detected = predictCategory(form.details);
     if (detected) updateForm("category", detected);
+  };
+
+  const handleAccountChange = (value: string) => {
+    if (value === ADD_NEW_VALUE) {
+      setShowNewAccountModal(true);
+      return;
+    }
+    updateForm("sourceId", value);
+  };
+
+  const handleSaveNewAccount = async () => {
+    const trimmed = newAccName.trim();
+    if (!trimmed) {
+      Toast.error("Account name is required");
+      return;
+    }
+    // Client-side duplicate check using normalized name
+    const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
+    if (accounts.some((a) => a.normalizedName === normalized)) {
+      Toast.error("An account with this name already exists");
+      return;
+    }
+    setSavingAccount(true);
+    try {
+      const created = await createAccountApi({
+        name: trimmed,
+        type: newAccType,
+        openingBalance: parseFloat(newAccBalance) || 0,
+      });
+      if (created) {
+        addAccount(created);
+        updateForm("sourceId", created._id);
+        Toast.success("Account added");
+      } else {
+        Toast.error("Failed to create account");
+      }
+    } finally {
+      setSavingAccount(false);
+      setShowNewAccountModal(false);
+      setNewAccName("");
+      setNewAccType("bank");
+      setNewAccBalance("0");
+    }
   };
 
   const buildTransaction = useCallback(
@@ -117,7 +214,8 @@ const ExpenseForm = () => {
         date: form.date.toDateString(),
         createdAt: new Date().toISOString(),
         isSynced: false,
-        clientId: createLocalId(), // Unique ID for this specific version/attempt
+        clientId: createLocalId(),
+        sourceId: form.sourceId || getDefaultAccount()?._id || null,
         ...overrides,
       };
     },
@@ -125,7 +223,6 @@ const ExpenseForm = () => {
   );
 
   // ------------------ Submit Logic ------------------
-
   const handleAdminSubmit = () => {
     if (!form.details || !form.amount) {
       Toast.error("Please enter details and amount");
@@ -151,7 +248,6 @@ const ExpenseForm = () => {
           markAsSyncedAdmin(_id, _id, userIdAdmin);
         });
       } else {
-        // Optimistic update should match backend 'assign' behavior
         const assignData = { ...transactionData, type: 'assign', category: 'Added by Admin' };
         assignBalance(userIdAdmin, assignData);
         assignBalanceApi(
@@ -188,7 +284,6 @@ const ExpenseForm = () => {
       return;
     }
 
-    // Optimistic Update: Don't wait for API
     try {
       const transactionData = buildTransaction();
       if (_id) {
@@ -212,12 +307,11 @@ const ExpenseForm = () => {
   const handleSubmit = () => (userIdAdmin ? handleAdminSubmit() : handleUserSubmit());
 
   // ------------------ Render ------------------
-
   const backcolor = colorScheme === "light" ? "white" : "#111827";
   const textColor = colorScheme === "light" ? "black" : "#d1d5db";
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-700/60 justify-end" >
+    <SafeAreaView className="flex-1 bg-slate-700/60 justify-end">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="dark:bg-gray-900 bg-white w-full rounded-lg p-5 items-center" style={{ paddingBottom: containerPadding }}>
           <View className="mb-10 relative w-full">
@@ -286,6 +380,62 @@ const ExpenseForm = () => {
             </TouchableOpacity>
           )}
 
+          {/* Account Selector — only shown for non-admin user transactions */}
+          {!userIdAdmin && (
+            <TouchableOpacity
+              onPress={() => {
+                Keyboard.dismiss();
+                setTimeout(() => accountDropdownRef.current?.open(), 100);
+              }}
+              className="dark:bg-gray-900 bg-white rounded-lg h-16 w-full mt-3"
+            >
+              <Dropdown
+                ref={accountDropdownRef}
+                data={accountItems}
+                labelField="label"
+                valueField="value"
+                value={form.sourceId || null}
+                placeholder="Select Account"
+                onChange={(item) => handleAccountChange(item.value)}
+                dropdownPosition="top"
+                style={{
+                  backgroundColor: backcolor,
+                  borderRadius: 8,
+                  padding: 10,
+                  height: "100%",
+                  pointerEvents: "none",
+                }}
+                containerStyle={{
+                  backgroundColor: backcolor,
+                  marginBottom: 30,
+                  borderWidth: 0,
+                  elevation: 20,
+                }}
+                selectedTextStyle={{ color: textColor }}
+                itemTextStyle={{ color: textColor }}
+                placeholderStyle={{ color: "#d1d5db" }}
+                activeColor={backcolor}
+                iconColor={textColor}
+                renderItem={(item) => (
+                  <View style={{ padding: 14, borderBottomWidth: 0.5, borderBottomColor: colorScheme === 'dark' ? '#374151' : '#e5e7eb' }}>
+                    <Text style={{
+                      color: item.value === ADD_NEW_VALUE ? '#6366f1' : textColor,
+                      fontWeight: item.value === ADD_NEW_VALUE ? '700' : '400',
+                      fontSize: 15,
+                    }}>
+                      {item.label}
+                    </Text>
+                    {item.sublabel ? (
+                      <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>
+                        {item.sublabel.replace('_', ' ')}
+                      </Text>
+                    ) : null}
+                  </View>
+                )}
+              />
+            </TouchableOpacity>
+          )}
+
           {/* Date Picker */}
           <TouchableOpacity
             onPress={() => setShowDatePicker(true)}
@@ -318,7 +468,77 @@ const ExpenseForm = () => {
         </View>
       </TouchableWithoutFeedback>
 
+      {/* Add New Account Modal */}
+      <Modal
+        visible={showNewAccountModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowNewAccountModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+            <Text className="text-xl font-bold dark:text-white text-gray-900 mb-5">Add New Account</Text>
 
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Account Name</Text>
+            <TextInput
+              className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-4"
+              placeholder="e.g. HDFC Savings"
+              placeholderTextColor="#9ca3af"
+              value={newAccName}
+              onChangeText={setNewAccName}
+            />
+
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Account Type</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+              <View className="flex-row gap-2">
+                {ACCOUNT_TYPES.map((t) => (
+                  <TouchableOpacity
+                    key={t.value}
+                    onPress={() => setNewAccType(t.value)}
+                    className={`px-4 py-2 rounded-full border ${newAccType === t.value
+                      ? 'bg-indigo-600 border-indigo-600'
+                      : 'bg-transparent border-gray-400 dark:border-gray-600'
+                      }`}
+                  >
+                    <Text className={newAccType === t.value ? 'text-white font-bold' : 'dark:text-gray-300 text-gray-700'}>
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+            <TextInput
+              className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
+              placeholder="0"
+              placeholderTextColor="#9ca3af"
+              keyboardType="number-pad"
+              value={newAccBalance}
+              onChangeText={setNewAccBalance}
+            />
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowNewAccountModal(false)}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 p-4 rounded-xl"
+              >
+                <Text className="text-center font-semibold text-gray-700 dark:text-gray-300">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleSaveNewAccount}
+                disabled={savingAccount}
+                className="flex-1 bg-indigo-600 p-4 rounded-xl"
+              >
+                {savingAccount
+                  ? <ActivityIndicator color="white" />
+                  : <Text className="text-center font-semibold text-white">Add Account</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

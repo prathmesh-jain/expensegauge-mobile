@@ -12,7 +12,7 @@ import { TextInput } from 'react-native';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native';
-
+// when come back from insights to index page the total balance stats not changing and when going back to insights page it still shows graph of old data
 const UserProfileScreen: React.FC = () => {
   const router = useRouter()
   const user = useAuthStore((state) => state.name);
@@ -87,10 +87,6 @@ const UserProfileScreen: React.FC = () => {
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-
-  // Logging for debugging
-  useEffect(() => {
-  }, [showReportModal, reportType, referenceDate, pickerTarget]);
 
   const { calculatedStart, calculatedEnd, formattedRange } = useMemo(() => {
     let start = new Date();
@@ -257,10 +253,11 @@ const UserProfileScreen: React.FC = () => {
               </Pressable>
             )}
 
-            <Pressable
-              className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100"
-              onPress={() => setShowReportModal(true)}
-            >
+            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/accounts' as any)}>
+              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
+            </Pressable>
+            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowReportModal(true)}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Download Expense Report</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='download' size={15} /></Text>
             </Pressable>
