@@ -20,6 +20,7 @@
     "@react-navigation/native": "^7.1.6",
     "axios": "^1.18.0",
     "axios-retry": "^4.5.0",
+    "babel-preset-expo": "~54.0.10",
     "bayes-classifier": "^0.0.5",
     "expo": "~54.0.35",
     "expo-blur": "~15.0.8",
