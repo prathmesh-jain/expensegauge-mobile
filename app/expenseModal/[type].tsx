@@ -397,7 +397,7 @@ const ExpenseForm = () => {
           )}
 
           {/* Account Selector — only shown for non-admin user transactions */}
-          {!userIdAdmin && (
+          {!userIdAdmin && accounts.length>1 && (
             <TouchableOpacity
               onPress={() => {
                 Keyboard.dismiss();
