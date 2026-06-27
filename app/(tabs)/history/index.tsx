@@ -127,7 +127,6 @@ export default function TransactionHistory() {
     const result: any[] = [];
 
     Object.keys(grouped)
-      .reverse()
       .forEach((monthYear) => {
         result.push({
           type: "header",

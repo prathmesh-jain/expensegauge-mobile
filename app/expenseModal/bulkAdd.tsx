@@ -348,8 +348,7 @@ export default function BulkAddPage() {
   }, [accounts]);
 
   const getAccountName = (sid: string) => accounts.find((a) => a._id === sid)?.name || 'Default Account';
-  const selectedAccountName = accounts.find((a) => a._id === sourceId)?.name || 'Default Account';
-
+  const showAccountNames = accounts.length > 1
   // ---- Render ----
   return (
     <SafeAreaView className="flex-1 dark:bg-gray-900 bg-white">
@@ -374,7 +373,7 @@ export default function BulkAddPage() {
           {/* Account + Date row */}
           <View className="flex-row gap-3 mt-3 mb-3">
             {/* Account Dropdown */}
-            <TouchableOpacity
+            {showAccountNames && <TouchableOpacity
               onPress={() => { Keyboard.dismiss(); setTimeout(() => accountDropdownRef.current?.open(), 100); }}
               className="flex-1 dark:bg-gray-800 bg-gray-100 rounded-lg h-12"
             >
@@ -406,7 +405,7 @@ export default function BulkAddPage() {
                   </View>
                 )}
               />
-            </TouchableOpacity>
+            </TouchableOpacity>}
 
             {/* Date Picker */}
             <TouchableOpacity
@@ -475,9 +474,9 @@ export default function BulkAddPage() {
                       <View className="bg-indigo-100 dark:bg-indigo-900/50 px-2.5 py-0.5 rounded-full">
                         <Text className="text-indigo-600 dark:text-indigo-300 text-xs font-medium">{item.category}</Text>
                       </View>
-                      <Text className="text-gray-500 dark:text-gray-400 text-xs">
+                      {showAccountNames && <Text className="text-gray-500 dark:text-gray-400 text-xs">
                         {getAccountName(item.sourceId)}
-                      </Text>
+                      </Text>}
                       <Text className="text-gray-500 dark:text-gray-400 text-xs">
                         {item.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                       </Text>
@@ -626,41 +625,41 @@ export default function BulkAddPage() {
                 />
               </TouchableOpacity>
 
-              <Text className="dark:text-gray-300 text-gray-600 mb-1">Account</Text>
-              <TouchableOpacity
-                onPress={() => { Keyboard.dismiss(); setTimeout(() => editAccountRef.current?.open(), 100); }}
-                className="dark:bg-gray-800 bg-gray-100 rounded-lg h-12 mb-3"
-              >
-                <Dropdown
-                  ref={editAccountRef}
-                  data={editAccountItems}
-                  labelField="label"
-                  valueField="value"
-                  value={editForm.sourceId || null}
-                  placeholder="Select Account"
-                  onChange={handleEditAccountChange}
-                  dropdownPosition="top"
-                  style={{ backgroundColor: 'transparent', borderRadius: 8, padding: 10, height: '100%', pointerEvents: 'none' }}
-                  containerStyle={{ backgroundColor: backcolor, marginBottom: 30, borderWidth: 0, elevation: 20 }}
-                  selectedTextStyle={{ color: textColor, fontSize: 13 }}
-                  itemTextStyle={{ color: textColor }}
-                  placeholderStyle={{ color: '#9ca3af' }}
-                  activeColor={backcolor}
-                  iconColor={textColor}
-                  renderItem={(item: any) => (
-                    <View style={{ padding: 14, borderBottomWidth: 0.5, borderBottomColor: isDark ? '#374151' : '#e5e7eb' }}>
-                      <Text style={{ color: item.value === ADD_NEW_VALUE ? '#6366f1' : textColor, fontWeight: item.value === ADD_NEW_VALUE ? '700' : '400', fontSize: 15 }}>
-                        {item.label}
-                      </Text>
-                      {item.sublabel ? (
-                        <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>
-                          {item.sublabel.replace('_', ' ')}
+              {showAccountNames && <><Text className="dark:text-gray-300 text-gray-600 mb-1">Account</Text>
+                <TouchableOpacity
+                  onPress={() => { Keyboard.dismiss(); setTimeout(() => editAccountRef.current?.open(), 100); }}
+                  className="dark:bg-gray-800 bg-gray-100 rounded-lg h-12 mb-3"
+                >
+                  <Dropdown
+                    ref={editAccountRef}
+                    data={editAccountItems}
+                    labelField="label"
+                    valueField="value"
+                    value={editForm.sourceId || null}
+                    placeholder="Select Account"
+                    onChange={handleEditAccountChange}
+                    dropdownPosition="top"
+                    style={{ backgroundColor: 'transparent', borderRadius: 8, padding: 10, height: '100%', pointerEvents: 'none' }}
+                    containerStyle={{ backgroundColor: backcolor, marginBottom: 30, borderWidth: 0, elevation: 20 }}
+                    selectedTextStyle={{ color: textColor, fontSize: 13 }}
+                    itemTextStyle={{ color: textColor }}
+                    placeholderStyle={{ color: '#9ca3af' }}
+                    activeColor={backcolor}
+                    iconColor={textColor}
+                    renderItem={(item: any) => (
+                      <View style={{ padding: 14, borderBottomWidth: 0.5, borderBottomColor: isDark ? '#374151' : '#e5e7eb' }}>
+                        <Text style={{ color: item.value === ADD_NEW_VALUE ? '#6366f1' : textColor, fontWeight: item.value === ADD_NEW_VALUE ? '700' : '400', fontSize: 15 }}>
+                          {item.label}
                         </Text>
-                      ) : null}
-                    </View>
-                  )}
-                />
-              </TouchableOpacity>
+                        {item.sublabel ? (
+                          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>
+                            {item.sublabel.replace('_', ' ')}
+                          </Text>
+                        ) : null}
+                      </View>
+                    )}
+                  />
+                </TouchableOpacity></>}
 
               <Text className="dark:text-gray-300 text-gray-600 mb-1">Date</Text>
               <TouchableOpacity
