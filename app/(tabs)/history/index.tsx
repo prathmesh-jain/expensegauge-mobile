@@ -12,6 +12,8 @@ import { Transaction } from "@/types";
 import { useAccountStore } from '@/store/accountStore';
 import { fetchAccountsApi } from '@/api/accountApi';
 import { Dropdown, IDropdownRef } from 'react-native-element-dropdown';
+import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -25,6 +27,7 @@ const ranges = [
 
 export default function TransactionHistory() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const { setCachedExpenses, removeExpense, cachedExpenses, cachedStats, setCachedStats, selectedRange, setSelectedRange } = useExpenseStore();
   const { accounts, setAccounts, selectedAccountId, setSelectedAccountId } = useAccountStore();
@@ -441,6 +444,23 @@ export default function TransactionHistory() {
           </Text>
         )}
       </View>
+
+      <TouchableOpacity
+        onPress={() => router.push('/(tabs)/history/analytics')}
+        className="mb-2 flex-row items-center justify-between rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-4 dark:border-indigo-800 dark:bg-indigo-950"
+      >
+        <View className="flex-1 pr-3">
+          <Text className="text-base font-semibold text-indigo-950 dark:text-indigo-100">
+            Show analytics
+          </Text>
+          <Text className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
+            Category, account, and spending insights
+          </Text>
+        </View>
+        <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo-600">
+          <Feather name="arrow-right" size={18} color="white" />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
