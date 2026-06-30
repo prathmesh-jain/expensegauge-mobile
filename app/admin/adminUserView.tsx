@@ -1,6 +1,6 @@
-import { Link, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { Link, useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "@/api/api";
 import { useAdminStore } from "@/store/adminStore";
 import DeleteModal from "../(tabs)/home/DeleteModal";
@@ -10,7 +10,7 @@ import { Transaction } from "@/types";
 
 
 
-export default function adminUserView() {
+export default function AdminUserView() {
   const { userindex, userId } = useLocalSearchParams<Record<string, string>>()
   const { activeUser, setActiveUser, updateUserFromServer } = useAdminStore();
   const cachedUsers = useAdminStore((state) => state.cachedUsers);
@@ -60,9 +60,11 @@ export default function adminUserView() {
     setInitialLoading(false)
   };
 
-  useEffect(() => {
-    fetchExpenses();
-  }, [userId]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchExpenses();
+    }, [userId, user?._id])
+  );
 
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -144,6 +146,7 @@ export default function adminUserView() {
             item={item}
             selectedId={selectedTransaction?._id || null}
             type="admin"
+            userIdAdmin={user._id}
             onSelect={handleTransactionPress}
             onDeletePress={() => setShowDeleteModal(true)
             }

@@ -71,6 +71,7 @@ const ExpenseForm = () => {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [containerPadding, setContainerPadding] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   // Unified form state
   const [form, setForm] = useState({
@@ -224,11 +225,12 @@ const ExpenseForm = () => {
   );
 
   // ------------------ Submit Logic ------------------
-  const handleAdminSubmit = () => {
+  const handleAdminSubmit = async () => {
     if (!form.details || !form.amount) {
       Toast.error("Please enter details and amount");
       return;
     }
+    if (submitting) return;
 
     const isRedundant = _id &&
       form.details === (params.details || "") &&
@@ -243,28 +245,29 @@ const ExpenseForm = () => {
 
     const transactionData = buildTransaction();
     try {
+      setSubmitting(true);
       if (_id) {
         editUserExpenseByAdmin(userIdAdmin, transactionData);
-        editUserExpenseAdminApi(userIdAdmin, transactionData).then(() => {
-          markAsSyncedAdmin(_id, _id, userIdAdmin);
-        });
+        await editUserExpenseAdminApi(userIdAdmin, transactionData);
+        markAsSyncedAdmin(_id, _id, userIdAdmin);
       } else {
         const assignData = { ...transactionData, type: 'assign', category: 'Added by Admin' };
         assignBalance(userIdAdmin, assignData);
-        assignBalanceApi(
+        const newId = await assignBalanceApi(
           userIdAdmin,
           form.details,
           form.date.toDateString(),
           parseFloat(form.amount),
-          transactionData._id
-        ).then((newId) => {
-          if (newId) markAsSyncedAdmin(transactionData._id, newId, userIdAdmin);
-        });
+          transactionData.clientId || transactionData._id
+        );
+        if (newId) markAsSyncedAdmin(transactionData._id, newId, userIdAdmin);
       }
       Toast.success("Request processed");
       router.back();
     } catch (error) {
       Toast.error("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -476,9 +479,14 @@ const ExpenseForm = () => {
           <View className="flex flex-row mt-10 mb-5">
             <TouchableOpacity
               className="bg-green-500 w-1/3 h-12 rounded-lg justify-center"
+              disabled={submitting}
               onPress={handleSubmit}
             >
-              <Text className="text-center text-xl text-gray-950 font-semibold">Done</Text>
+              {submitting ? (
+                <ActivityIndicator color="#111827" />
+              ) : (
+                <Text className="text-center text-xl text-gray-950 font-semibold">Done</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
