@@ -1,10 +1,10 @@
 import { View, Text, FlatList, Dimensions, useColorScheme, RefreshControl } from 'react-native';
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import api from '@/api/api';
 import { ActivityIndicator } from 'react-native-paper';
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useAdminStore } from '@/store/adminStore';
 import ExpenseItem from '../expenseModal/ExpenseItem';
 import DeleteModal from '../(tabs)/home/DeleteModal';
@@ -78,7 +78,8 @@ export default function TransactionHistory() {
         return [...unique].sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
       });
 
-      updateUserFromServer({ ...response.data.user });
+      const sortedFetched = [...response.data.expenses].sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      updateUserFromServer({ ...response.data.user, expenses: sortedFetched });
 
       setOffset(isRefresh ? limit : currentOffset + limit);
       setHasMore(response.data.hasMore);
@@ -95,10 +96,12 @@ export default function TransactionHistory() {
     fetchExpenses(true);
   };
 
-  useEffect(() => {
-    fetchExpenses();
-    fetchStats();
-  }, [userId]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchExpenses(true);
+      fetchStats();
+    }, [userId, user?._id])
+  );
 
   const fetchStats = async () => {
     if (!userId) return;
@@ -303,6 +306,7 @@ export default function TransactionHistory() {
                   item={item}
                   selectedId={selectedTransaction?._id || null}
                   type="admin"
+                  userIdAdmin={user?._id}
                   onSelect={handleTransactionPress}
                   onDeletePress={() => setShowDeleteModal(true)
                   }

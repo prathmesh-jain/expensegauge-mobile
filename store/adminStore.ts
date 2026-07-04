@@ -34,7 +34,7 @@ type AdminStore = {
     deleteUser: (data: User) => void;
     editUserExpenseByAdmin: (id: string, data: Transaction) => void;
     removeUserExpenseByAdmin: (id: string, data: Transaction) => void;
-    markAsSyncedAdmin: (tempId: string, newIdFromBackend: string, userId: String) => void;
+    markAsSyncedAdmin: (tempId: string, newIdFromBackend: string, userId: string) => void;
     statsCache: Record<string, any>;
     setStatsCache: (userId: string, data: any) => void;
     reset: () => void;
@@ -185,61 +185,54 @@ export const useAdminStore = create<AdminStore>()(
                     totalUserBalance: state.totalUserBalance - data.netBalance
                 })),
             editUserExpenseByAdmin: (id, data) => set((state) => {
-                let diffAmount = 0
+                const activeExpense = state.activeUser?._id === id
+                    ? state.activeUser.expenses.find((expense) => expense._id === data._id)
+                    : null;
+                const cachedUser = state.cachedUsers.find((user) => user._id === id);
+                const cachedExpense = cachedUser?.expenses.find((expense) => expense._id === data._id);
+                const previousExpense = activeExpense || cachedExpense;
+                const diffAmount = previousExpense ? data.amount - previousExpense.amount : 0;
+
                 return {
                     ...state,
                     activeUser: state.activeUser?._id === id ? {
                         ...state.activeUser,
-                        expenses: state.activeUser.expenses.map((it) => {
-                            if (it._id === data._id) {
-                                diffAmount = data.amount - it.amount; // Note: this calculates diff for activeUser separately, but logic is same
-                                return { ...data }
-                            }
-                            return it
-                        }),
-                        netBalance: state.activeUser.netBalance + (data.amount - (state.activeUser.expenses.find(e => e._id === data._id)?.amount || 0))
+                        expenses: state.activeUser.expenses.map((it) => it._id === data._id ? { ...data } : it),
+                        netBalance: state.activeUser.netBalance + diffAmount
                     } : state.activeUser,
-                    cachedUsers: state.cachedUsers.map((item) => {
-                        if (item._id === id) {
-                            return {
-                                ...item, expenses: item.expenses.map((it) => {
-                                    if (it._id === data._id) {
-                                        diffAmount = data.amount - it.amount;
-                                        return { ...data }
-                                    }
-                                    return it
-                                }), netBalance: item.netBalance + diffAmount
-                            }
-                        }
-                        return item
-                    }),
+                    cachedUsers: state.cachedUsers.map((item) => (
+                        item._id === id ? {
+                            ...item,
+                            expenses: item.expenses.map((it) => it._id === data._id ? { ...data } : it),
+                            netBalance: item.netBalance + diffAmount
+                        } : item
+                    )),
                     totalUserBalance: state.totalUserBalance + diffAmount
                 }
             }),
             removeUserExpenseByAdmin: (id, data) => set((state) => {
-                let diffAmount = 0
+                const activeExpense = state.activeUser?._id === id
+                    ? state.activeUser.expenses.find((expense) => expense._id === data._id)
+                    : null;
+                const cachedUser = state.cachedUsers.find((user) => user._id === id);
+                const cachedExpense = cachedUser?.expenses.find((expense) => expense._id === data._id);
+                const removedAmount = activeExpense?.amount ?? cachedExpense?.amount ?? data.amount;
+
                 return {
                     ...state,
                     activeUser: state.activeUser?._id === id ? {
                         ...state.activeUser,
                         expenses: state.activeUser.expenses.filter((it) => it._id !== data._id),
-                        netBalance: state.activeUser.netBalance - data.amount
+                        netBalance: state.activeUser.netBalance - removedAmount
                     } : state.activeUser,
-                    cachedUsers: state.cachedUsers.map((item) => {
-                        if (item._id === id) {
-                            return {
-                                ...item, expenses: item.expenses.filter((it) => {
-                                    if (it._id === data._id) {
-                                        diffAmount = data.amount
-                                        return false
-                                    }
-                                    return true
-                                }), netBalance: item.netBalance - diffAmount
-                            }
-                        }
-                        return item
-                    }),
-                    totalUserBalance: state.totalUserBalance - diffAmount
+                    cachedUsers: state.cachedUsers.map((item) => (
+                        item._id === id ? {
+                            ...item,
+                            expenses: item.expenses.filter((it) => it._id !== data._id),
+                            netBalance: item.netBalance - removedAmount
+                        } : item
+                    )),
+                    totalUserBalance: state.totalUserBalance - removedAmount
                 }
             }),
             markAsSyncedAdmin: (tempId, newIdFromBackend, userId) => set((state) => {

@@ -12,9 +12,10 @@ type Props = {
   onDeletePress: () => void;
   showAccountName?: boolean;
   accountName?: string;
+  userIdAdmin?: string;
 };
 
-export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress, showAccountName, accountName }: Props) {
+export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress, showAccountName, accountName, userIdAdmin }: Props) {
   const colorScheme = useColorScheme();
   const isSelected = selectedId === item._id;
   const isAdminAdded = item.type === "assign" && type === "admin";
@@ -94,7 +95,7 @@ export default React.memo(function ExpenseItem({ item, selectedId, type = "user"
           <Link
             href={{
               pathname: `/expenseModal/[type]`,
-              params: { ...item, isSynced: String(item.isSynced) },
+              params: { ...item, isSynced: String(item.isSynced), ...(userIdAdmin ? { userIdAdmin } : {}) },
             }}
 
             asChild

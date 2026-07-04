@@ -69,17 +69,26 @@ export const editUserExpenseAdminApi = async (userId: string, data: Transaction)
         });
     } catch (error) {
         console.error("Error editing user expense (admin):", error);
+        throw error;
     }
 };
 
 // Assign balance to user
-export const assignBalanceApi = async (userId: string, details: string, date: string, amount: number, localId?: string) => {
+export const assignBalanceApi = async (
+    userId: string,
+    details: string,
+    date: string,
+    amount: number,
+    localId?: string
+) => {
     try {
         const tempId = localId || Date.now().toString();
+
         const response = await api.post(`/admin/assignBalance/${userId}`, {
             details,
             date,
             amount,
+            clientId: tempId,
         }, {
             headers: {
                 "x-meta": JSON.stringify({
@@ -95,5 +104,6 @@ export const assignBalanceApi = async (userId: string, details: string, date: st
         return response.data.id;
     } catch (error) {
         console.error(error);
+        throw error;
     }
 };
