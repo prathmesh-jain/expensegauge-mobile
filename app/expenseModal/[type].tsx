@@ -357,7 +357,11 @@ const ExpenseForm = () => {
             placeholder="₹ Amount"
             keyboardType="number-pad"
             value={form.amount}
-            onChangeText={(v) => updateForm("amount", v)}
+            onChangeText={(v) => {
+              // Replaces anything that isn't a digit (0-9) with an empty string
+              const numericValue = v.replace(/[^0-9]/g, '');
+              updateForm("amount", numericValue);
+            }}
           />
 
           {/* Category Dropdown (for debit) */}
