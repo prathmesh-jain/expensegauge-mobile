@@ -243,7 +243,7 @@ const UserProfileScreen: React.FC = () => {
                 onPress={handleUpgradeToAdmin}
               >
                 <Text className="text-base text-gray-700 dark:text-gray-200 py-6">
-                  Register for Admin View
+                  Request Admin Access
                 </Text>
                 <View className="flex-row items-center py-6 px-1">
                   <Text className="text-base text-gray-500 dark:text-gray-300">

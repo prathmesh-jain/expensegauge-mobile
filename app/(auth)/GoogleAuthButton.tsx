@@ -4,7 +4,7 @@ import api from "@/api/api";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "expo-router";
 
-export default function GoogleAuthButton({ setStatus, role }: { setStatus: (loading: boolean) => void, role?: string }) {
+export default function GoogleAuthButton({ setStatus }: { setStatus: (loading: boolean) => void }) {
   const router = useRouter();
   const { setTokens, setUser } = useAuthStore();
 
@@ -27,7 +27,7 @@ export default function GoogleAuthButton({ setStatus, role }: { setStatus: (load
       }
 
       // Send to your backend
-      const res = await api.post("/user/google-login", { idToken, role: role ?? "user" });
+      const res = await api.post("/user/google-login", { idToken, role: "user" });
 
       setTokens(res.data.accessToken, res.data.refreshToken);
       setUser(res.data.name, res.data.email, res.data.role ?? "user", res.data.profilePicture);

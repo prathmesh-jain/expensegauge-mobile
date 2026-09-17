@@ -117,14 +117,10 @@ export default function Login() {
         }
       }
       else {
-        const response = await api.post(`/user/signup`, { name, email, password, role: role }) // Changed from username to email
+        const response = await api.post(`/user/signup`, { name, email, password }) // Changed from username to email
         setTokens(response.data.accessToken, response.data.refreshToken);
-        setUser(name, email, role, response.data.profilePicture); // Changed username to email
-        if (response.data.role === 'admin') {
-          router.replace("/(tabs)/home/adminView");
-        } else {
-          router.replace("/(tabs)/home");
-        }
+        setUser(name, email, response.data.role, response.data.profilePicture); // Changed username to email
+        router.replace("/(tabs)/home");
       }
     } catch (error: any) {
       console.error("error : ", error);
@@ -149,7 +145,7 @@ export default function Login() {
           keyboardShouldPersistTaps="handled"
         >
           <Text className="text-2xl text-center font-bold dark:text-white text-gray-800 mb-6">
-            {isLogin ? 'Welcome Back' : `Create Account ${role === 'admin' ? "as Admin" : ""}`}
+            {isLogin ? 'Welcome Back' : 'Create Account'}
           </Text>
           <View className="flex gap-5 space-y-6">
             {error.serverError && <Text className="text-red-600 -mt-4 -mb-1 px-3 text-center">{error.serverError}</Text>}
@@ -247,20 +243,11 @@ export default function Login() {
             <TouchableOpacity disabled={buttonDisabled} className="bg-indigo-600 disabled:bg-indigo-300 py-4 rounded-lg"
               onPress={handleVerify}>
               <Text className="text-white text-center text-lg font-semibold">
-                {isLogin ? 'Login' : `Sign Up ${role == 'admin' ? "as Admin" : ""}`}
+                {isLogin ? 'Login' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
 
-            <GoogleAuthButton setStatus={setLoading} role={role} />
-            {!isLogin && role !== 'admin' &&
-              <TouchableOpacity
-                onPress={() => router.navigate('/AdminPreview')}
-                className="mt-4 p-4 bg-gray-700 rounded-xl"
-              >
-                <Text className="text-white text-center font-semibold">
-                  👨‍💼 Try Admin View
-                </Text>
-              </TouchableOpacity>}
+            <GoogleAuthButton setStatus={setLoading} />
           </View>
           <LoaderModal
             visible={loading}

@@ -1,5 +1,4 @@
 import api from '@/api/api'
-import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { View, Text, ScrollView, Image, TouchableOpacity, useColorScheme, ActivityIndicator, Alert } from 'react-native'
@@ -7,43 +6,25 @@ import { Toast } from 'toastify-react-native'
 
 export default function AdminPreviewScreen() {
   const router = useRouter()
-  const role = useAuthStore((state) => state.role)
-  const accessToken = useAuthStore((state) => state.accessToken)
-  const setTokens = useAuthStore((state) => state.setTokens)
-  const setUser = useAuthStore((state) => state.setUser)
-  const setViewMode = useAuthStore((state) => state.setViewMode)
   const [upgrading, setUpgrading] = useState(false)
   const colorScheme=useColorScheme()
 
   const handleUpgrade = async () => {
-    const isLoggedInNonAdmin = !!accessToken && role !== 'admin'
-    if (!isLoggedInNonAdmin) {
-      router.replace('/login?type=signup&role=admin')
-      return
-    }
-
     Alert.alert(
-      "Confirm Registration",
-      "Do you want to register as an admin and enable admin view?",
+      "Request Admin Access",
+      "Do you want to request admin access? Your request will be reviewed and if approved, you'll be granted access within 24-48 hours.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Register",
+          text: "Request Access",
           onPress: async () => {
             try {
               setUpgrading(true)
               const res = await api.post('/user/upgrade-to-admin')
-              if (res.data?.accessToken && res.data?.refreshToken) {
-                setTokens(res.data.accessToken, res.data.refreshToken)
-              }
-              if (res.data?.name && res.data?.email && res.data?.role) {
-                setUser(res.data.name, res.data.email, res.data.role, res.data.profilePicture)
-              }
-              setViewMode('admin')
-              Toast.success('Admin view enabled')
-              router.replace('/(tabs)/home/adminView')
+              Toast.success(res.data.message || 'Admin access request submitted successfully')
+              router.back()
             } catch (error: any) {
-              const message = error.response?.data?.message || error.message || 'Failed to enable admin view'
+              const message = error.response?.data?.message || error.message || 'Failed to submit admin access request'
               Toast.error(message)
             } finally {
               setUpgrading(false)
@@ -88,7 +69,7 @@ export default function AdminPreviewScreen() {
           onPress={handleUpgrade}
         >
           <Text className="text-white font-semibold">
-            {!!accessToken && role !== 'admin' ? 'Register for Admin View' : 'Sign Up as Admin'}
+            Request Admin Access
           </Text>
         </TouchableOpacity>
         {upgrading && <ActivityIndicator className="mt-4" color={colorScheme === 'dark' ? 'white' : '#111827'} />}
