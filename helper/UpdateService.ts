@@ -1,14 +1,25 @@
 import * as Updates from 'expo-updates';
-import api from '../api/api';
+import axios from 'axios';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { useUpdateStore } from '../store/updateStore';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 class UpdateService {
     async checkForUpdates() {
         const { setUpdateStatus } = useUpdateStore.getState();
 
         try {
-            // 1. Check Backend for update instructions
-            const response = await api.get('/update/check');
+            if (!API_URL) return;
+            // 1. Check Backend for update instructions via public unauthenticated request
+            const response = await axios.get(`${API_URL}/update/check`, {
+                timeout: 10000,
+                headers: {
+                    'x-app-version': Constants.expoConfig?.version || '1.0.0',
+                    'x-platform': Platform.OS,
+                },
+            });
             const data = response.data;
 
             if (!data.updateAvailable) {

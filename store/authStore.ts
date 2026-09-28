@@ -11,9 +11,15 @@ type AuthStore = {
   accessToken: string | null;
   refreshToken: string | null;
   profilePicture: string | null;
+  isGuest: boolean;
+  guestModeStartTime: string | null;
+  hasHydrated: boolean;
+  setHasHydrated: (hasHydrated: boolean) => void;
   setTokens: (access: string, refresh: string) => void;
   setUser: (name: string, email: string, role: string, profilePicture?: string) => void;
   setViewMode: (mode: 'admin' | 'user') => void;
+  setGuestMode: () => void;
+  exitGuestMode: () => void;
   clearTokens: () => void;
   reset: () => void;
 };
@@ -29,6 +35,10 @@ export const useAuthStore = create<AuthStore>()(
       accessToken: null,
       refreshToken: null,
       profilePicture: null,
+      isGuest: false,
+      guestModeStartTime: null,
+      hasHydrated: false,
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
       setTokens: (access, refresh) => set({ accessToken: access, refreshToken: refresh }),
       setUser: (name, email, role, profilePicture) =>
         set((state) => {
@@ -42,11 +52,25 @@ export const useAuthStore = create<AuthStore>()(
             role,
             profilePicture: profilePicture || null,
             viewMode: nextViewMode,
+            isGuest: false,
+            guestModeStartTime: null,
           };
         }),
       setViewMode: (mode) => set({ viewMode: mode }),
+      setGuestMode: () => set({
+        isGuest: true,
+        guestModeStartTime: new Date().toISOString(),
+        role: 'user',
+        viewMode: 'user',
+        name: 'Guest User',
+        email: null,
+      }),
+      exitGuestMode: () => set({
+        isGuest: false,
+        guestModeStartTime: null,
+      }),
       clearTokens: () => set({ accessToken: null, refreshToken: null }),
-      reset: () => set(() => {
+      reset: () => set((state) => {
         return {
           name: null,
           email: null,
@@ -56,6 +80,9 @@ export const useAuthStore = create<AuthStore>()(
           accessToken: null,
           refreshToken: null,
           profilePicture: null,
+          isGuest: false,
+          guestModeStartTime: null,
+          hasHydrated: state.hasHydrated,
         }
       }),
     }),
@@ -66,6 +93,13 @@ export const useAuthStore = create<AuthStore>()(
         setItem: async (name: string, value: string) => await SecureStore.setItemAsync(name, value),
         removeItem: async (name: string) => await SecureStore.deleteItemAsync(name),
       })),
+      partialize: (state) => {
+        const { hasHydrated, ...rest } = state;
+        return rest;
+      },
+      onRehydrateStorage: () => () => {
+        useAuthStore.setState({ hasHydrated: true });
+      },
     }
   )
 );

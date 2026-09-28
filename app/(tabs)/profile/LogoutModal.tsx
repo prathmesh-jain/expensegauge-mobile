@@ -8,24 +8,42 @@ import { router } from 'expo-router'
 import { useExpenseStore } from '@/store/expenseStore'
 import { useAdminStore } from '@/store/adminStore'
 import { clearQueue, hasPendingUserMutationRequests } from '@/store/offlineQueue'
+import { clearAllLocalData } from '@/utils/guestExpenseService'
 
 const LogoutModal = ({ setShow }: any) => {
-    const { reset, refreshToken } = useAuthStore();
+    const { reset, refreshToken, isGuest, exitGuestMode } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const doLogout = async () => {
         setLoading(true);
         try {
-            const response = await api.post(`/user/logout`, { refreshToken })
-            const { reset: resetExpenseStore } = useExpenseStore.getState()
-            const { reset: resetAdminStore } = useAdminStore.getState()
-            const { reset: resetAccountStore } = useAccountStore.getState()
-            resetExpenseStore()
-            resetAdminStore()
-            resetAccountStore()
-            await clearQueue()
-            reset()
-            setShow(false)
-            router.replace('/')
+            if (isGuest) {
+                // Guest logout - clear state and local data
+                const { reset: resetExpenseStore } = useExpenseStore.getState()
+                const { reset: resetAdminStore } = useAdminStore.getState()
+                const { reset: resetAccountStore } = useAccountStore.getState()
+                resetExpenseStore()
+                resetAdminStore()
+                resetAccountStore()
+                await clearQueue()
+                await clearAllLocalData()
+                exitGuestMode()
+                reset()
+                setShow(false)
+                router.replace('/')
+            } else {
+                // Regular user logout
+                const response = await api.post(`/user/logout`, { refreshToken })
+                const { reset: resetExpenseStore } = useExpenseStore.getState()
+                const { reset: resetAdminStore } = useAdminStore.getState()
+                const { reset: resetAccountStore } = useAccountStore.getState()
+                resetExpenseStore()
+                resetAdminStore()
+                resetAccountStore()
+                await clearQueue()
+                reset()
+                setShow(false)
+                router.replace('/')
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -34,6 +52,19 @@ const LogoutModal = ({ setShow }: any) => {
     }
 
     const handleLogout = async () => {
+        if (isGuest) {
+            // For guest users, warn about permanent data loss
+            Alert.alert(
+                'Exit Guest Mode',
+                '⚠️ All your local data will be permanently deleted and cannot be recovered. Are you sure you want to exit guest mode?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Exit & Delete Data', style: 'destructive', onPress: () => { void doLogout(); } },
+                ]
+            );
+            return;
+        }
+
         try {
             const hasPending = await hasPendingUserMutationRequests();
             if (hasPending) {

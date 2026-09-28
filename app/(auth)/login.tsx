@@ -1,11 +1,14 @@
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View, Animated, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { Text, TextInput, TouchableOpacity, View, Animated, ScrollView, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import api from "@/api/api";
 import { useAuthStore } from "@/store/authStore";
 import LoaderModal from "../expenseModal/LoaderModal";
 import GoogleAuthButton from "./GoogleAuthButton";
+import { getDatabase } from "@/utils/sqlite";
+import PrivacyNotice from "@/components/PrivacyNotice";
+import GuestMigrationModal from "@/components/GuestMigrationModal";
 
 
 
@@ -26,7 +29,7 @@ export default function Login() {
     passwordvalidationError: '',
     serverError: '',
   })
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setGuestMode } = useAuthStore();
   const router = useRouter();
 
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -39,6 +42,29 @@ export default function Login() {
     special: false,
   });
   const [shakeAnim] = useState(new Animated.Value(0));
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const { isGuest, exitGuestMode } = useAuthStore();
+
+  const handleContinueAsGuest = () => {
+    setShowPrivacyNotice(true);
+  };
+
+  const handlePrivacyAccept = async () => {
+    try {
+      setLoading(true);
+      setShowPrivacyNotice(false);
+      // Initialize SQLite database
+      await getDatabase();
+      setGuestMode();
+      router.replace('/(tabs)/home');
+    } catch (error) {
+      console.error('Failed to initialize guest mode:', error);
+      Alert.alert('Error', 'Failed to start guest mode. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validatePasswords = () => {
     if (password && confirmPassword && password !== confirmPassword) {
@@ -110,17 +136,29 @@ export default function Login() {
         const response = await api.post(`/user/login`, { email, password }) // Changed from username to email
         setTokens(response.data.accessToken, response.data.refreshToken);
         setUser(response.data.name, response.data.email, response.data.role, response.data.profilePicture); // Changed username to email
-        if (response.data.role === 'admin') {
-          router.replace("/(tabs)/home/adminView");
+        
+        // Check if user was in guest mode and has data to migrate
+        if (isGuest) {
+          setShowMigrationModal(true);
         } else {
-          router.replace("/(tabs)/home");
+          if (response.data.role === 'admin') {
+            router.replace("/(tabs)/home/adminView");
+          } else {
+            router.replace("/(tabs)/home");
+          }
         }
       }
       else {
         const response = await api.post(`/user/signup`, { name, email, password }) // Changed from username to email
         setTokens(response.data.accessToken, response.data.refreshToken);
         setUser(name, email, response.data.role, response.data.profilePicture); // Changed username to email
-        router.replace("/(tabs)/home");
+        
+        // Check if user was in guest mode and has data to migrate
+        if (isGuest) {
+          setShowMigrationModal(true);
+        } else {
+          router.replace("/(tabs)/home");
+        }
       }
     } catch (error: any) {
       console.error("error : ", error);
@@ -132,6 +170,26 @@ export default function Login() {
       setButtonDisabled(false)
     }
   }
+
+  const handleMigrationComplete = () => {
+    setShowMigrationModal(false);
+    const { role } = useAuthStore.getState();
+    if (role === 'admin') {
+      router.replace("/(tabs)/home/adminView");
+    } else {
+      router.replace("/(tabs)/home");
+    }
+  };
+
+  const handleMigrationSkip = () => {
+    setShowMigrationModal(false);
+    const { role } = useAuthStore.getState();
+    if (role === 'admin') {
+      router.replace("/(tabs)/home/adminView");
+    } else {
+      router.replace("/(tabs)/home");
+    }
+  };
 
 
   return (
@@ -248,6 +306,15 @@ export default function Login() {
             </TouchableOpacity>
 
             <GoogleAuthButton setStatus={setLoading} />
+            
+            <TouchableOpacity
+              onPress={handleContinueAsGuest}
+              className="mt-4 p-4 bg-gray-600 rounded-xl"
+            >
+              <Text className="text-white text-center font-semibold">
+                🚀 Continue as Guest
+              </Text>
+            </TouchableOpacity>
           </View>
           <LoaderModal
             visible={loading}
@@ -255,6 +322,19 @@ export default function Login() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      <PrivacyNotice
+        visible={showPrivacyNotice}
+        onClose={() => setShowPrivacyNotice(false)}
+        onAccept={handlePrivacyAccept}
+      />
+      
+      <GuestMigrationModal
+        visible={showMigrationModal}
+        onClose={() => setShowMigrationModal(false)}
+        onSkip={handleMigrationSkip}
+        onMigrate={handleMigrationComplete}
+      />
     </SafeAreaView >
   );
 }

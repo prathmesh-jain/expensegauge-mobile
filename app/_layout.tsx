@@ -6,7 +6,7 @@ import { useThemeStore } from "@/store/themeStore";
 import { useEffect, useRef } from "react";
 import { processQueue } from "@/api/syncQueue";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import api from "@/api/api";
+import { useAuthStore } from "@/store/authStore";
 import { Provider as PaperProvider } from 'react-native-paper';
 import UpdateService from "@/helper/UpdateService";
 import UpdatePrompt from "@/components/UpdatePrompt";
@@ -28,7 +28,18 @@ export default function RootLayout() {
   const backcolor = colorScheme == "light" ? "white" : "#111827";
   const statusColor = colorScheme == "light" ? "dark" : "light";
 
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const isGuest = useAuthStore((state) => state.isGuest);
+
   useEffect(() => {
+    // Check for updates on startup via public endpoint
+    UpdateService.checkForUpdates();
+  }, []);
+
+  useEffect(() => {
+    // Only proceed with auth/sync startup logic after auth state has hydrated from SecureStore
+    if (!hasHydrated) return;
+
     const notifyOfflineOnStartup = async () => {
       const isConnected = await checkConnection();
       if (!isConnected) {
@@ -38,8 +49,10 @@ export default function RootLayout() {
 
     notifyOfflineOnStartup();
 
-    // Run immediately on startup
-    processQueue(true);
+    // Run queue processing immediately on startup for logged-in users only
+    if (!isGuest) {
+      processQueue(true);
+    }
 
     // Subscribe to network changes
     const unsubscribe = addNetworkListener(async (isConnected) => {
@@ -53,7 +66,7 @@ export default function RootLayout() {
 
       previousConnection.current = isConnected;
 
-      if (isConnected) {
+      if (isConnected && !useAuthStore.getState().isGuest) {
         await processQueue(true);
       }
     });
@@ -61,17 +74,13 @@ export default function RootLayout() {
     // Subscribe to new queue items
     const { setOnQueueAdded } = require("@/api/api");
     setOnQueueAdded(() => {
-      processQueue();
+      if (!useAuthStore.getState().isGuest) {
+        processQueue();
+      }
     });
-
-    api.get("/health").catch((err) => {
-      console.error("Error fetching profile on app start:", err.message);
-    });
-
-    UpdateService.checkForUpdates();
 
     return () => unsubscribe();
-  }, []);
+  }, [hasHydrated, isGuest]);
 
   return (
     <PaperProvider>

@@ -6,26 +6,29 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import ExpenseItem from "@/app/expenseModal/ExpenseItem";
 import DeleteModal from "./DeleteModal";
-import api from "@/api/api";
 import { processQueue } from "@/api/syncQueue";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
 import { Toast } from "toastify-react-native";
 import { checkConnection } from "@/api/network";
 import { Transaction } from "@/types";
 import { useAccountStore } from "@/store/accountStore";
-import { fetchAccountsApi } from "@/api/accountApi";
+import { getExpenses, deleteExpense, getAccounts } from "@/utils/expenseServiceWrapper";
 
 export default function Index() {
   const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance, selectedRange, setSelectedRange } = useExpenseStore();
   const { accounts, setAccounts, selectedAccountId, setSelectedAccountId } = useAccountStore();
+  const isGuest = useAuthStore((state) => state.isGuest);
 
   const expenses = useMemo(() => {
     let list = cachedExpenses.filter((expense) => isExpenseInRange(expense.date, selectedRange));
     if (selectedAccountId) {
-      list = list.filter((expense) => expense.sourceId === selectedAccountId);
+      const selectedAcc = accounts.find((a) => a._id === selectedAccountId);
+      list = list.filter((expense) =>
+        expense.sourceId === selectedAccountId || (selectedAcc && expense.sourceId === selectedAcc.name)
+      );
     }
     return list;
-  }, [cachedExpenses, selectedRange, selectedAccountId]);
+  }, [cachedExpenses, selectedRange, selectedAccountId, accounts]);
 
   const user = useAuthStore((state) => state.name);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -52,8 +55,8 @@ export default function Index() {
   const handleDelete = async () => {
     if (selectedTransaction) {
       try {
-        await api.delete(`/expense/${selectedTransaction._id}`)
-        removeExpense(selectedTransaction)
+        await deleteExpense(selectedTransaction._id);
+        removeExpense(selectedTransaction);
       } catch (error) {
         console.error(error);
       }
@@ -63,30 +66,33 @@ export default function Index() {
 
   const fetchExpenses = async () => {
     if (refreshing) return;
-    setRefreshing(true)
+    setRefreshing(true);
     setAccountBalance(null);
-    setSyncMessage("Checking pending offline changes...");
+    if (!isGuest) {
+      setSyncMessage("Checking pending offline changes...");
+    }
     try {
-      const syncResult = await processQueue(true);
-      if (!syncResult.completed) {
-        setSyncMessage(
-          `${syncResult.pending} pending change${syncResult.pending === 1 ? "" : "s"} still syncing. Refreshing...`
-        );
-      } else {
-        setSyncMessage("Refreshing expenses...");
+      if (!isGuest) {
+        const syncResult = await processQueue(true);
+        if (!syncResult.completed) {
+          setSyncMessage(
+            `${syncResult.pending} pending change${syncResult.pending === 1 ? "" : "s"} still syncing. Refreshing...`
+          );
+        } else {
+          setSyncMessage("Refreshing expenses...");
+        }
       }
 
-      const accountParam = selectedAccountId ? `&sourceId=${selectedAccountId}` : '';
-      const response = await api.get(`/expense/get-expense/?range=${selectedRange}&offset=0&limit=50${accountParam}`);
-      const newExpenses = [...response.data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      setAccountBalance(response.data.accountBalance ?? null);
-      setCachedExpenses(newExpenses, response.data.rangeBalance ?? response.data.totalBalance ?? 0, selectedRange);
+      const data = await getExpenses(50, 0, selectedRange, selectedAccountId);
+      const newExpenses = [...data.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setAccountBalance(data.accountBalance ?? null);
+      setCachedExpenses(newExpenses, data.rangeBalance ?? data.totalBalance ?? 0, selectedRange);
       setSyncMessage(null);
     } catch (err) {
       console.error('Failed to fetch expenses', err);
       setSyncMessage("Could not refresh. Showing cached expenses.");
     } finally {
-      setRefreshing(false)
+      setRefreshing(false);
     }
   };
 
@@ -97,11 +103,11 @@ export default function Index() {
   // Load accounts on mount
   useEffect(() => {
     if (accounts.length === 0) {
-      fetchAccountsApi().then((fetched) => {
+      getAccounts().then((fetched) => {
         if (fetched.length > 0) setAccounts(fetched);
       });
     }
-  }, []);
+  }, [isGuest]);
 
   const colorScheme = useColorScheme();
   const dropdownRef = useRef<IDropdownRef>(null);
@@ -122,7 +128,7 @@ export default function Index() {
 
   const getAccountName = (sourceId?: string | null) => {
     if (!sourceId) return '';
-    const acc = accounts.find((a) => a._id === sourceId);
+    const acc = accounts.find((a) => a._id === sourceId || a.name === sourceId);
     return acc?.name || '';
   };
   return (

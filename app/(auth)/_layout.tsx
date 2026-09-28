@@ -7,12 +7,12 @@ import ToastManager from 'toastify-react-native'
 export default function RootLayout() {
   const colorScheme = useColorScheme()
   const backcolor = colorScheme == 'light' ? 'white' : '#111827'
-  const {accessToken,viewMode,role} = useAuthStore();
+  const {accessToken,viewMode,role,isGuest} = useAuthStore();
   const segments = useSegments();
   
   const isAdminPreview = segments.join("/").includes("AdminPreview");
 
-  if (accessToken && !isAdminPreview) {
+  if ((accessToken || isGuest) && !isAdminPreview) {
     if (role === 'admin' && viewMode === 'admin') {
       return <Redirect href="/(tabs)/home/adminView" />;
     }

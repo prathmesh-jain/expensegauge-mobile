@@ -12,8 +12,8 @@ import { Toast } from "toastify-react-native";
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAccountStore, AccountSource } from "@/store/accountStore";
 import { predictCategory } from "@/helper/categoryDetector";
-import { addExpenseApi } from "@/api/expenseApi";
-import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
+import { addExpense as saveExpenseToService, getAccounts, addAccount as addAccountService } from "@/utils/expenseServiceWrapper";
+import { useAuthStore } from "@/store/authStore";
 import { useEffect } from "react";
 
 // ---- Constants ----
@@ -111,16 +111,25 @@ export default function BulkAddPage() {
   const isDark = colorScheme === 'dark';
   const { addExpense, markAsSynced } = useExpenseStore();
   const { accounts, setAccounts, addAccount, getDefaultAccount } = useAccountStore();
+  const { isGuest } = useAuthStore();
   const { type: paramType, preselectedSourceId } = useLocalSearchParams<Record<string, string>>();
 
   const [txType] = useState<string>(paramType || 'debit');
   const [date, setDate] = useState(new Date());
-  const [sourceId, setSourceId] = useState<string>(preselectedSourceId || getDefaultAccount()?._id || '');
+  const [sourceId, setSourceId] = useState<string>(preselectedSourceId || '');
   const [rawText, setRawText] = useState('');
   const [transactions, setTransactions] = useState<BulkTransaction[]>([]);
   const [mode, setMode] = useState<'input' | 'review'>('input');
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Set default sourceId when accounts are available
+  useEffect(() => {
+    if (!sourceId && accounts.length > 0) {
+      const def = getDefaultAccount();
+      if (def) setSourceId(isGuest ? def.name : def._id);
+    }
+  }, [accounts, isGuest, getDefaultAccount]);
 
   // Edit modal state
   const [editIdx, setEditIdx] = useState<number | null>(null);
@@ -145,11 +154,11 @@ export default function BulkAddPage() {
   // Load accounts on mount
   useEffect(() => {
     if (accounts.length === 0) {
-      fetchAccountsApi().then((fetched) => {
+      getAccounts().then((fetched) => {
         if (fetched.length > 0) setAccounts(fetched);
       });
     }
-  }, []);
+  }, [isGuest]);
 
   // Keyboard padding (Android)
   useEffect(() => {
@@ -162,7 +171,7 @@ export default function BulkAddPage() {
   const accountItems = useMemo(() => {
     const items: { label: string; value: string; sublabel?: string }[] = accounts.map((a) => ({
       label: a.isDefault ? `${a.name} (Default)` : a.name,
-      value: a._id,
+      value: isGuest ? a.name : a._id, // Use name for guest, _id for logged-in
       sublabel: a.type,
     }));
     items.push({ label: '+ Add New Account', value: ADD_NEW_VALUE });
@@ -285,13 +294,17 @@ export default function BulkAddPage() {
         createdAt: new Date().toISOString(),
         isSynced: false,
         clientId: createLocalId(),
-        sourceId: tx.sourceId || getDefaultAccount()?._id || null,
+        sourceId: tx.sourceId || (isGuest ? getDefaultAccount()?.name : getDefaultAccount()?._id) || null,
       };
 
       try {
+        const result = await saveExpenseToService(transactionData as any);
+        // Update local UI store
         addExpense(transactionData as any);
-        const newId = await addExpenseApi(transactionData as any);
-        if (newId) markAsSynced(transactionData._id, newId);
+        if (!isGuest && result && typeof result === 'object') {
+          const remoteId = (result as any).id?.toString() || (result as any)._id;
+          if (remoteId) markAsSynced(transactionData._id, remoteId);
+        }
         savedCount++;
       } catch (err) {
         console.error('Failed to queue transaction:', err);
@@ -310,10 +323,14 @@ export default function BulkAddPage() {
     if (!trimmed) { Toast.error('Account name is required'); return; }
     setSavingAccount(true);
     try {
-      const created = await createAccountApi({ name: trimmed, type: newAccType, openingBalance: parseFloat(newAccBalance) || 0 } as any);
+      const created = await addAccountService({
+        name: trimmed,
+        type: newAccType,
+        openingBalance: parseFloat(newAccBalance) || 0
+      });
       if (created) {
         addAccount(created);
-        setSourceId(created._id);
+        setSourceId(isGuest ? created.name : created._id);
         Toast.success('Account added');
       } else {
         Toast.error('Failed to create account');

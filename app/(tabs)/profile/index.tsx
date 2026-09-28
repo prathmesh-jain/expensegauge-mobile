@@ -22,6 +22,9 @@ const UserProfileScreen: React.FC = () => {
   const role = useAuthStore((state) => state.role);
   const viewMode = useAuthStore((state) => state.viewMode);
   const setViewMode = useAuthStore((state) => state.setViewMode);
+  const isGuest = useAuthStore((state) => state.isGuest);
+  const exitGuestMode = useAuthStore((state) => state.exitGuestMode);
+  const reset = useAuthStore((state) => state.reset);
 
   const inAdminMode = role === 'admin' && viewMode === 'admin';
 
@@ -58,6 +61,10 @@ const UserProfileScreen: React.FC = () => {
   }
 
   const handleUpgradeToAdmin = () => {
+    if (isGuest) {
+      router.push('/(auth)/login');
+      return;
+    }
     if (role === 'admin') {
       setViewMode('admin');
       router.navigate('/(tabs)/home/adminView');
@@ -185,7 +192,7 @@ const UserProfileScreen: React.FC = () => {
         <View className="items-center mb-6">
           <Avatar uri={profilePicture} name={user || 'User'} size={100} />
           <View className="flex-row items-center mt-3 gap-2">
-            {isEditing ? (
+            {isEditing && !isGuest ? (
               <View className="flex-row items-center gap-4">
                 <TextInput
                   value={newName}
@@ -209,13 +216,15 @@ const UserProfileScreen: React.FC = () => {
             ) : (
               <>
                 <Text className="text-xl font-bold text-gray-900 dark:text-white">{user}</Text>
-                <TouchableOpacity onPress={() => setIsEditing(true)}>
-                  <Feather name="edit-2" size={16} color={isDark ? '#9ca3af' : '#4b5563'} />
-                </TouchableOpacity>
+                {!isGuest && (
+                  <TouchableOpacity onPress={() => setIsEditing(true)}>
+                    <Feather name="edit-2" size={16} color={isDark ? '#9ca3af' : '#4b5563'} />
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
-          <Text className="text-sm text-gray-500 dark:text-gray-400">{email}</Text>
+          <Text className="text-sm text-gray-500 dark:text-gray-400">{email || 'Guest User'}</Text>
         </View>
 
         <View className='mt-10'>
@@ -225,7 +234,21 @@ const UserProfileScreen: React.FC = () => {
 
           <View className=" p-2 mb-6">
 
-            {role === 'admin' ? (
+            {isGuest ? (
+              <Pressable
+                className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100"
+                onPress={handleUpgradeToAdmin}
+              >
+                <Text className="text-base text-gray-700 dark:text-gray-200 py-6">
+                  Create Account
+                </Text>
+                <View className="flex-row items-center py-6 px-1">
+                  <Text className="text-base text-gray-500 dark:text-gray-300">
+                    <Feather name='chevron-right' size={15} />
+                  </Text>
+                </View>
+              </Pressable>
+            ) : role === 'admin' ? (
               <Pressable
                 className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100"
                 onPress={handleSwitchView}
@@ -257,22 +280,29 @@ const UserProfileScreen: React.FC = () => {
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
             </Pressable>
-            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowReportModal(true)}>
-              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Download Expense Report</Text>
-              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='download' size={15} /></Text>
-            </Pressable>
+            
+            {!isGuest && (
+              <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowReportModal(true)}>
+                <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Download Expense Report</Text>
+                <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='download' size={15} /></Text>
+              </Pressable>
+            )}
 
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/theme')}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Theme</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
             </Pressable>
-            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/changePassword')}>
-              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Password</Text>
-              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
-            </Pressable>
+            
+            {!isGuest && (
+              <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/changePassword')}>
+                <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Password</Text>
+                <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
+              </Pressable>
+            )}
+            
             <TouchableOpacity className="py-6" onPress={() => setShowLogoutModal(true)}>
               <Text className="text-base text-red-600 dark:text-red-400 font-semibold">
-                Log Out
+                {isGuest ? 'Exit Guest Mode' : 'Log Out'}
               </Text>
             </TouchableOpacity>
           </View>

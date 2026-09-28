@@ -18,9 +18,9 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const { accessToken } = useAuthStore.getState()
+  const { accessToken, isGuest } = useAuthStore.getState()
 
-  if (accessToken) {
+  if (accessToken && !isGuest) {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
 
@@ -50,7 +50,7 @@ export const setOnQueueAdded = (cb: () => void) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: any) => {
-    const { refreshToken, setTokens, reset } = useAuthStore.getState();
+    const { refreshToken, setTokens, reset, isGuest } = useAuthStore.getState();
     const originalRequest = error.config;
 
     // Skip if no request config or if specifically told to skip queue (internal sync requests)
@@ -72,7 +72,7 @@ api.interceptors.response.use(
       originalRequest.url?.includes('/user/refresh');
 
     // Handle offline/network failure for mutations: Queue and return a successful offline response
-    if (isMutation && isRetryableError && !isAuthRequest) {
+    if (isMutation && isRetryableError && !isAuthRequest && !isGuest) {
       console.log(`[Offline-First] Queueing ${originalRequest.method} request due to ${isNoResponse ? 'network failure' : 'server error ' + status}`);
 
       let metadata = {};
@@ -106,7 +106,7 @@ api.interceptors.response.use(
     }
 
     // 2. Handle Authentication only when the server actually responds with 401
-    if (status === 401 && !isAuthRequest && !originalRequest._retry) {
+    if (status === 401 && !isGuest && refreshToken && !isAuthRequest && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokenRefresh((token) => {

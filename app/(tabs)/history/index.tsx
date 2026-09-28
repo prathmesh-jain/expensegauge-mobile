@@ -3,14 +3,14 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useExpenseStore } from '../../../store/expenseStore';
 import { LineChart } from 'react-native-chart-kit';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api from '@/api/api';
 import { ActivityIndicator } from 'react-native-paper';
 import ExpenseItem from '@/app/expenseModal/ExpenseItem';
 import DeleteModal from '../home/DeleteModal';
 import { processQueue } from '@/api/syncQueue';
 import { Transaction } from "@/types";
 import { useAccountStore } from '@/store/accountStore';
-import { fetchAccountsApi } from '@/api/accountApi';
+import { useAuthStore } from '@/store/authStore';
+import { getExpenses, deleteExpense, getMonthlyStats, getAccounts } from '@/utils/expenseServiceWrapper';
 import { Dropdown, IDropdownRef } from 'react-native-element-dropdown';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -28,6 +28,7 @@ const ranges = [
 export default function TransactionHistory() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isGuest = useAuthStore((state) => state.isGuest);
 
   const { setCachedExpenses, removeExpense, cachedExpenses, cachedStats, setCachedStats, selectedRange, setSelectedRange } = useExpenseStore();
   const { accounts, setAccounts, selectedAccountId, setSelectedAccountId } = useAccountStore();
@@ -82,11 +83,11 @@ export default function TransactionHistory() {
   // Load accounts if not yet loaded
   useEffect(() => {
     if (accounts.length === 0) {
-      fetchAccountsApi().then((fetched) => {
+      getAccounts().then((fetched) => {
         if (fetched.length > 0) setAccounts(fetched);
       });
     }
-  }, []);
+  }, [isGuest]);
 
   const handleTransactionPress = (transaction: Transaction) => {
     setSelectedTransaction(
@@ -97,22 +98,25 @@ export default function TransactionHistory() {
   const handleDelete = async () => {
     if (selectedTransaction) {
       try {
-        await api.delete(`/expense/${selectedTransaction._id}`)
-        setExpenses(prev => prev.filter((item) => item._id !== selectedTransaction._id))
-        removeExpense(selectedTransaction)
+        await deleteExpense(selectedTransaction._id);
+        setExpenses(prev => prev.filter((item) => item._id !== selectedTransaction._id));
+        removeExpense(selectedTransaction);
         fetchStats();
       } catch (error) {
         console.error(error);
       }
     }
-    setShowDeleteModal(false)
+    setShowDeleteModal(false);
   }
 
   // Filtered expenses for the list (apply account filter client-side on cached data too)
   const filteredExpenses = useMemo(() => {
     if (!selectedAccountId) return expenses;
-    return expenses.filter((e) => e.sourceId === selectedAccountId);
-  }, [expenses, selectedAccountId]);
+    const selectedAcc = accounts.find((a) => a._id === selectedAccountId);
+    return expenses.filter((e) =>
+      e.sourceId === selectedAccountId || (selectedAcc && e.sourceId === selectedAcc.name)
+    );
+  }, [expenses, selectedAccountId, accounts]);
 
   const flatData = useMemo(() => {
     const grouped: Record<string, Transaction[]> = {};
@@ -156,27 +160,18 @@ export default function TransactionHistory() {
     const requestId = ++statsRequestRef.current;
 
     try {
-      const params = new URLSearchParams();
-      if (selectedAccountId) {
-        params.append('sourceId', selectedAccountId);
-      }
-      if (selectedRange && selectedRange !== 'all_time') {
-        params.append('range', selectedRange);
-      }
-
-      const queryString = params.toString();
-      const res = await api.get(`/expense/stats/monthly${queryString ? '?' + queryString : ''}`);
+      const resData = await getMonthlyStats(selectedAccountId, selectedRange);
 
       // Discard stale responses
       if (requestId !== statsRequestRef.current) {
         return;
       }
 
-      const { labels, raw } = res.data;
+      const { labels, raw } = resData;
 
       const chartLabels = ["", ...labels];
-      const debitData = [0, ...(raw.debits || [])];
-      const creditData = [0, ...(raw.credits || [])];
+      const debitData = [0, ...(raw?.debits || [])];
+      const creditData = [0, ...(raw?.credits || [])];
 
       const processedStats = {
         labels: chartLabels,
@@ -215,7 +210,7 @@ export default function TransactionHistory() {
     try {
       const limit = 10;
       const currentOffset = isRefresh ? 0 : offset;
-      if (currentOffset === 0) {
+      if (!isGuest && currentOffset === 0) {
         setSyncMessage("Checking pending offline changes...");
         const syncResult = await processQueue(true);
         if (!syncResult.completed) {
@@ -227,16 +222,14 @@ export default function TransactionHistory() {
         }
       }
 
-      const rangeParam = selectedRange !== 'all_time' ? `&range=${selectedRange}` : '';
-      const accountParam = selectedAccountId ? `&sourceId=${selectedAccountId}` : '';
-      const response = await api.get(`/expense/get-expense/?offset=${currentOffset}&limit=${limit}${rangeParam}${accountParam}`);
+      const responseData = await getExpenses(limit, currentOffset, selectedRange, selectedAccountId);
 
       // Discard stale responses
       if (requestId !== expensesRequestRef.current) {
         return;
       }
 
-      const fetched = response.data.expenses;
+      const fetched = responseData.expenses;
 
       const merged = isRefresh || offset === 0 ? fetched : [...expenses, ...fetched];
       const unique = merged.filter((item: Transaction, index: number, self: Transaction[]) =>
@@ -245,14 +238,14 @@ export default function TransactionHistory() {
       const sorted = unique.sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       if (currentOffset === 0) {
-        setCachedExpenses(sorted.slice(0, 21), response.data.rangeBalance ?? response.data.totalBalance ?? 0, selectedRange);
+        setCachedExpenses(sorted.slice(0, 21), responseData.rangeBalance ?? responseData.totalBalance ?? 0, selectedRange);
         setExpenses(useExpenseStore.getState().cachedExpenses);
       } else {
         setExpenses(sorted);
       }
 
       setOffset(isRefresh ? limit : offset + limit);
-      setHasMore(response.data.hasMore);
+      setHasMore(responseData.hasMore);
       setSyncMessage(null);
     } catch (err) {
       // Only log errors for current request

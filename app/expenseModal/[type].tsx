@@ -21,14 +21,13 @@ import { Toast } from "toastify-react-native";
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
 import { predictCategory } from "@/helper/categoryDetector";
+import { useAccountStore, AccountSource } from "@/store/accountStore";
+import { useAuthStore } from "@/store/authStore";
+import { addExpense as saveExpenseToService, editExpense as updateExpenseInService, getAccounts, addAccount as addAccountService } from "@/utils/expenseServiceWrapper";
 import {
-  addExpenseApi,
-  editExpenseApi,
   editUserExpenseAdminApi,
   assignBalanceApi,
 } from "@/api/expenseApi";
-import { useAccountStore, AccountSource } from "@/store/accountStore";
-import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 
 // ------------------ Constants ------------------
 const categories = [
@@ -64,6 +63,7 @@ const ExpenseForm = () => {
   const { addExpense, editExpense, markAsSynced } = useExpenseStore();
   const { assignBalance, editUserExpenseByAdmin, markAsSyncedAdmin } = useAdminStore();
   const { accounts, setAccounts, addAccount, getDefaultAccount } = useAccountStore();
+  const { isGuest } = useAuthStore();
 
   const dropdownRef = useRef<IDropdownRef>(null);
   const accountDropdownRef = useRef<IDropdownRef>(null);
@@ -96,7 +96,7 @@ const ExpenseForm = () => {
   const accountItems = [
     ...accounts.map((a) => ({
       label: a.isDefault ? `${a.name} (Default)` : a.name,
-      value: a._id,
+      value: isGuest ? a.name : a._id, // Use name for guest, _id for logged-in
       sublabel: a.type,
     })),
     { label: "+ Add New Account", value: ADD_NEW_VALUE, sublabel: "" },
@@ -105,11 +105,11 @@ const ExpenseForm = () => {
   // Load accounts on mount
   useEffect(() => {
     if (accounts.length === 0) {
-      fetchAccountsApi().then((fetched) => {
+      getAccounts().then((fetched) => {
         if (fetched.length > 0) setAccounts(fetched);
       });
     }
-  }, []);
+  }, [isGuest]);
 
   // Set default sourceId when accounts are available (use preselectedSourceId if provided)
   useEffect(() => {
@@ -119,10 +119,10 @@ const ExpenseForm = () => {
         updateForm("sourceId", preselected);
       } else {
         const def = getDefaultAccount();
-        if (def) updateForm("sourceId", def._id);
+        if (def) updateForm("sourceId", isGuest ? def.name : def._id);
       }
     }
-  }, [accounts]);
+  }, [accounts, isGuest]);
 
   // ------------------ Lifecycle ------------------
   useEffect(() => {
@@ -183,18 +183,21 @@ const ExpenseForm = () => {
     }
     setSavingAccount(true);
     try {
-      const created = await createAccountApi({
+      const created = await addAccountService({
         name: trimmed,
         type: newAccType,
         openingBalance: parseFloat(newAccBalance) || 0,
       });
       if (created) {
         addAccount(created);
-        updateForm("sourceId", created._id);
+        updateForm("sourceId", isGuest ? created.name : created._id);
         Toast.success("Account added");
       } else {
         Toast.error("Failed to create account");
       }
+    } catch (error) {
+      console.error("Error creating account:", error);
+      Toast.error("Failed to create account");
     } finally {
       setSavingAccount(false);
       setShowNewAccountModal(false);
@@ -207,6 +210,7 @@ const ExpenseForm = () => {
   const buildTransaction = useCallback(
     (overrides = {}) => {
       const transactionId = _id || createLocalId();
+      const defaultAccount = getDefaultAccount();
       return {
         _id: transactionId,
         type,
@@ -217,11 +221,11 @@ const ExpenseForm = () => {
         createdAt: new Date().toISOString(),
         isSynced: false,
         clientId: createLocalId(),
-        sourceId: form.sourceId || getDefaultAccount()?._id || null,
+        sourceId: form.sourceId || (isGuest ? defaultAccount?.name : defaultAccount?._id) || null,
         ...overrides,
       };
     },
-    [_id, type, form]
+    [_id, type, form, isGuest, getDefaultAccount]
   );
 
   // ------------------ Submit Logic ------------------
@@ -271,7 +275,7 @@ const ExpenseForm = () => {
     }
   };
 
-  const handleUserSubmit = () => {
+  const handleUserSubmit = async () => {
     if (!form.details || !form.amount) {
       Toast.error("Please enter details and amount");
       return;
@@ -292,15 +296,34 @@ const ExpenseForm = () => {
     try {
       const transactionData = buildTransaction({ category: detectedCat });
       if (_id) {
+        // Update in service (API or SQLite)
+        await updateExpenseInService(_id, {
+          details: transactionData.details,
+          amount: transactionData.amount,
+          type: transactionData.type,
+          category: transactionData.category,
+          date: transactionData.date,
+          sourceId: transactionData.sourceId,
+        });
+        // Update local UI store
         editExpense(transactionData);
-        editExpenseApi(transactionData).then(() => {
-          markAsSynced(_id, _id);
-        });
+        if (!isGuest) markAsSynced(_id, _id);
       } else {
-        addExpense(transactionData);
-        addExpenseApi(transactionData).then((newId) => {
-          if (newId) markAsSynced(transactionData._id, newId);
+        // Add to service (API or SQLite)
+        const result = await saveExpenseToService({
+          details: transactionData.details,
+          amount: transactionData.amount,
+          type: transactionData.type,
+          category: transactionData.category,
+          date: transactionData.date,
+          sourceId: transactionData.sourceId,
         });
+        // Update local UI store
+        addExpense(transactionData);
+        if (!isGuest && result && typeof result === 'object') {
+          const remoteId = (result as any).id?.toString() || (result as any)._id;
+          if (remoteId) markAsSynced(transactionData._id, remoteId);
+        }
       }
       Toast.success("Request processed");
       router.back();

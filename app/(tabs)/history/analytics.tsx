@@ -5,10 +5,10 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native-paper';
 import { Dropdown, IDropdownRef } from 'react-native-element-dropdown';
-import api from '@/api/api';
-import { fetchAccountsApi } from '@/api/accountApi';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAccountStore } from '@/store/accountStore';
+import { useAuthStore } from '@/store/authStore';
+import { getAccounts, getExpenseAnalytics } from '@/utils/expenseServiceWrapper';
 import { AnalyticsBreakdownItem, ExpenseAnalytics } from '@/types';
 
 const ranges = [
@@ -124,31 +124,28 @@ export default function HistoryAnalyticsScreen() {
   const { selectedRange, setSelectedRange } = useExpenseStore();
   const { accounts, setAccounts, selectedAccountId, setSelectedAccountId } = useAccountStore();
 
+  const isGuest = useAuthStore((state) => state.isGuest);
+
   const [analytics, setAnalytics] = useState<ExpenseAnalytics>(emptyAnalytics);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (accounts.length === 0) {
-      fetchAccountsApi().then((fetched) => {
+      getAccounts().then((fetched) => {
         if (fetched.length > 0) setAccounts(fetched);
       });
     }
-  }, [accounts.length, setAccounts]);
+  }, [accounts.length, setAccounts, isGuest]);
 
   const fetchAnalytics = useCallback(async () => {
     const requestId = ++requestRef.current;
     setLoading(true);
 
     try {
-      const params = new URLSearchParams();
-      if (selectedAccountId) params.append('sourceId', selectedAccountId);
-      if (selectedRange && selectedRange !== 'all_time') params.append('range', selectedRange);
-
-      const queryString = params.toString();
-      const response = await api.get(`/expense/stats/analytics${queryString ? `?${queryString}` : ''}`);
+      const data = await getExpenseAnalytics(selectedRange, selectedAccountId);
 
       if (requestId !== requestRef.current) return;
-      setAnalytics(response.data || emptyAnalytics);
+      setAnalytics(data || emptyAnalytics);
     } catch (error) {
       if (requestId === requestRef.current) {
         console.error('Failed to fetch analytics', error);
@@ -159,7 +156,7 @@ export default function HistoryAnalyticsScreen() {
         setLoading(false);
       }
     }
-  }, [selectedAccountId, selectedRange]);
+  }, [selectedAccountId, selectedRange, isGuest]);
 
   useEffect(() => {
     fetchAnalytics();

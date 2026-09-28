@@ -10,12 +10,12 @@ import { useRouter } from 'expo-router';
 import { Toast } from 'toastify-react-native';
 import { useAccountStore, AccountSource } from '@/store/accountStore';
 import {
-  fetchAccountsApi,
-  createAccountApi,
-  updateAccountApi,
-  setDefaultAccountApi,
-  deleteAccountApi,
-} from '@/api/accountApi';
+  getAccounts,
+  addAccount as addAccountService,
+  updateAccount as updateAccountService,
+  setDefaultAccount as setDefaultAccountService,
+  deleteAccount as deleteAccountService,
+} from '@/utils/expenseServiceWrapper';
 
 const ACCOUNT_TYPES: { label: string; value: AccountSource['type']; icon: string }[] = [
   { label: "Bank", value: "bank", icon: "credit-card" },
@@ -69,7 +69,7 @@ export default function AccountSettings() {
 
   const loadAccounts = async () => {
     setLoading(true);
-    const fetched = await fetchAccountsApi();
+    const fetched = await getAccounts();
     setAccounts(fetched);
     setLoading(false);
   };
@@ -115,7 +115,7 @@ export default function AccountSettings() {
     setSaving(true);
     try {
       if (editTarget) {
-        const updated = await updateAccountApi(editTarget._id, { name: trimmedName, type: modalType });
+        const updated = await updateAccountService(editTarget._id, { name: trimmedName, type: modalType });
         if (updated) {
           updateAccount(updated);
           Toast.success('Account updated');
@@ -123,7 +123,7 @@ export default function AccountSettings() {
           Toast.error('Failed to update account');
         }
       } else {
-        const created = await createAccountApi({
+        const created = await addAccountService({
           name: trimmedName,
           type: modalType,
           openingBalance: parseFloat(modalBalance) || 0,
@@ -143,7 +143,7 @@ export default function AccountSettings() {
 
   const handleSetDefault = async (account: AccountSource) => {
     if (account.isDefault) return;
-    const updated = await setDefaultAccountApi(account._id);
+    const updated = await setDefaultAccountService(account._id);
     if (updated) {
       setDefaultAccount(account._id);
       Toast.success(`${account.name} is now the default account`);
@@ -172,7 +172,7 @@ export default function AccountSettings() {
     if (!deleteTarget || !selectedTransferId) return;
     setDeleting(true);
     try {
-      const result = await deleteAccountApi(deleteTarget._id, selectedTransferId);
+      const result = await deleteAccountService(deleteTarget._id, selectedTransferId);
       if (result.success) {
         removeAccount(deleteTarget._id);
         await loadAccounts(); // Reload to reflect updated balances on target account
