@@ -535,7 +535,7 @@ export default function TransactionHistory() {
         removeClippedSubviews
         updateCellsBatchingPeriod={50}
       />
-      {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+      <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
     </View>
   );
 }

@@ -159,7 +159,7 @@ export default function AdminUserView() {
           <Text className="text-xl dark:text-white ">No transactions to show</Text>
         </View>
       }
-      {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+      <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
     </View>
   );
 }

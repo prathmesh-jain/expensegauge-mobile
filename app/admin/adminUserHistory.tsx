@@ -322,7 +322,7 @@ export default function TransactionHistory() {
         onEndReachedThreshold={0.5}
         ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
       />
-      {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+      <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
 
     </View>
   );

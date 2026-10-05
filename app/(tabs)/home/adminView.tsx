@@ -140,7 +140,7 @@ export default function Index() {
                 </View>
             }
 
-            {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+            <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
         </SafeAreaView>
     );
 }

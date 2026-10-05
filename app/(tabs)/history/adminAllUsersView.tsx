@@ -157,7 +157,7 @@ export default function TransactionHistory() {
         :
         <Text className="text-gray-600 dark:text-gray-300 font-semibold text-center py-5 text-lg">No data available</Text>
       }
-      {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+      <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
     </SafeAreaView>
   );
 }
