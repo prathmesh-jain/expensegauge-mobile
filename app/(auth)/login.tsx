@@ -153,7 +153,7 @@ export default function Login() {
             {!isLogin &&
               <>
                 <TextInput
-                  className="dark:bg-gray-800 bg-white dark:text-white p-4 rounded-lg text-lg"
+                  className="dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg"
                   placeholder="Full Name"
                   placeholderTextColor="#9CA3AF"
                   onChangeText={setName}
@@ -162,7 +162,7 @@ export default function Login() {
               </>
             }
             <TextInput
-              className="dark:bg-gray-800 bg-white dark:text-white p-4 rounded-lg text-lg"
+              className="dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
               onChangeText={setEmail}
@@ -172,7 +172,7 @@ export default function Login() {
             {error.emailError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.emailError}</Text>}
 
             <TextInput
-              className={`dark:bg-gray-800 bg-white dark:text-white p-4 rounded-lg text-lg ${passwordInvalid ? 'border-2 border-red-500' : ''}`}
+              className={`dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg ${passwordInvalid ? 'border-2 border-red-500' : ''}`}
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
               onChangeText={(text) => {
@@ -222,7 +222,7 @@ export default function Login() {
             )}
 
             {!isLogin && <TextInput
-              className="dark:bg-gray-800 bg-white dark:text-white p-4 rounded-lg text-lg"
+              className="dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg"
               placeholder="Confirm Password"
               placeholderTextColor="#9CA3AF"
               onBlur={validatePasswords}
@@ -230,7 +230,8 @@ export default function Login() {
               secureTextEntry
             />}
             {error.passwordvalidationError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.passwordvalidationError}</Text>}
-            <View className="flex-row justify-end -mt-2">
+            
+            {isLogin && <View className="flex-row justify-end -mt-2">
               <Link href={{
                 pathname: `/forgotCredentials`,
               }} asChild>
@@ -238,7 +239,7 @@ export default function Login() {
                   <Text className="text-indigo-400 text-sm">Forgot Password?</Text>
                 </TouchableOpacity>
               </Link>
-            </View>
+            </View>}
 
             <TouchableOpacity disabled={buttonDisabled} className="bg-indigo-600 disabled:bg-indigo-300 py-4 rounded-lg"
               onPress={handleVerify}>
