@@ -7,6 +7,12 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { addToQueue } from '@/store/offlineQueue';
 
+// Global callback for user not found modal
+let onUserNotFound: (() => void) | null = null;
+export const setOnUserNotFound = (cb: () => void) => {
+    onUserNotFound = cb;
+};
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 const api = axios.create({
@@ -65,6 +71,16 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const isNoResponse = !error.response;
     const isRetryableError = isNoResponse || (status && (status >= 500 || status === 408 || status === 429));
+
+    // Check for user not found error
+    const isUserNotFound = status === 404 &&
+      (error.response?.data?.message?.includes('User not found') ||
+       error.response?.data?.message?.includes('Account may have been deleted'));
+
+    if (isUserNotFound && onUserNotFound) {
+      onUserNotFound();
+      return Promise.reject(error);
+    }
 
     const isAuthRequest = originalRequest.url?.includes('/user/login') ||
       originalRequest.url?.includes('/user/signup') ||
