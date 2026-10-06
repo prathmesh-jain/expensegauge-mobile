@@ -11,7 +11,7 @@ import { clearQueue, hasPendingUserMutationRequests } from '@/store/offlineQueue
 import { useColorScheme } from 'react-native'
 
 const LogoutModal = ({ show, setShow }: { show: boolean; setShow: (show: boolean) => void }) => {
-    const { reset, refreshToken } = useAuthStore();
+    const { logout, refreshToken } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -19,7 +19,13 @@ const LogoutModal = ({ show, setShow }: { show: boolean; setShow: (show: boolean
     const doLogout = async () => {
         setLoading(true);
         try {
-            const response = await api.post(`/user/logout`, { refreshToken })
+            // Try to call logout API, but proceed even if it fails
+            try {
+                await api.post(`/user/logout`, { refreshToken });
+            } catch (apiError) {
+                console.error('Logout API failed, proceeding with local logout:', apiError);
+            }
+
             const { reset: resetExpenseStore } = useExpenseStore.getState()
             const { reset: resetAdminStore } = useAdminStore.getState()
             const { reset: resetAccountStore } = useAccountStore.getState()
@@ -27,7 +33,7 @@ const LogoutModal = ({ show, setShow }: { show: boolean; setShow: (show: boolean
             resetAdminStore()
             resetAccountStore()
             await clearQueue()
-            reset()
+            await logout()
             setShow(false)
             router.replace('/')
         } catch (error) {

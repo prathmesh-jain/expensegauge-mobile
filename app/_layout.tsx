@@ -17,6 +17,7 @@ import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
 import { clearQueue } from "@/store/offlineQueue";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
@@ -30,7 +31,7 @@ export default function RootLayout() {
   const theme = useThemeStore((state) => state.theme);
   const previousConnection = useRef<boolean | null>(null);
   const [showUserNotFoundModal, setShowUserNotFoundModal] = useState(false);
-  const { reset, accessToken } = useAuthStore();
+  const { logout, accessToken } = useAuthStore();
   const { reset: resetExpenseStore } = useExpenseStore();
   const { reset: resetAdminStore } = useAdminStore();
   Appearance.setColorScheme(theme);
@@ -43,7 +44,7 @@ export default function RootLayout() {
     resetExpenseStore();
     resetAdminStore();
     await clearQueue();
-    reset();
+    await logout();
     // Set flag so modal shows on app restart
     await AsyncStorage.setItem('userNotFound', 'true');
     // Then show the modal
@@ -53,7 +54,7 @@ export default function RootLayout() {
   const handleUserNotFoundOk = () => {
     setShowUserNotFoundModal(false);
     // Navigate to login screen
-    // Note: User is already logged out, so they should be at login screen
+    router.replace('/');
   };
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function RootLayout() {
         resetExpenseStore();
         resetAdminStore();
         await clearQueue();
-        reset();
+        await logout();
         // Show the modal
         setShowUserNotFoundModal(true);
       }

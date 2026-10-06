@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { addToQueue } from '@/store/offlineQueue';
+import { clearQueue } from '@/store/offlineQueue';
 
 // Global callback for user not found modal
 let onUserNotFound: (() => void) | null = null;
@@ -56,7 +57,7 @@ export const setOnQueueAdded = (cb: () => void) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: any) => {
-    const { refreshToken, setTokens, reset } = useAuthStore.getState();
+    const { refreshToken, setTokens, logout } = useAuthStore.getState();
     const originalRequest = error.config;
 
     // Skip if no request config or if specifically told to skip queue (internal sync requests)
@@ -158,7 +159,8 @@ api.interceptors.response.use(
           resetExpenseStore();
           resetAdminStore();
           // Keep the offline queue persisted
-          reset();
+          await clearQueue();
+          await logout();
           router.replace('/');
         } else {
           console.warn('[Auth] Refresh failed (likely network/timeout), maintaining session');
