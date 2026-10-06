@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoutModal from './LogoutModal';
@@ -84,8 +84,8 @@ const UserProfileScreen: React.FC = () => {
     try {
       setIsDeletingAccount(true);
       // Call the public API endpoint to send deletion email
-      const API_URL = process.env.EXPO_PUBLIC_API_URL;
-      const res = await axios.post(`${API_URL}/public/request-account-deletion`, {
+      const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+      const res = await axios.post(`${API_URL}/api/v1/public/request-account-deletion`, {
         email: email
       });
 
@@ -351,7 +351,7 @@ const UserProfileScreen: React.FC = () => {
         </View>
 
         {/* Delete Account Button - Small and centered at bottom */}
-        <View className="mb-5">
+        <View className="mb-5 flex-row justify-between">
           <TouchableOpacity
             onPress={() => setShowDeleteModal(true)}
             className=""
@@ -360,6 +360,15 @@ const UserProfileScreen: React.FC = () => {
               Delete Account
             </Text>
           </TouchableOpacity>
+
+          {/* Privacy Policy Link - Bottom right */}
+            <TouchableOpacity
+              onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL || 'https://expensegauge.prathmeshjain.in/privacy')}
+            >
+              <Text className="text-xs text-gray-400 dark:text-gray-500 underline">
+                Privacy Policy
+              </Text>
+            </TouchableOpacity>
         </View>
 
         {showLogoutModal && <LogoutModal show={showLogoutModal} setShow={setShowLogoutModal} />}
