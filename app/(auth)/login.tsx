@@ -57,12 +57,21 @@ export default function Login() {
       }
       if (password !== confirmPassword) return false;
     }
-    if (!email) { // Changed from username to email
-      setError((prev) => ({ ...prev, emailError: "Please enter email" })); // Changed from usernameError to emailError
+    if (!email) {
+      setError((prev) => ({ ...prev, emailError: "Please enter email" }));
       return false
     }
-    else {
-      setError((prev) => ({ ...prev, emailError: "" })); // Changed from usernameError to emailError
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email.trim())) {
+      setError((prev) => ({
+        ...prev,
+        emailError: "Please enter a valid email",
+      }));
+      return false;
+    } else {
+      setError((prev) => ({ ...prev, emailError: "" }));
     }
     if (!password) {
       setError((prev) => ({ ...prev, passwordError: "Please enter password" }));
@@ -165,9 +174,11 @@ export default function Login() {
               className="dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
-              onChangeText={setEmail}
+              value={email}
+              onChangeText={(text) => setEmail(text.trim())}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
             {error.emailError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.emailError}</Text>}
 
@@ -226,11 +237,14 @@ export default function Login() {
               placeholder="Confirm Password"
               placeholderTextColor="#9CA3AF"
               onBlur={validatePasswords}
-              onChangeText={setConfirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                validatePasswords()
+              }}
               secureTextEntry
             />}
             {error.passwordvalidationError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.passwordvalidationError}</Text>}
-            
+
             {isLogin && <View className="flex-row justify-end -mt-2">
               <Link href={{
                 pathname: `/forgotCredentials`,
