@@ -1,27 +1,40 @@
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { Text, TextInput, TouchableOpacity, View, Animated, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Animated,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+} from "react-native";
 import api from "@/api/api";
 import { useAuthStore } from "@/store/authStore";
 import LoaderModal from "../expenseModal/LoaderModal";
 import GoogleAuthButton from "./GoogleAuthButton";
+import { Ionicons } from "@expo/vector-icons";
 
 
 
 export default function Login() {
 
   const [loading, setLoading] = useState(false);
-  const { type, role } = useLocalSearchParams<Record<string, string>>();
+  const { type } = useLocalSearchParams<Record<string, string>>();
   const isLogin = type === 'login';
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("") // Changed from username to email
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("")
   const [buttonDisabled, setButtonDisabled] = useState(false)
   const [error, setError] = useState({
     nameError: '',
-    emailError: '', // Changed from usernameError to emailError
+    emailError: '',
     passwordError: '',
     passwordvalidationError: '',
     serverError: '',
@@ -39,13 +52,48 @@ export default function Login() {
     special: false,
   });
   const [shakeAnim] = useState(new Animated.Value(0));
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  const validatePasswords = () => {
-    if (password && confirmPassword && password !== confirmPassword) {
-      setError((prev) => ({ ...prev, passwordvalidationError: "Passwords don't match" }));
-    }
-    else setError((prev) => ({ ...prev, passwordvalidationError: "" }));
-  }
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+
+  const validatePasswords = (
+    passwordValue = password,
+    confirmPasswordValue = confirmPassword
+  ) => {
+    const mismatch =
+      confirmPasswordValue.length > 0 &&
+      passwordValue !== confirmPasswordValue;
+
+    setError((prev) => ({
+      ...prev,
+      passwordvalidationError: mismatch
+        ? "Passwords don't match"
+        : "",
+    }));
+
+    return !mismatch;
+  };
+
   const validateFields = () => {
     if (!isLogin) {
       if (!name) {
@@ -55,7 +103,24 @@ export default function Login() {
       else {
         setError((prev) => ({ ...prev, nameError: "" }));
       }
-      if (password !== confirmPassword) return false;
+      const valid = validatePasswordPolicy(password);
+
+      setPasswordInvalid(!valid);
+
+      if (!valid) {
+        triggerShake();
+        return false;
+      }
+      if (!confirmPassword) {
+        setError((prev) => ({
+          ...prev,
+          passwordvalidationError: "Please confirm your password",
+        }));
+        return false;
+      }
+      if (!validatePasswords(password, confirmPassword)) {
+        return false;
+      }
     }
     if (!email) {
       setError((prev) => ({ ...prev, emailError: "Please enter email" }));
@@ -79,10 +144,6 @@ export default function Login() {
     }
     else {
       setError((prev) => ({ ...prev, passwordError: "" }));
-    }
-    if (passwordInvalid) {
-      triggerShake();
-      return false;
     }
     return true
   }
@@ -146,12 +207,18 @@ export default function Login() {
   return (
     <SafeAreaView className="flex-1 dark:bg-gray-900 bg-white">
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: `center` }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 24,
+            paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.5 + 24 : 24,
+            justifyContent: "center",
+          }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           <Text className="text-2xl text-center font-bold dark:text-white text-gray-800 mb-6">
             {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -182,25 +249,52 @@ export default function Login() {
             />
             {error.emailError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.emailError}</Text>}
 
-            <TextInput
-              className={`dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg ${passwordInvalid ? 'border-2 border-red-500' : ''}`}
-              placeholder="Password"
-              placeholderTextColor="#9CA3AF"
-              onChangeText={(text) => {
-                setPassword(text);
-                validatePasswordPolicy(text);
-                setPasswordInvalid(false);
-              }}
-              onFocus={() => setIsPasswordFocused(true)}
-              onBlur={() => {
-                setIsPasswordFocused(false);
-                const valid = validatePasswordPolicy(password);
-                setPasswordInvalid(!valid);
-                if (!valid) triggerShake();
-              }}
-              secureTextEntry
-            />
+
+            <View className="relative justify-center">
+              <TextInput
+                className={`dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 pr-12 rounded-lg text-lg ${passwordInvalid ? "border-2 border-red-500" : ""
+                  }`}
+                placeholder="Password"
+                placeholderTextColor="#9CA3AF"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  validatePasswordPolicy(text);
+                  setPasswordInvalid(false);
+
+                  if (confirmPassword.length > 0) {
+                    validatePasswords(text, confirmPassword);
+                  }
+                }}
+                onFocus={() => setIsPasswordFocused(true)}
+                onBlur={() => {
+                  setIsPasswordFocused(false);
+                  const valid = validatePasswordPolicy(password);
+                  setPasswordInvalid(!valid);
+                  if (!valid) triggerShake();
+                }}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+
+              <TouchableOpacity
+                onPress={() => setShowPassword((prev) => !prev)}
+                className="absolute right-1 p-3"
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color="#9CA3AF"
+                />
+              </TouchableOpacity>
+            </View>
+
+
             {error.passwordError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.passwordError}</Text>}
+
             {!isLogin && (isPasswordFocused || passwordInvalid) && (
               <Animated.View
                 style={{
@@ -232,18 +326,59 @@ export default function Login() {
               </Animated.View>
             )}
 
-            {!isLogin && <TextInput
-              className="dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 rounded-lg text-lg"
-              placeholder="Confirm Password"
-              placeholderTextColor="#9CA3AF"
-              onBlur={validatePasswords}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                validatePasswords()
-              }}
-              secureTextEntry
-            />}
-            {error.passwordvalidationError && <Text className="text-red-600 -mt-4 -mb-1 px-3">{error.passwordvalidationError}</Text>}
+            {!isLogin && (
+              <View className="relative justify-center">
+                <TextInput
+                  className={`dark:bg-gray-800 bg-gray-100/80 dark:text-white p-4 pr-12 rounded-lg text-lg ${error.passwordvalidationError
+                    ? "border-2 border-red-500"
+                    : ""
+                    }`}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#9CA3AF"
+                  value={confirmPassword}
+                  onFocus={() => {
+                    if (Platform.OS === "android") {
+                      setKeyboardHeight((height) => height || 1);
+                    }
+                  }}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    validatePasswords(password, text);
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-1 p-3"
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
+                >
+                  <Ionicons
+                    name={
+                      showConfirmPassword
+                        ? "eye-off-outline"
+                        : "eye-outline"
+                    }
+                    size={22}
+                    color="#9CA3AF"
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {!isLogin && error.passwordvalidationError !== "" && (
+              <Text className="text-red-600 -mt-4 -mb-1 px-3">
+                {error.passwordvalidationError}
+              </Text>
+            )}
+
 
             {isLogin && <View className="flex-row justify-end -mt-2">
               <Link href={{
