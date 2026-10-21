@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
@@ -72,6 +73,7 @@ const ExpenseForm = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [containerPadding, setContainerPadding] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
 
   // Unified form state
   const [form, setForm] = useState({
@@ -153,6 +155,19 @@ const ExpenseForm = () => {
       hideSub.remove();
     };
   }, []);
+
+  // Handle Android back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (hasUnsavedChanges()) {
+        setShowConfirmClose(true);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [form]);
 
   // ------------------ Handlers ------------------
   const handleCategoryDetect = () => {
@@ -311,6 +326,21 @@ const ExpenseForm = () => {
 
   const handleSubmit = () => (userIdAdmin ? handleAdminSubmit() : handleUserSubmit());
 
+  // Check if form has unsaved changes
+  const hasUnsavedChanges = () => {
+    if (!form.details && !form.amount) return false;
+    return true;
+  };
+
+  // Handle close with confirmation
+  const handleClose = () => {
+    if (hasUnsavedChanges()) {
+      setShowConfirmClose(true);
+    } else {
+      router.back();
+    }
+  };
+
   // ------------------ Render ------------------
   const backcolor = colorScheme === "light" ? "white" : "#111827";
   const textColor = colorScheme === "light" ? "black" : "#d1d5db";
@@ -323,9 +353,9 @@ const ExpenseForm = () => {
             <Text className="text-center text-xl dark:text-gray-200">
               Enter the {type} details
             </Text>
-            <Link href={"../"} asChild>
-              <Feather name="x" size={25} color={textColor} className="absolute right-0 top-0" />
-            </Link>
+            <TouchableOpacity onPress={handleClose} className="absolute right-0 top-0">
+              <Feather name="x" size={25} color={textColor} />
+            </TouchableOpacity>
           </View>
 
           {/* Bulk Add Link — only for regular user credit/debit */}
@@ -562,6 +592,42 @@ const ExpenseForm = () => {
                   ? <ActivityIndicator color="white" />
                   : <Text className="text-center font-semibold text-white">Add Account</Text>
                 }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Unsaved Changes Confirmation Modal */}
+      <Modal
+        visible={showConfirmClose}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirmClose(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="dark:bg-gray-900 bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
+            <Text className="text-xl font-bold dark:text-white text-gray-900 mb-3">
+              Unsaved Changes
+            </Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-6 text-base">
+              You have unsaved data. Click "Done" to save your entry, or discard your changes.
+            </Text>
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowConfirmClose(false)}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 p-4 rounded-xl"
+              >
+                <Text className="text-center font-semibold text-gray-700 dark:text-gray-300">Keep Editing</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowConfirmClose(false);
+                  router.back();
+                }}
+                className="flex-1 bg-red-500 p-4 rounded-xl"
+              >
+                <Text className="text-center font-semibold text-white">Discard</Text>
               </TouchableOpacity>
             </View>
           </View>
