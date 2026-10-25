@@ -14,8 +14,10 @@ import { checkConnection } from "@/api/network";
 import { Transaction } from "@/types";
 import { useAccountStore } from "@/store/accountStore";
 import { fetchAccountsApi } from "@/api/accountApi";
+import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
 
 export default function Index() {
+  const currencySymbol = useCurrencySymbol();
   const { setCachedExpenses, removeExpense, LastSyncedAt, cachedExpenses, totalBalance, selectedRange, setSelectedRange } = useExpenseStore();
   const { accounts, setAccounts, selectedAccountId, setSelectedAccountId } = useAccountStore();
 
@@ -198,7 +200,7 @@ export default function Index() {
             />
           </TouchableOpacity>
         </View>
-        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{displayedBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
+        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{formatCurrency(displayedBalance ?? 0, currencySymbol, TWO_DECIMALS)}</Text>
         {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
         {syncMessage && (
           <Text className="dark:text-indigo-100 text-indigo-700 text-sm font-semibold mt-2">

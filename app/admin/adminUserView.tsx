@@ -7,10 +7,12 @@ import DeleteModal from "../(tabs)/home/DeleteModal";
 import ExpenseItem from "../expenseModal/ExpenseItem";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Transaction } from "@/types";
+import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
 
 
 
 export default function AdminUserView() {
+  const currencySymbol = useCurrencySymbol()
   const { userindex, userId } = useLocalSearchParams<Record<string, string>>()
   const { activeUser, setActiveUser, updateUserFromServer } = useAdminStore();
   const cachedUsers = useAdminStore((state) => state.cachedUsers);
@@ -111,7 +113,7 @@ export default function AdminUserView() {
     <View className="flex-1 p-4 dark:bg-gray-900">
       <View className="dark:bg-indigo-600 bg-white rounded-xl p-6 mb-6 dark:border-0 border border-gray-300">
         <Text className="dark:text-white text-slate-800 text-lg">Total Balance</Text>
-        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{user.netBalance.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</Text>
+        <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{formatCurrency(user.netBalance, currencySymbol, TWO_DECIMALS)}</Text>
       </View>
 
       <View className="flex-row justify-between mb-6">

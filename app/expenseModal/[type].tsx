@@ -30,6 +30,7 @@ import {
 } from "@/api/expenseApi";
 import { useAccountStore, AccountSource } from "@/store/accountStore";
 import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 // ------------------ Constants ------------------
 const categories = [
@@ -58,6 +59,7 @@ const createLocalId = () => `${Date.now()}-${Math.random().toString(16).slice(2)
 
 // ------------------ Component ------------------
 const ExpenseForm = () => {
+  const currencySymbol = useCurrencySymbol();
   const { _id, type, userIdAdmin, ...params } = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -384,7 +386,7 @@ const ExpenseForm = () => {
           {/* Amount */}
           <TextInput
             className="dark:bg-gray-900 bg-white placeholder:text-gray-400 dark:placeholder:text-gray-300 dark:text-gray-200 h-16 p-3 rounded-lg text-xl w-full mt-3"
-            placeholder="₹ Amount"
+            placeholder={`${currencySymbol} Amount`}
             keyboardType="number-pad"
             value={form.amount}
             onChangeText={(v) => {
@@ -566,7 +568,7 @@ const ExpenseForm = () => {
               </View>
             </ScrollView>
 
-            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance ({currencySymbol})</Text>
             <TextInput
               className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
               placeholder="0"

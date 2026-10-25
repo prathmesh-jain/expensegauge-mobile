@@ -9,6 +9,7 @@ import api from '@/api/api';
 import { fetchAccountsApi } from '@/api/accountApi';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAccountStore } from '@/store/accountStore';
+import { formatCurrency, useCurrencySymbol } from '@/store/currencyStore';
 import { AnalyticsBreakdownItem, ExpenseAnalytics } from '@/types';
 
 const ranges = [
@@ -38,7 +39,10 @@ const emptyAnalytics: ExpenseAnalytics = {
   },
 };
 
-const formatCurrency = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const useFormatAmount = () => {
+  const currencySymbol = useCurrencySymbol();
+  return (value: number) => formatCurrency(value, currencySymbol, { maximumFractionDigits: 2 });
+};
 
 const formatDate = (value?: string) => {
   if (!value) return '';
@@ -58,6 +62,7 @@ function BreakdownSection({
   items: AnalyticsBreakdownItem[];
   colorScheme: 'light' | 'dark' | null;
 }) {
+  const formatAmount = useFormatAmount();
   return (
     <View
       className="mb-4 rounded-3xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
@@ -87,7 +92,7 @@ function BreakdownSection({
                     {item.label}
                   </Text>
                   <Text className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    {formatCurrency(item.amount)}
+                    {formatAmount(item.amount)}
                   </Text>
                 </View>
                 <View className="h-3 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
@@ -113,6 +118,7 @@ function BreakdownSection({
 }
 
 export default function HistoryAnalyticsScreen() {
+  const formatAmount = useFormatAmount();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colorScheme = useColorScheme() || null;
@@ -171,8 +177,8 @@ export default function HistoryAnalyticsScreen() {
   ]), [accounts]);
 
   const summaryCards = [
-    { label: 'Total spent', value: formatCurrency(analytics.summary.totalSpend), icon: 'trending-down' as const },
-    { label: 'Avg daily spend', value: formatCurrency(analytics.summary.averageDailySpend), icon: 'calendar' as const },
+    { label: 'Total spent', value: formatAmount(analytics.summary.totalSpend), icon: 'trending-down' as const },
+    { label: 'Avg daily spend', value: formatAmount(analytics.summary.averageDailySpend), icon: 'calendar' as const },
     { label: 'Spend entries', value: analytics.summary.totalTransactions.toString(), icon: 'hash' as const },
     { label: 'Active days', value: analytics.summary.activeDays.toString(), icon: 'activity' as const },
   ];
@@ -180,26 +186,26 @@ export default function HistoryAnalyticsScreen() {
   const insightCards = [
     analytics.insights.largestExpense && {
       title: 'Largest spend',
-      value: formatCurrency(analytics.insights.largestExpense.amount),
+      value: formatAmount(analytics.insights.largestExpense.amount),
       note: `${analytics.insights.largestExpense.category} · ${analytics.insights.largestExpense.details || 'Expense'} · ${formatDate(analytics.insights.largestExpense.date)}`,
       icon: 'arrow-up-right' as const,
     },
     analytics.insights.topWeekday && {
       title: 'Highest spend day',
       value: analytics.insights.topWeekday.day,
-      note: `${formatCurrency(analytics.insights.topWeekday.amount)} spent on average busiest day`,
+      note: `${formatAmount(analytics.insights.topWeekday.amount)} spent on average busiest day`,
       icon: 'bar-chart-2' as const,
     },
     analytics.insights.highestCategory && {
       title: 'Top category',
       value: analytics.insights.highestCategory.label,
-      note: `${formatCurrency(analytics.insights.highestCategory.amount)} · ${analytics.insights.highestCategory.percentage.toFixed(1)}% of spend`,
+      note: `${formatAmount(analytics.insights.highestCategory.amount)} · ${analytics.insights.highestCategory.percentage.toFixed(1)}% of spend`,
       icon: 'pie-chart' as const,
     },
     accounts.length>1 && analytics.insights.topAccount && {
       title: 'Top account',
       value: analytics.insights.topAccount.label,
-      note: `${formatCurrency(analytics.insights.topAccount.amount)} · ${analytics.insights.topAccount.percentage.toFixed(1)}% of spend`,
+      note: `${formatAmount(analytics.insights.topAccount.amount)} · ${analytics.insights.topAccount.percentage.toFixed(1)}% of spend`,
       icon: 'credit-card' as const,
     },
   ].filter(Boolean) as { title: string; value: string; note: string; icon: keyof typeof Feather.glyphMap }[];

@@ -14,6 +14,7 @@ import { fetchAccountsApi } from '@/api/accountApi';
 import { Dropdown, IDropdownRef } from 'react-native-element-dropdown';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -26,6 +27,7 @@ const ranges = [
 ];
 
 export default function TransactionHistory() {
+  const currencySymbol = useCurrencySymbol();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -415,7 +417,7 @@ export default function TransactionHistory() {
                       {tooltip.type}
                     </Text>
                     <Text style={{ color: 'white', fontSize: 15, fontWeight: '900', marginTop: 2 }}>
-                      ₹{tooltip.value.toLocaleString('en-IN')}
+                      {currencySymbol}{tooltip.value.toLocaleString('en-IN')}
                     </Text>
                     <View
                       style={{

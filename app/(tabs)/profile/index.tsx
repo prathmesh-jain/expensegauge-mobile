@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/store/authStore';
+import { useCurrencySymbol } from '@/store/currencyStore';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -18,6 +19,7 @@ import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native
 // when come back from insights to index page the total balance stats not changing and when going back to insights page it still shows graph of old data
 const UserProfileScreen: React.FC = () => {
   const router = useRouter()
+  const currencySymbol = useCurrencySymbol()
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.name);
   const email = useAuthStore((state) => state.email);
@@ -333,6 +335,10 @@ const UserProfileScreen: React.FC = () => {
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/theme')}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Theme</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
+            </Pressable>
+            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/currency' as any)}>
+              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Currency Symbol</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1">{currencySymbol} <Feather name='chevron-right' size={15} /></Text>
             </Pressable>
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/changePassword')}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Password</Text>

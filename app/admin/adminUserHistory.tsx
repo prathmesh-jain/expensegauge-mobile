@@ -10,11 +10,13 @@ import ExpenseItem from '../expenseModal/ExpenseItem';
 import DeleteModal from '../(tabs)/home/DeleteModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Transaction } from "@/types";
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function TransactionHistory() {
+  const currencySymbol = useCurrencySymbol()
   const { userindex, userId } = useLocalSearchParams<Record<string, string>>()
   const { activeUser, setActiveUser, statsCache, setStatsCache, updateUserFromServer } = useAdminStore();
   const cachedUsers = useAdminStore((state) => state.cachedUsers);
@@ -252,7 +254,7 @@ export default function TransactionHistory() {
                     {tooltip.type}
                   </Text>
                   <Text style={{ color: 'white', fontSize: 15, fontWeight: '900', marginTop: 2 }}>
-                    ₹{tooltip.value.toLocaleString('en-IN')}
+                    {currencySymbol}{tooltip.value.toLocaleString('en-IN')}
                   </Text>
 
                   <View

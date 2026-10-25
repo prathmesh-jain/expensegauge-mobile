@@ -8,8 +8,10 @@ import DeleteModal from "./DeleteModal";
 import { useAdminStore } from "@/store/adminStore";
 import api from "@/api/api";
 import { User } from "@/types";
+import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
 
 export default function Index() {
+    const currencySymbol = useCurrencySymbol();
     const { deleteUser, setCachedUsers, totalUserBalance, cachedUsers, LastSyncedAt } = useAdminStore();
     const user = useAuthStore((state) => state.name);
     const [users, setUsers] = useState<User[]>(cachedUsers);
@@ -83,7 +85,7 @@ export default function Index() {
             </View>
             <View className="dark:bg-indigo-600 bg-indigo-200 rounded-xl p-6 mb-6 dark:border-0 border border-gray-300">
                 <Text className="dark:text-white text-slate-800 text-lg">All Users Balance</Text>
-                <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{totalUserBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) ?? "0.00"}</Text>
+                <Text className="dark:text-white text-slate-800 text-4xl font-bold mt-2">{formatCurrency(totalUserBalance ?? 0, currencySymbol, TWO_DECIMALS)}</Text>
                 {LastSyncedAt && <Text className="dark:text-gray-300 text-slate-800 text-sm italic mt-1">Last Synced At {LastSyncedAt}</Text>}
 
             </View>
@@ -111,7 +113,7 @@ export default function Index() {
                                 <View className="flex-row justify-between">
                                     <Text className="dark:text-gray-100">{item.name} </Text>
                                     <Text className="dark:text-white">
-                                        ₹{item.netBalance}
+                                        {currencySymbol}{item.netBalance}
                                     </Text>
                                 </View>
                                 <View className="flex flex-row justify-between items-center mt-1">

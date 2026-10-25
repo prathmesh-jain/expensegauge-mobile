@@ -3,6 +3,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Link } from "expo-router";
 import React from "react";
 import { Transaction } from "@/types";
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 type Props = {
   item: Transaction;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default React.memo(function ExpenseItem({ item, selectedId, type = "user", onSelect, onDeletePress, showAccountName, accountName, userIdAdmin }: Props) {
+  const currencySymbol = useCurrencySymbol();
   const colorScheme = useColorScheme();
   const isSelected = selectedId === item._id;
   const isAdminAdded = item.type === "assign" && type === "admin";
@@ -38,7 +40,7 @@ export default React.memo(function ExpenseItem({ item, selectedId, type = "user"
                 ? "dark:text-red-400 text-red-500"
                 : "dark:text-green-400 text-green-500"
             }>
-            {item.type === "debit" ? "-" : "+"} ₹{item.amount}
+            {item.type === "debit" ? "-" : "+"} {currencySymbol}{item.amount}
           </Text>
         </View>
 
@@ -66,7 +68,7 @@ export default React.memo(function ExpenseItem({ item, selectedId, type = "user"
         <View className="flex-row items-center mt-1 gap-2">
           {typeof item.afterBalance === "number" && (
             <Text className="dark:text-indigo-300 text-indigo-700 text-xs">
-              Available Balance: ₹{item.afterBalance.toLocaleString("en-IN")}
+              Available Balance: {currencySymbol}{item.afterBalance.toLocaleString("en-IN")}
             </Text>
           )}
           {showAccountName && accountName && (

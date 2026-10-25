@@ -15,6 +15,7 @@ import { predictCategory } from "@/helper/categoryDetector";
 import { addExpenseApi } from "@/api/expenseApi";
 import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 import { useEffect } from "react";
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 // ---- Constants ----
 const categories = [
@@ -106,6 +107,7 @@ function parseBulkText(raw: string): { entries: ParsedLine[]; usedComma: boolean
 
 // ---- Component ----
 export default function BulkAddPage() {
+  const currencySymbol = useCurrencySymbol();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -484,7 +486,7 @@ export default function BulkAddPage() {
                   </View>
                   <View className="items-end">
                     <Text className={txType === 'credit' ? 'text-green-500 font-bold text-lg' : 'text-red-500 font-bold text-lg'}>
-                      {txType === 'credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                      {txType === 'credit' ? '+' : '-'}{currencySymbol}{item.amount.toLocaleString('en-IN')}
                     </Text>
                   </View>
                 </View>
@@ -522,7 +524,7 @@ export default function BulkAddPage() {
                     />
                     <TextInput
                       className="w-24 dark:bg-gray-700 bg-white rounded-lg px-3 py-2.5 dark:text-white text-gray-900 text-sm border dark:border-gray-600 border-gray-300"
-                      placeholder="₹"
+                      placeholder={currencySymbol}
                       placeholderTextColor="#9ca3af"
                       keyboardType="number-pad"
                       value={quickAmount}
@@ -553,7 +555,7 @@ export default function BulkAddPage() {
                 Total {txType === 'credit' ? 'Credit' : 'Debit'}:
               </Text>
               <Text className={`font-bold text-lg ${txType === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                ₹{total.toLocaleString('en-IN')}
+                {currencySymbol}{total.toLocaleString('en-IN')}
               </Text>
             </View>
             <View className="flex-row gap-3">
@@ -595,7 +597,7 @@ export default function BulkAddPage() {
                 onChangeText={(v) => setEditForm((p) => ({ ...p, details: v }))}
               />
 
-              <Text className="dark:text-gray-300 text-gray-600 mb-1">Amount (₹)</Text>
+              <Text className="dark:text-gray-300 text-gray-600 mb-1">Amount ({currencySymbol})</Text>
               <TextInput
                 className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-3"
                 keyboardType="number-pad"
@@ -724,7 +726,7 @@ export default function BulkAddPage() {
               </View>
             </ScrollView>
 
-            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance ({currencySymbol})</Text>
             <TextInput
               className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
               placeholder="0"
