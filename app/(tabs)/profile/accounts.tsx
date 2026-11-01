@@ -4,12 +4,13 @@ import {
   Modal, useColorScheme, ActivityIndicator, Keyboard,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Toast } from 'toastify-react-native';
 import { useAccountStore, AccountSource } from '@/store/accountStore';
 import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
+import { MAX_AMOUNT_DIGITS } from '@/helper/expenseLimits';
 import {
   fetchAccountsApi,
   createAccountApi,
@@ -50,6 +51,9 @@ export default function AccountSettings() {
 
   const [loading, setLoading] = useState(false);
   const [containerPadding, setContainerPadding] = useState(0);
+  const insets = useSafeAreaInsets();
+  // Keeps sheet content above Android's navigation buttons; the keyboard covers them while it is open
+  const sheetPaddingBottom = containerPadding > 0 ? 24 : insets.bottom + 24;
 
   // Edit/Add modal state
   const [showModal, setShowModal] = useState(false);
@@ -355,7 +359,7 @@ export default function AccountSettings() {
         onRequestClose={() => setShowModal(false)}
       >
         <View className="flex-1 justify-end bg-black/50" style={{paddingBottom:containerPadding}}>
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-5">
               {editTarget ? 'Edit Account' : 'New Account'}
             </Text>
@@ -398,6 +402,7 @@ export default function AccountSettings() {
                   placeholder="0"
                   placeholderTextColor="#9ca3af"
                   keyboardType="number-pad"
+                  maxLength={MAX_AMOUNT_DIGITS}
                   value={modalBalance}
                   onChangeText={setModalBalance}
                 />
@@ -434,7 +439,7 @@ export default function AccountSettings() {
         onRequestClose={() => setShowDeleteModal(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-2">Delete Account</Text>
             <Text className="dark:text-gray-300 text-gray-600 mb-4">
               Transfer expenses from "{deleteTarget?.name}" to which account?
