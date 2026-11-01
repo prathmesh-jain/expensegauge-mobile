@@ -323,10 +323,12 @@ const UserProfileScreen: React.FC = () => {
               </Pressable>
             )}
 
-            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/accounts' as any)}>
-              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
-              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
-            </Pressable>
+            {!inAdminMode && (
+              <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/accounts' as any)}>
+                <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
+                <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
+              </Pressable>
+            )}
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowReportModal(true)}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Download Expense Report</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='download' size={15} /></Text>
