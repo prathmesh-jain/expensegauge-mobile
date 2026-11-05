@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
@@ -29,6 +30,9 @@ import {
 } from "@/api/expenseApi";
 import { useAccountStore, AccountSource } from "@/store/accountStore";
 import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
+import { useCurrencySymbol } from '@/store/currencyStore';
+import { getExpenseLimitError, MAX_AMOUNT_DIGITS, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ------------------ Constants ------------------
 const categories = [
@@ -57,6 +61,7 @@ const createLocalId = () => `${Date.now()}-${Math.random().toString(16).slice(2)
 
 // ------------------ Component ------------------
 const ExpenseForm = () => {
+  const currencySymbol = useCurrencySymbol();
   const { _id, type, userIdAdmin, ...params } = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
   const colorScheme = useColorScheme();
@@ -71,7 +76,11 @@ const ExpenseForm = () => {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [containerPadding, setContainerPadding] = useState(0);
+  const insets = useSafeAreaInsets();
+  // Keeps sheet content above Android's navigation buttons; the keyboard covers them while it is open
+  const sheetPaddingBottom = containerPadding > 0 ? 24 : insets.bottom + 24;
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
 
   // Unified form state
   const [form, setForm] = useState({
@@ -154,6 +163,19 @@ const ExpenseForm = () => {
     };
   }, []);
 
+  // Handle Android back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (hasUnsavedChanges()) {
+        setShowConfirmClose(true);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [form]);
+
   // ------------------ Handlers ------------------
   const handleCategoryDetect = () => {
     const detected = predictCategory(form.details);
@@ -230,6 +252,14 @@ const ExpenseForm = () => {
       Toast.error("Please enter details and amount");
       return;
     }
+    const limitError = getExpenseLimitError(form.details, parseFloat(form.amount), {
+      details: params.details,
+      amount: parseFloat(params.amount || ""),
+    });
+    if (limitError) {
+      Toast.error(limitError);
+      return;
+    }
     if (submitting) return;
 
     const isRedundant = _id &&
@@ -276,6 +306,14 @@ const ExpenseForm = () => {
       Toast.error("Please enter details and amount");
       return;
     }
+    const limitError = getExpenseLimitError(form.details, parseFloat(form.amount), {
+      details: params.details,
+      amount: parseFloat(params.amount || ""),
+    });
+    if (limitError) {
+      Toast.error(limitError);
+      return;
+    }
     const detectedCat = !form.category ? handleCategoryDetect() : form.category;
 
     const isRedundant = _id &&
@@ -311,6 +349,21 @@ const ExpenseForm = () => {
 
   const handleSubmit = () => (userIdAdmin ? handleAdminSubmit() : handleUserSubmit());
 
+  // Check if form has unsaved changes
+  const hasUnsavedChanges = () => {
+    if (!form.details && !form.amount) return false;
+    return true;
+  };
+
+  // Handle close with confirmation
+  const handleClose = () => {
+    if (hasUnsavedChanges()) {
+      setShowConfirmClose(true);
+    } else {
+      router.back();
+    }
+  };
+
   // ------------------ Render ------------------
   const backcolor = colorScheme === "light" ? "white" : "#111827";
   const textColor = colorScheme === "light" ? "black" : "#d1d5db";
@@ -323,9 +376,9 @@ const ExpenseForm = () => {
             <Text className="text-center text-xl dark:text-gray-200">
               Enter the {type} details
             </Text>
-            <Link href={"../"} asChild>
-              <Feather name="x" size={25} color={textColor} className="absolute right-0 top-0" />
-            </Link>
+            <TouchableOpacity onPress={handleClose} className="absolute right-0 top-0">
+              <Feather name="x" size={25} color={textColor} />
+            </TouchableOpacity>
           </View>
 
           {/* Bulk Add Link — only for regular user credit/debit */}
@@ -346,6 +399,7 @@ const ExpenseForm = () => {
           <TextInput
             className="w-full h-16 rounded-lg dark:bg-gray-900 bg-white placeholder:text-gray-400 dark:placeholder:text-gray-300 dark:text-gray-100 text-xl p-4"
             placeholder="Enter details"
+            maxLength={MAX_DETAILS_LENGTH}
             value={form.details}
             onChangeText={(v) => updateForm("details", v)}
             onBlur={handleCategoryDetect}
@@ -354,8 +408,9 @@ const ExpenseForm = () => {
           {/* Amount */}
           <TextInput
             className="dark:bg-gray-900 bg-white placeholder:text-gray-400 dark:placeholder:text-gray-300 dark:text-gray-200 h-16 p-3 rounded-lg text-xl w-full mt-3"
-            placeholder="₹ Amount"
+            placeholder={`${currencySymbol} Amount`}
             keyboardType="number-pad"
+            maxLength={MAX_AMOUNT_DIGITS}
             value={form.amount}
             onChangeText={(v) => {
               // Replaces anything that isn't a digit (0-9) with an empty string
@@ -504,7 +559,7 @@ const ExpenseForm = () => {
         onRequestClose={() => setShowNewAccountModal(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-5">Add New Account</Text>
 
             <Text className="dark:text-gray-300 text-gray-600 mb-1">Account Name</Text>
@@ -536,12 +591,13 @@ const ExpenseForm = () => {
               </View>
             </ScrollView>
 
-            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance ({currencySymbol})</Text>
             <TextInput
               className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
               placeholder="0"
               placeholderTextColor="#9ca3af"
               keyboardType="number-pad"
+              maxLength={MAX_AMOUNT_DIGITS}
               value={newAccBalance}
               onChangeText={setNewAccBalance}
             />
@@ -562,6 +618,42 @@ const ExpenseForm = () => {
                   ? <ActivityIndicator color="white" />
                   : <Text className="text-center font-semibold text-white">Add Account</Text>
                 }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Unsaved Changes Confirmation Modal */}
+      <Modal
+        visible={showConfirmClose}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirmClose(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="dark:bg-gray-900 bg-white rounded-2xl p-6 mx-6 w-full max-w-sm">
+            <Text className="text-xl font-bold dark:text-white text-gray-900 mb-3">
+              Unsaved Changes
+            </Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-6 text-base">
+              You have unsaved data. Click "Done" to save your entry, or discard your changes.
+            </Text>
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setShowConfirmClose(false)}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 p-4 rounded-xl"
+              >
+                <Text className="text-center font-semibold text-gray-700 dark:text-gray-300">Keep Editing</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowConfirmClose(false);
+                  router.back();
+                }}
+                className="flex-1 bg-red-500 p-4 rounded-xl"
+              >
+                <Text className="text-center font-semibold text-white">Discard</Text>
               </TouchableOpacity>
             </View>
           </View>

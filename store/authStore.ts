@@ -16,6 +16,7 @@ type AuthStore = {
   setViewMode: (mode: 'admin' | 'user') => void;
   clearTokens: () => void;
   reset: () => void;
+  logout: () => Promise<void>;
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -58,6 +59,25 @@ export const useAuthStore = create<AuthStore>()(
           profilePicture: null,
         }
       }),
+      logout: async () => {
+        // Clear all auth state
+        set(() => ({
+          name: null,
+          email: null,
+          role: null,
+          admin: null,
+          viewMode: null,
+          accessToken: null,
+          refreshToken: null,
+          profilePicture: null,
+        }));
+        // Clear persisted data from SecureStore
+        try {
+          await SecureStore.deleteItemAsync('auth-storage');
+        } catch (error) {
+          console.error('Error clearing SecureStore:', error);
+        }
+      },
     }),
     {
       name: 'auth-storage',

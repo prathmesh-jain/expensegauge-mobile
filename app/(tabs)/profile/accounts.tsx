@@ -4,11 +4,13 @@ import {
   Modal, useColorScheme, ActivityIndicator, Keyboard,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Toast } from 'toastify-react-native';
 import { useAccountStore, AccountSource } from '@/store/accountStore';
+import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
+import { MAX_AMOUNT_DIGITS } from '@/helper/expenseLimits';
 import {
   fetchAccountsApi,
   createAccountApi,
@@ -41,6 +43,7 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function AccountSettings() {
+  const currencySymbol = useCurrencySymbol();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -48,6 +51,9 @@ export default function AccountSettings() {
 
   const [loading, setLoading] = useState(false);
   const [containerPadding, setContainerPadding] = useState(0);
+  const insets = useSafeAreaInsets();
+  // Keeps sheet content above Android's navigation buttons; the keyboard covers them while it is open
+  const sheetPaddingBottom = containerPadding > 0 ? 24 : insets.bottom + 24;
 
   // Edit/Add modal state
   const [showModal, setShowModal] = useState(false);
@@ -296,7 +302,7 @@ export default function AccountSettings() {
                       ? 'text-blue-700 dark:text-blue-300' 
                       : 'dark:text-gray-300 text-gray-700'
                   }`}>
-                    Balance: {account.currentBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                    Balance: {formatCurrency(account.currentBalance ?? 0, currencySymbol, TWO_DECIMALS)}
                   </Text>
                   {/* Don't show transaction count and last used for system accounts */}
                   {!account.isSystem && (
@@ -353,7 +359,7 @@ export default function AccountSettings() {
         onRequestClose={() => setShowModal(false)}
       >
         <View className="flex-1 justify-end bg-black/50" style={{paddingBottom:containerPadding}}>
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-5">
               {editTarget ? 'Edit Account' : 'New Account'}
             </Text>
@@ -390,12 +396,13 @@ export default function AccountSettings() {
             {/* Opening balance only for NEW accounts */}
             {!editTarget && (
               <>
-                <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+                <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance ({currencySymbol})</Text>
                 <TextInput
                   className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
                   placeholder="0"
                   placeholderTextColor="#9ca3af"
                   keyboardType="number-pad"
+                  maxLength={MAX_AMOUNT_DIGITS}
                   value={modalBalance}
                   onChangeText={setModalBalance}
                 />
@@ -432,7 +439,7 @@ export default function AccountSettings() {
         onRequestClose={() => setShowDeleteModal(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-2">Delete Account</Text>
             <Text className="dark:text-gray-300 text-gray-600 mb-4">
               Transfer expenses from "{deleteTarget?.name}" to which account?
@@ -493,7 +500,7 @@ export default function AccountSettings() {
                     {acc.name}{acc.isDefault ? ' (Default)' : ''}
                   </Text>
                   <Text className="dark:text-gray-400 text-gray-500 text-xs">
-                    Balance: {acc.currentBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                    Balance: {formatCurrency(acc.currentBalance ?? 0, currencySymbol, TWO_DECIMALS)}
                   </Text>
                 </View>
                 {selectedTransferId === acc._id && (

@@ -6,6 +6,13 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { addToQueue } from '@/store/offlineQueue';
+import { clearQueue } from '@/store/offlineQueue';
+
+// Global callback for user not found modal
+let onUserNotFound: (() => void) | null = null;
+export const setOnUserNotFound = (cb: () => void) => {
+    onUserNotFound = cb;
+};
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
@@ -50,7 +57,7 @@ export const setOnQueueAdded = (cb: () => void) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: any) => {
-    const { refreshToken, setTokens, reset } = useAuthStore.getState();
+    const { refreshToken, setTokens, logout } = useAuthStore.getState();
     const originalRequest = error.config;
 
     // Skip if no request config or if specifically told to skip queue (internal sync requests)
@@ -65,6 +72,16 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const isNoResponse = !error.response;
     const isRetryableError = isNoResponse || (status && (status >= 500 || status === 408 || status === 429));
+
+    // Check for user not found error
+    const isUserNotFound = status === 404 &&
+      (error.response?.data?.message?.includes('User not found') ||
+       error.response?.data?.message?.includes('Account may have been deleted'));
+
+    if (isUserNotFound && onUserNotFound) {
+      onUserNotFound();
+      return Promise.reject(error);
+    }
 
     const isAuthRequest = originalRequest.url?.includes('/user/login') ||
       originalRequest.url?.includes('/user/signup') ||
@@ -142,7 +159,8 @@ api.interceptors.response.use(
           resetExpenseStore();
           resetAdminStore();
           // Keep the offline queue persisted
-          reset();
+          await clearQueue();
+          await logout();
           router.replace('/');
         } else {
           console.warn('[Auth] Refresh failed (likely network/timeout), maintaining session');

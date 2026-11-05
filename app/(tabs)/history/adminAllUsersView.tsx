@@ -8,8 +8,10 @@ import { useRouter } from 'expo-router';
 import DeleteModal from '../home/DeleteModal';
 import { useAdminStore } from '@/store/adminStore';
 import { User } from "@/types";
+import { useCurrencySymbol } from '@/store/currencyStore';
 
 export default function TransactionHistory() {
+  const currencySymbol = useCurrencySymbol();
   const { deleteUser, setCachedUsers, cachedUsers } = useAdminStore();
 
   const [users, setUsers] = useState<User[]>(cachedUsers);
@@ -122,7 +124,7 @@ export default function TransactionHistory() {
                       <View className="flex-row justify-between">
                         <Text className="dark:text-gray-100">{item.name} </Text>
                         <Text className="dark:text-white">
-                          ₹{item.netBalance}
+                          {currencySymbol}{item.netBalance}
                         </Text>
                       </View>
                       <View className="flex flex-row justify-between items-center mt-1">
@@ -157,7 +159,7 @@ export default function TransactionHistory() {
         :
         <Text className="text-gray-600 dark:text-gray-300 font-semibold text-center py-5 text-lg">No data available</Text>
       }
-      {showDeleteModal && <DeleteModal setShow={setShowDeleteModal} handleDelete={handleDelete} />}
+      <DeleteModal show={showDeleteModal} setShow={setShowDeleteModal} handleDelete={handleDelete} />
     </SafeAreaView>
   );
 }

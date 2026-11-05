@@ -15,6 +15,9 @@ import { predictCategory } from "@/helper/categoryDetector";
 import { addExpenseApi } from "@/api/expenseApi";
 import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 import { useEffect } from "react";
+import { useCurrencySymbol } from '@/store/currencyStore';
+import { getExpenseLimitError, MAX_AMOUNT, MAX_AMOUNT_DIGITS, MAX_AMOUNT_INPUT_LENGTH, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ---- Constants ----
 const categories = [
@@ -106,6 +109,7 @@ function parseBulkText(raw: string): { entries: ParsedLine[]; usedComma: boolean
 
 // ---- Component ----
 export default function BulkAddPage() {
+  const currencySymbol = useCurrencySymbol();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -130,6 +134,9 @@ export default function BulkAddPage() {
   const accountDropdownRef = useRef<IDropdownRef>(null);
   const editCategoryRef = useRef<IDropdownRef>(null);
   const [containerPadding, setContainerPadding] = useState(0);
+  const insets = useSafeAreaInsets();
+  // Keeps sheet content above Android's navigation buttons; the keyboard covers them while it is open
+  const sheetPaddingBottom = containerPadding > 0 ? 24 : insets.bottom + 24;
 
   // Quick add state for review mode
   const [quickDetails, setQuickDetails] = useState('');
@@ -178,11 +185,16 @@ export default function BulkAddPage() {
       Toast.error('Please enter or paste some transactions');
       return;
     }
-    const { entries, usedComma } = parseBulkText(rawText);
-    if (entries.length === 0) {
+    const { entries: parsedEntries, usedComma } = parseBulkText(rawText);
+    if (parsedEntries.length === 0) {
       Toast.error('Could not parse any transactions. Check the format.');
       return;
     }
+    const entries = parsedEntries.filter((e) => !getExpenseLimitError(e.details, e.amount));
+    if (entries.length < parsedEntries.length) {
+      Toast.error(`${parsedEntries.length - entries.length} line(s) skipped: details over ${MAX_DETAILS_LENGTH} characters or amount over ${MAX_AMOUNT.toLocaleString('en-IN')}`);
+    }
+    if (entries.length === 0) return;
     if (usedComma) {
       Toast.info('Some entries used "," as separator. Please review parsed transactions.');
     }
@@ -215,6 +227,11 @@ export default function BulkAddPage() {
       Toast.error('Invalid details or amount');
       return;
     }
+    const limitError = getExpenseLimitError(editForm.details, amount);
+    if (limitError) {
+      Toast.error(limitError);
+      return;
+    }
     setTransactions((prev) =>
       prev.map((tx, i) =>
         i === editIdx ? { ...tx, details: editForm.details.trim(), amount, category: editForm.category || tx.category, date: editForm.date, sourceId: editForm.sourceId || tx.sourceId } : tx
@@ -236,6 +253,11 @@ export default function BulkAddPage() {
     const amount = parseFloat(quickAmount);
     if (!quickDetails.trim() || isNaN(amount) || amount <= 0) {
       Toast.error('Enter details and a valid amount');
+      return;
+    }
+    const limitError = getExpenseLimitError(quickDetails, amount);
+    if (limitError) {
+      Toast.error(limitError);
       return;
     }
     const newTx: BulkTransaction = {
@@ -484,7 +506,7 @@ export default function BulkAddPage() {
                   </View>
                   <View className="items-end">
                     <Text className={txType === 'credit' ? 'text-green-500 font-bold text-lg' : 'text-red-500 font-bold text-lg'}>
-                      {txType === 'credit' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                      {txType === 'credit' ? '+' : '-'}{currencySymbol}{item.amount.toLocaleString('en-IN')}
                     </Text>
                   </View>
                 </View>
@@ -515,6 +537,7 @@ export default function BulkAddPage() {
                       className="flex-1 dark:bg-gray-700 bg-white rounded-lg px-3 py-2.5 dark:text-white text-gray-900 text-sm border dark:border-gray-600 border-gray-300"
                       placeholder="Add more..."
                       placeholderTextColor="#9ca3af"
+                      maxLength={MAX_DETAILS_LENGTH}
                       value={quickDetails}
                       onChangeText={setQuickDetails}
                       returnKeyType="done"
@@ -522,9 +545,10 @@ export default function BulkAddPage() {
                     />
                     <TextInput
                       className="w-24 dark:bg-gray-700 bg-white rounded-lg px-3 py-2.5 dark:text-white text-gray-900 text-sm border dark:border-gray-600 border-gray-300"
-                      placeholder="₹"
+                      placeholder={currencySymbol}
                       placeholderTextColor="#9ca3af"
                       keyboardType="number-pad"
+                      maxLength={MAX_AMOUNT_INPUT_LENGTH}
                       value={quickAmount}
                       onChangeText={setQuickAmount}
                       onSubmitEditing={handleQuickAdd}
@@ -553,7 +577,7 @@ export default function BulkAddPage() {
                 Total {txType === 'credit' ? 'Credit' : 'Debit'}:
               </Text>
               <Text className={`font-bold text-lg ${txType === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
-                ₹{total.toLocaleString('en-IN')}
+                {currencySymbol}{total.toLocaleString('en-IN')}
               </Text>
             </View>
             <View className="flex-row gap-3">
@@ -585,20 +609,22 @@ export default function BulkAddPage() {
       <Modal visible={editIdx !== null} transparent animationType="slide" onRequestClose={() => setEditIdx(null)}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 justify-end bg-black/50" style={{ paddingBottom: containerPadding }}>
-            <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+            <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
               <Text className="text-xl font-bold dark:text-white text-gray-900 mb-4">Edit Transaction</Text>
 
               <Text className="dark:text-gray-300 text-gray-600 mb-1">Details</Text>
               <TextInput
                 className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-3"
+                maxLength={MAX_DETAILS_LENGTH}
                 value={editForm.details}
                 onChangeText={(v) => setEditForm((p) => ({ ...p, details: v }))}
               />
 
-              <Text className="dark:text-gray-300 text-gray-600 mb-1">Amount (₹)</Text>
+              <Text className="dark:text-gray-300 text-gray-600 mb-1">Amount ({currencySymbol})</Text>
               <TextInput
                 className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-3"
                 keyboardType="number-pad"
+                maxLength={MAX_AMOUNT_INPUT_LENGTH}
                 value={editForm.amount}
                 onChangeText={(v) => setEditForm((p) => ({ ...p, amount: v }))}
               />
@@ -697,7 +723,7 @@ export default function BulkAddPage() {
       {/* ---- Add New Account Modal ---- */}
       <Modal visible={showNewAccountModal} transparent animationType="slide" onRequestClose={() => setShowNewAccountModal(false)}>
         <View className="flex-1 justify-end bg-black/50">
-          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6">
+          <View className="dark:bg-gray-900 bg-white rounded-t-2xl p-6" style={{ paddingBottom: sheetPaddingBottom }}>
             <Text className="text-xl font-bold dark:text-white text-gray-900 mb-5">Add New Account</Text>
 
             <Text className="dark:text-gray-300 text-gray-600 mb-1">Account Name</Text>
@@ -724,12 +750,13 @@ export default function BulkAddPage() {
               </View>
             </ScrollView>
 
-            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance (₹)</Text>
+            <Text className="dark:text-gray-300 text-gray-600 mb-1">Opening Balance ({currencySymbol})</Text>
             <TextInput
               className="dark:bg-gray-800 bg-gray-100 rounded-lg p-3 dark:text-white text-gray-900 text-base mb-6"
               placeholder="0"
               placeholderTextColor="#9ca3af"
               keyboardType="number-pad"
+              maxLength={MAX_AMOUNT_DIGITS}
               value={newAccBalance}
               onChangeText={setNewAccBalance}
             />

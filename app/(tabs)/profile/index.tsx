@@ -1,20 +1,26 @@
 import { useAuthStore } from '@/store/authStore';
+import { useCurrencySymbol } from '@/store/currencyStore';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Pressable, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LogoutModal from './LogoutModal';
 import api from '@/api/api';
+import axios from 'axios';
 import { Toast } from 'toastify-react-native';
 import Avatar from '@/components/Avatar';
 import { TextInput } from 'react-native';
+import * as Device from 'expo-device';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native';
 // when come back from insights to index page the total balance stats not changing and when going back to insights page it still shows graph of old data
 const UserProfileScreen: React.FC = () => {
   const router = useRouter()
+  const currencySymbol = useCurrencySymbol()
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.name);
   const email = useAuthStore((state) => state.email);
   const profilePicture = useAuthStore((state) => state.profilePicture);
@@ -29,6 +35,15 @@ const UserProfileScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(user || '');
   const [isSavingName, setIsSavingName] = useState(false);
+
+  // Delete Account State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  // Feedback State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   const handleSaveName = async () => {
     try {
@@ -66,6 +81,61 @@ const UserProfileScreen: React.FC = () => {
     // Navigate to AdminPreview instead of directly upgrading
     router.push('/(auth)/AdminPreview');
   }
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeletingAccount(true);
+      // Call the public API endpoint to send deletion email
+      const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+      const res = await axios.post(`${API_URL}/api/v1/public/request-account-deletion`, {
+        email: email
+      });
+
+      Toast.success("Deletion link sent to your email");
+      setShowDeleteModal(false);
+    } catch (error: any) {
+      Toast.error(error.response?.data?.message || "Failed to send deletion email");
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackMessage.trim()) {
+      Toast.error("Please enter a message");
+      return;
+    }
+    if (feedbackMessage.length > 500) {
+      Toast.error("Message must be less than 500 characters");
+      return;
+    }
+
+    try {
+      setIsSendingFeedback(true);
+      const deviceInfo = {
+        modelName: Device.modelName,
+        brand: Device.brand,
+        manufacturer: Device.manufacturer,
+        deviceType: Device.deviceType,
+        platform: Platform.OS,
+        platformVersion: Platform.Version,
+        ...Platform.constants,
+      };
+
+      await api.post('/user/send-feedback', {
+        message: feedbackMessage,
+        deviceInfo
+      });
+
+      Toast.success("Feedback sent successfully");
+      setFeedbackMessage('');
+      setShowFeedbackModal(false);
+    } catch (error) {
+      Toast.error("Failed to send feedback");
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  };
 
   // Unified Report Modal State
   const [showReportModal, setShowReportModal] = useState(false);
@@ -181,7 +251,7 @@ const UserProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
-      <ScrollView className="px-6 pt-10" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="px-6 pt-10" contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}>
         <View className="items-center mb-6">
           <Avatar uri={profilePicture} name={user || 'User'} size={100} />
           <View className="flex-row items-center mt-3 gap-2">
@@ -223,7 +293,7 @@ const UserProfileScreen: React.FC = () => {
             Settings
           </Text>
 
-          <View className=" p-2 mb-6">
+          <View className=" p-2 mb-2">
 
             {role === 'admin' ? (
               <Pressable
@@ -253,10 +323,12 @@ const UserProfileScreen: React.FC = () => {
               </Pressable>
             )}
 
-            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/accounts' as any)}>
-              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
-              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
-            </Pressable>
+            {!inAdminMode && (
+              <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/accounts' as any)}>
+                <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Manage Accounts</Text>
+                <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='credit-card' size={15} /></Text>
+              </Pressable>
+            )}
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowReportModal(true)}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Download Expense Report</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='download' size={15} /></Text>
@@ -266,9 +338,17 @@ const UserProfileScreen: React.FC = () => {
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Theme</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
             </Pressable>
+            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/currency' as any)}>
+              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Currency Symbol</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1">{currencySymbol} <Feather name='chevron-right' size={15} /></Text>
+            </Pressable>
             <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => router.navigate('/profile/changePassword')}>
               <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Change Password</Text>
               <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='chevron-right' size={15} /></Text>
+            </Pressable>
+            <Pressable className="flex-row justify-between items-center border-b dark:border-gray-600 border-gray-300 dark:active:bg-gray-800 active:bg-gray-100" onPress={() => setShowFeedbackModal(true)}>
+              <Text className="text-base text-gray-700 dark:text-gray-200 py-6">Send Feedback</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-300 py-6 px-1"><Feather name='message-circle' size={15} /></Text>
             </Pressable>
             <TouchableOpacity className="py-6" onPress={() => setShowLogoutModal(true)}>
               <Text className="text-base text-red-600 dark:text-red-400 font-semibold">
@@ -278,7 +358,28 @@ const UserProfileScreen: React.FC = () => {
           </View>
         </View>
 
-        {showLogoutModal && <LogoutModal setShow={setShowLogoutModal} />}
+        {/* Delete Account Button - Small and centered at bottom */}
+        <View className="mb-5 flex-row justify-between">
+          <TouchableOpacity
+            onPress={() => setShowDeleteModal(true)}
+            className=""
+          >
+            <Text className="text-sm text-red-600/80 dark:text-red-200/80 font-medium">
+              Delete Account
+            </Text>
+          </TouchableOpacity>
+
+          {/* Privacy Policy Link - Bottom right */}
+            <TouchableOpacity
+              onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL || 'https://expensegauge.prathmeshjain.in/privacy')}
+            >
+              <Text className="text-xs text-gray-400 dark:text-gray-500 underline">
+                Privacy Policy
+              </Text>
+            </TouchableOpacity>
+        </View>
+
+        {showLogoutModal && <LogoutModal show={showLogoutModal} setShow={setShowLogoutModal} />}
 
         <Modal
           animationType="fade"
@@ -493,6 +594,115 @@ const UserProfileScreen: React.FC = () => {
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleGenerate} className="flex-1 bg-indigo-600 p-4 rounded-xl">
                   <Text className="text-center font-semibold text-white">Generate PDF</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Delete Account Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showDeleteModal}
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 p-4">
+            <View className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-xl">
+              <View className="items-center mb-4">
+                <View className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 items-center justify-center mb-3">
+                  <Feather name="trash-2" size={28} color="#dc2626" />
+                </View>
+                <Text className="text-xl font-bold text-center dark:text-white">Delete Account</Text>
+              </View>
+
+              <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                <Text className="text-red-800 dark:text-red-200 text-sm text-center">
+                  This action cannot be undone. All your data including expenses, accounts, and personal information will be permanently deleted.
+                </Text>
+              </View>
+
+              <Text className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+                A confirmation link will be sent to your email address. Click the link in the email to confirm account deletion.
+              </Text>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowDeleteModal(false)}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 p-4 rounded-xl"
+                  disabled={isDeletingAccount}
+                >
+                  <Text className="text-center font-semibold text-gray-700 dark:text-gray-300">Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleDeleteAccount}
+                  className="flex-1 bg-red-600 p-4 rounded-xl"
+                  disabled={isDeletingAccount}
+                >
+                  {isDeletingAccount ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text className="text-center font-semibold text-white">Send Link</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Feedback Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showFeedbackModal}
+          onRequestClose={() => setShowFeedbackModal(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-black/50 p-4">
+            <View className="bg-white dark:bg-gray-800 w-full max-w-sm rounded-2xl p-6 shadow-xl">
+              <Text className="text-xl font-bold mb-4 text-center dark:text-white">Send Feedback</Text>
+
+              <Text className="text-gray-600 dark:text-gray-300 mb-2 text-sm">
+                We'd love to hear from you! Please share your thoughts, suggestions, or report any issues.
+              </Text>
+
+              <TextInput
+                value={feedbackMessage}
+                onChangeText={setFeedbackMessage}
+                placeholder="Enter your feedback..."
+                placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+                editable={!isSendingFeedback}
+                className="border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white mb-2 min-h-[100px]"
+                style={{ textAlignVertical: 'top' }}
+              />
+
+              <Text className="text-gray-400 dark:text-gray-500 text-xs mb-4 text-right">
+                {feedbackMessage.length}/500
+              </Text>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowFeedbackModal(false);
+                    setFeedbackMessage('');
+                  }}
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 p-4 rounded-xl"
+                  disabled={isSendingFeedback}
+                >
+                  <Text className="text-center font-semibold text-gray-700 dark:text-gray-300">Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSendFeedback}
+                  className="flex-1 bg-indigo-600 p-4 rounded-xl"
+                  disabled={isSendingFeedback}
+                >
+                  {isSendingFeedback ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text className="text-center font-semibold text-white">Send</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
