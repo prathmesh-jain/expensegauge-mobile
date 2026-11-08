@@ -10,6 +10,7 @@ import api from "@/api/api";
 import { Provider as PaperProvider } from 'react-native-paper';
 import UpdateService from "@/helper/UpdateService";
 import UpdatePrompt from "@/components/UpdatePrompt";
+import ReminderPromptModal from "@/components/ReminderPromptModal";
 import { addNetworkListener, checkConnection } from "@/api/network";
 import UserNotFoundModal from "@/components/UserNotFoundModal";
 import { useAuthStore } from "@/store/authStore";
@@ -18,6 +19,7 @@ import { useAdminStore } from "@/store/adminStore";
 import { clearQueue } from "@/store/offlineQueue";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { startDailyReminderSync } from "@/helper/reminderService";
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
@@ -56,6 +58,8 @@ export default function RootLayout() {
     // Navigate to login screen
     router.replace('/');
   };
+
+  useEffect(() => startDailyReminderSync(), []);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -165,6 +169,7 @@ export default function RootLayout() {
         </Stack>
         <ToastManager useModal={false} theme={colorScheme} />
         <UpdatePrompt />
+        <ReminderPromptModal />
         <UserNotFoundModal
           show={showUserNotFoundModal}
           onOk={handleUserNotFoundOk}

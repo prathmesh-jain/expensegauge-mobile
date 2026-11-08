@@ -130,7 +130,7 @@ export default function Index() {
   return (
     <SafeAreaView className="flex-1 p-4 dark:bg-gray-900">
       <View className="px-2 py-2">
-        <Text className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Hello {user?.split(' ')[0]} 👋</Text>
+        <Text className="text-2xl font-bold font text-gray-800 dark:text-white mb-4">Hello {user?.split(' ')[0]} 👋</Text>
       </View>
 
       {/* Account Filter Chips — shown when user has at least one account */}

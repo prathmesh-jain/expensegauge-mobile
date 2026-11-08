@@ -12,6 +12,9 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="theme" options={{ headerStyle:{backgroundColor:backcolor},headerTintColor:textColor,headerTitle:"Change Theme" ,animation:'slide_from_right'}} />
         <Stack.Screen name="currency" options={{ headerStyle:{backgroundColor:backcolor},headerTintColor:textColor,headerTitle:"Currency Symbol" ,animation:'slide_from_right'}} />
+        <Stack.Screen name="reminder" options={{ headerStyle:{backgroundColor:backcolor},headerTintColor:textColor,headerTitle:"Daily Reminder" ,animation:'slide_from_right'}} />
+        <Stack.Screen name="preferences" options={{ headerStyle:{backgroundColor:backcolor},headerTintColor:textColor,headerTitle:"Preferences" ,animation:'slide_from_right'}} />
+        <Stack.Screen name="account" options={{ headerStyle:{backgroundColor:backcolor},headerTintColor:textColor,headerTitle:"Account & Security" ,animation:'slide_from_right'}} />
         <Stack.Screen name="changePassword" options={{ headerShown: false }} />
         <Stack.Screen name="accounts" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>

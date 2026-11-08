@@ -4,6 +4,12 @@ import { Pressable, Text, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
+import { useLastNotificationResponse } from "expo-notifications";
+import { useEffect } from "react";
+import { REMINDER_NOTIFICATION_TYPE } from "@/helper/reminderService";
+
+// The last response survives remounts, so remember which one was already handled
+let handledResponseId: string | null = null;
 
 
 export default function RootLayout() {
@@ -16,6 +22,17 @@ export default function RootLayout() {
   const historyHref = role === 'admin' && viewMode === 'admin'
     ? '/(tabs)/history/adminAllUsersView'
     : '/(tabs)/history';
+
+  // Tapping the daily reminder opens Add Debit (the tabs only mount when logged in)
+  const lastNotificationResponse = useLastNotificationResponse();
+  useEffect(() => {
+    const notification = lastNotificationResponse?.notification;
+    if (!notification || notification.request.content.data?.type !== REMINDER_NOTIFICATION_TYPE) return;
+    if (handledResponseId === notification.request.identifier) return;
+    handledResponseId = notification.request.identifier;
+    if (role === 'admin' && viewMode === 'admin') return;
+    router.push({ pathname: '/expenseModal/[type]', params: { type: 'debit' } });
+  }, [lastNotificationResponse, role, viewMode, router]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#111827' }}>

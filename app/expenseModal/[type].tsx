@@ -33,6 +33,7 @@ import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 import { useCurrencySymbol } from '@/store/currencyStore';
 import { getExpenseLimitError, MAX_AMOUNT_DIGITS, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { offerDailyReminder } from '@/helper/reminderService';
 
 // ------------------ Constants ------------------
 const categories = [
@@ -339,6 +340,7 @@ const ExpenseForm = () => {
         addExpenseApi(transactionData).then((newId) => {
           if (newId) markAsSynced(transactionData._id, newId);
         });
+        offerDailyReminder();
       }
       Toast.success("Request processed");
       router.back();
