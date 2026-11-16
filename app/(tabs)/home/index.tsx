@@ -9,12 +9,11 @@ import DeleteModal from "./DeleteModal";
 import api from "@/api/api";
 import { processQueue } from "@/api/syncQueue";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
-import { Toast } from "toastify-react-native";
-import { checkConnection } from "@/api/network";
 import { Transaction } from "@/types";
 import { useAccountStore } from "@/store/accountStore";
 import { fetchAccountsApi } from "@/api/accountApi";
 import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
+import { useGroupStore } from '@/store/groupStore';
 
 export default function Index() {
   const currencySymbol = useCurrencySymbol();
@@ -92,9 +91,12 @@ export default function Index() {
     }
   };
 
+  // Shared expenses you paid can add, change or remove personal entries
+  const personalLedgerVersion = useGroupStore((state) => state.personalLedgerVersion);
+
   useEffect(() => {
     fetchExpenses()
-  }, [selectedRange, selectedAccountId])
+  }, [selectedRange, selectedAccountId, personalLedgerVersion])
 
   // Load accounts on mount
   useEffect(() => {

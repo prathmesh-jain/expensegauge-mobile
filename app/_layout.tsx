@@ -11,11 +11,13 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import UpdateService from "@/helper/UpdateService";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import ReminderPromptModal from "@/components/ReminderPromptModal";
+import GroupNotifyPromptModal from "@/components/GroupNotifyPromptModal";
 import { addNetworkListener, checkConnection } from "@/api/network";
 import UserNotFoundModal from "@/components/UserNotFoundModal";
 import { useAuthStore } from "@/store/authStore";
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
+import { useGroupStore } from "@/store/groupStore";
 import { clearQueue } from "@/store/offlineQueue";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -45,6 +47,7 @@ export default function RootLayout() {
     // First log out the user
     resetExpenseStore();
     resetAdminStore();
+    useGroupStore.getState().reset();
     await clearQueue();
     await logout();
     // Set flag so modal shows on app restart
@@ -71,6 +74,7 @@ export default function RootLayout() {
         // Ensure user is logged out
         resetExpenseStore();
         resetAdminStore();
+        useGroupStore.getState().reset();
         await clearQueue();
         await logout();
         // Show the modal
@@ -159,6 +163,10 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="invite/[code]"
+            options={{ headerShown: false, animation: "none" }}
+          />
+          <Stack.Screen
             name="expenseModal/bulkAdd"
             options={{
               headerShown: false,
@@ -170,6 +178,7 @@ export default function RootLayout() {
         <ToastManager useModal={false} theme={colorScheme} />
         <UpdatePrompt />
         <ReminderPromptModal />
+        <GroupNotifyPromptModal />
         <UserNotFoundModal
           show={showUserNotFoundModal}
           onOk={handleUserNotFoundOk}

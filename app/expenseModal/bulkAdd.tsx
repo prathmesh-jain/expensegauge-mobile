@@ -16,6 +16,7 @@ import { addExpenseApi } from "@/api/expenseApi";
 import { fetchAccountsApi, createAccountApi } from "@/api/accountApi";
 import { useEffect } from "react";
 import { useCurrencySymbol } from '@/store/currencyStore';
+import { createLocalId } from '@/helper/localId';
 import { getExpenseLimitError, MAX_AMOUNT, MAX_AMOUNT_DIGITS, MAX_AMOUNT_INPUT_LENGTH, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -41,7 +42,6 @@ const ACCOUNT_TYPES: { label: string; value: AccountSource['type'] }[] = [
 ];
 
 const ADD_NEW_VALUE = "__add_new__";
-const createLocalId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 type BulkTransaction = {
   _id: string;

@@ -43,3 +43,5 @@ app-example
 /ios
 
 credentials.json
+# Firebase (upload as an EAS file environment variable instead)
+google-services.json

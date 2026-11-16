@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { useExpenseStore } from '@/store/expenseStore';
 import { useAdminStore } from '@/store/adminStore';
+import { useGroupStore } from '@/store/groupStore';
 import axios from 'axios';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
@@ -88,8 +89,11 @@ api.interceptors.response.use(
       originalRequest.url?.includes('/user/google-login') ||
       originalRequest.url?.includes('/user/refresh');
 
+    // Requests that need the server's answer right away (e.g. joining a group) opt out of queueing
+    const isOnlineOnly = !!originalRequest.headers?.['x-online-only'];
+
     // Handle offline/network failure for mutations: Queue and return a successful offline response
-    if (isMutation && isRetryableError && !isAuthRequest) {
+    if (isMutation && isRetryableError && !isAuthRequest && !isOnlineOnly) {
       console.log(`[Offline-First] Queueing ${originalRequest.method} request due to ${isNoResponse ? 'network failure' : 'server error ' + status}`);
 
       let metadata = {};
@@ -158,6 +162,7 @@ api.interceptors.response.use(
           const { reset: resetAdminStore } = useAdminStore.getState();
           resetExpenseStore();
           resetAdminStore();
+          useGroupStore.getState().reset();
           // Keep the offline queue persisted
           await clearQueue();
           await logout();

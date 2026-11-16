@@ -7,20 +7,21 @@ import api from '@/api/api'
 import { router } from 'expo-router'
 import { useExpenseStore } from '@/store/expenseStore'
 import { useAdminStore } from '@/store/adminStore'
+import { useGroupStore } from '@/store/groupStore'
+import { unregisterPush } from '@/helper/pushService'
 import { clearQueue, hasPendingUserMutationRequests } from '@/store/offlineQueue'
-import { useColorScheme } from 'react-native'
 
 const LogoutModal = ({ show, setShow }: { show: boolean; setShow: (show: boolean) => void }) => {
     const { logout, refreshToken } = useAuthStore();
     const [loading, setLoading] = useState(false);
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
 
     const doLogout = async () => {
         setLoading(true);
         try {
             // Try to call logout API, but proceed even if it fails
             try {
+                // While still signed in, so this phone stops getting this account's pushes
+                await unregisterPush();
                 await api.post(`/user/logout`, { refreshToken });
             } catch (apiError) {
                 console.error('Logout API failed, proceeding with local logout:', apiError);
@@ -32,6 +33,7 @@ const LogoutModal = ({ show, setShow }: { show: boolean; setShow: (show: boolean
             resetExpenseStore()
             resetAdminStore()
             resetAccountStore()
+            useGroupStore.getState().reset()
             await clearQueue()
             await logout()
             setShow(false)
