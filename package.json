@@ -1,7 +1,7 @@
 {
   "name": "expensegauge",
   "main": "expo-router/entry",
-  "version": "1.0.1",
+  "version": "1.1.0-betav1",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -19,7 +19,6 @@
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "axios": "^1.18.0",
-    "axios-retry": "^4.5.0",
     "babel-preset-expo": "~54.0.10",
     "bayes-classifier": "^0.0.5",
     "expo": "~54.0.37",
@@ -64,6 +63,16 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "react-native-chart-kit",
+          "bayes-classifier"
+        ]
+      }
+    }
   },
   "private": true
 }
