@@ -1,4 +1,5 @@
-import { View, Text, SafeAreaView, Appearance } from 'react-native'
+import { View, Text } from 'react-native'
+import { applyColorScheme } from "@/helper/applyColorScheme";
 import React, { useState } from 'react'
 import { RadioButton } from 'react-native-paper';
 import { Feather, FontAwesome } from '@expo/vector-icons';
@@ -9,12 +10,12 @@ const Theme = () => {
     const{setTheme,theme}= useThemeStore()
     const [current, setCurrent] = useState(theme);
     const applyTheme = async (theme: 'light' | 'dark' | null) => {
-        Appearance.setColorScheme?.(theme);
+        applyColorScheme(theme);
         setCurrent(theme)
         setTheme(theme)
     };
     return (
-        <SafeAreaView className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
+        <View className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
             <View className='p-6'>
                 <View className='flex-row items-center gap-2'>
                 <RadioButton.Android
@@ -53,7 +54,7 @@ const Theme = () => {
                     </Text>
                 </View>
             </View>
-        </SafeAreaView>
+        </View>
     )
 }
 

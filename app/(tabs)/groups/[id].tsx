@@ -29,6 +29,7 @@ import { useKeyboardHeight } from '@/helper/useKeyboardHeight';
 import InitialsAvatar from '@/components/InitialsAvatar';
 import ConfirmModal from '@/components/ConfirmModal';
 import { setGroupNotifications } from '@/helper/pushService';
+import { supportsNotifications } from '@/helper/reminderService';
 import type { ActivityItem, Group, GroupExpense, GroupMember, GroupSettlement } from '@/types/group';
 
 const PAGE_SIZE = 20;
@@ -809,6 +810,7 @@ export default function GroupDetailScreen() {
               </TouchableOpacity>
             </View>
 
+            {supportsNotifications && (
             <View className="flex-row items-center mt-6">
               <Feather name={group.myNotify ? 'bell' : 'bell-off'} size={18} color={isDark ? '#d1d5db' : '#4b5563'} />
               <View className="flex-1 px-3">
@@ -827,6 +829,7 @@ export default function GroupDetailScreen() {
                 thumbColor={group.myNotify ? '#4f46e5' : '#f4f4f5'}
               />
             </View>
+            )}
 
             <View className="flex-row items-center mt-6">
               <View className="flex-1 pr-3">

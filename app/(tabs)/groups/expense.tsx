@@ -5,7 +5,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@/components/DateTimePicker';
 import { Toast } from 'toastify-react-native';
 import { useGroupStore } from '@/store/groupStore';
 import { useAccountStore } from '@/store/accountStore';
