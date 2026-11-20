@@ -18,6 +18,7 @@ export default function GroupsLayout() {
         <Stack.Screen name="settle" />
         <Stack.Screen name="activity" />
         <Stack.Screen name="members" />
+        <Stack.Screen name="summary" />
         <Stack.Screen name="payment" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
     </View>

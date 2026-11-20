@@ -101,6 +101,30 @@ export type SettlePlan = {
   nets: MemberBalance[];
 };
 
+// One person's totals over the whole group
+export type MemberSummary = {
+  memberId: string;
+  // put down for expenses
+  paid: number;
+  // their part of expenses: what they actually spent
+  share: number;
+  // settle-up cash out and in
+  sent: number;
+  received: number;
+  net: number;
+};
+
+export type GroupSummary = {
+  totalSpent: number;
+  expenseCount: number;
+  paymentCount: number;
+  members: MemberSummary[];
+  // what each person still owes whom after payments
+  debts: Transfer[];
+  simplifyDebts: boolean;
+  smartPlan: Transfer[] | null;
+};
+
 export type SettlementInput = {
   fromMemberId: string;
   toMemberId: string;

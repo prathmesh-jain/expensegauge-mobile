@@ -1,7 +1,7 @@
 import api from './api';
 import { getQueue } from '@/store/offlineQueue';
 import type {
-  ActivityItem, EmailLookupUser, GroupInvitation, Group, GroupExpense, GroupExpenseInput, GroupSettlement, InvitePreview, SettlePlan, SettlementInput,
+  ActivityItem, EmailLookupUser, GroupInvitation, Group, GroupSummary, GroupExpense, GroupExpenseInput, GroupSettlement, InvitePreview, SettlePlan, SettlementInput,
 } from '@/types/group';
 
 // Most group changes need the server's answer right away (invite codes, who claimed
@@ -100,11 +100,19 @@ export const queuedExpenseClientIds = async () => {
   );
 };
 
-export const fetchActivityApi =(id: string, offset = 0, limit = 20) =>
+export const fetchActivityApi = (
+  id: string,
+  offset = 0,
+  limit = 20,
+  filter: { kind?: 'expense' | 'settlement'; memberId?: string } = {}
+) =>
   run(
-    async () => (await api.get(`/group/${id}/activity`, { params: { offset, limit } })).data as { items: ActivityItem[]; hasMore: boolean },
+    async () => (await api.get(`/group/${id}/activity`, { params: { offset, limit, ...filter } })).data as { items: ActivityItem[]; hasMore: boolean },
     'Failed to load activity'
   );
+
+export const fetchGroupSummaryApi = (id: string) =>
+  run(async () => (await api.get(`/group/${id}/summary`)).data.summary as GroupSummary, 'Failed to load summary');
 
 export const fetchSettlePlanApi = (id: string) =>
   run(async () => (await api.get(`/group/${id}/settle-plan`)).data.plan as SettlePlan, 'Failed to work out settlements');

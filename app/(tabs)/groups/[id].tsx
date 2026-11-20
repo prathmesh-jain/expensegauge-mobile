@@ -261,6 +261,22 @@ export default function GroupDetailScreen() {
           <Feather name="chevron-right" size={20} color="#9ca3af" />
         </TouchableOpacity>
 
+        {/* Summary: balances, spending and payments for everyone */}
+        <TouchableOpacity
+          onPress={() => router.push({ pathname: '/(tabs)/groups/summary', params: { groupId: group._id } })}
+          activeOpacity={0.7}
+          className="flex-row items-center py-3 border-b border-gray-100 dark:border-gray-800"
+        >
+          <View className="w-[30px] items-center">
+            <Feather name="pie-chart" size={20} color={isDark ? '#d1d5db' : '#4b5563'} />
+          </View>
+          <View className="flex-1 ml-3">
+            <Text className="dark:text-white text-gray-900 font-medium">Summary</Text>
+            <Text className="dark:text-gray-400 text-gray-500 text-xs mt-0.5">Who owes whom, who spent what, payments</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color="#9ca3af" />
+        </TouchableOpacity>
+
         {/* Invite: only until the group has someone else in it */}
         {showInviteCard && (
           <View className="rounded-xl p-4 mt-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
