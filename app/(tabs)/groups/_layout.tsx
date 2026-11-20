@@ -16,6 +16,8 @@ export default function GroupsLayout() {
         <Stack.Screen name="[id]" />
         <Stack.Screen name="expense" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="settle" />
+        <Stack.Screen name="activity" />
+        <Stack.Screen name="members" />
         <Stack.Screen name="payment" options={{ animation: 'slide_from_bottom' }} />
       </Stack>
     </View>

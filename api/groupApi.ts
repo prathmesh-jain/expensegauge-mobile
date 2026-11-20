@@ -1,4 +1,5 @@
 import api from './api';
+import { getQueue } from '@/store/offlineQueue';
 import type {
   ActivityItem, EmailLookupUser, GroupInvitation, Group, GroupExpense, GroupExpenseInput, GroupSettlement, InvitePreview, SettlePlan, SettlementInput,
 } from '@/types/group';
@@ -91,7 +92,15 @@ export const deleteGroupExpenseApi = (id: string, expenseId: string) =>
     'Failed to delete expense'
   );
 
-export const fetchActivityApi = (id: string, offset = 0, limit = 20) =>
+// clientIds of shared expenses still waiting in the offline queue
+export const queuedExpenseClientIds = async () => {
+  const queue = await getQueue();
+  return new Set(
+    queue.filter((r) => /\/group\/[^/]+\/expenses$/.test(r.url) && r.data?.clientId).map((r) => String(r.data.clientId))
+  );
+};
+
+export const fetchActivityApi =(id: string, offset = 0, limit = 20) =>
   run(
     async () => (await api.get(`/group/${id}/activity`, { params: { offset, limit } })).data as { items: ActivityItem[]; hasMore: boolean },
     'Failed to load activity'
