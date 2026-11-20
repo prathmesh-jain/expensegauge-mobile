@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent } from '@/components/DateTimePicker';
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
 import { Toast } from "toastify-react-native";
 import { useExpenseStore } from "@/store/expenseStore";

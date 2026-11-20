@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/authStore';
 import { formatReminderTime, useReminderStore } from '@/store/reminderStore';
+import { supportsNotifications } from '@/helper/reminderService';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -14,7 +15,7 @@ import SettingsRow from '@/components/SettingsRow';
 import { TextInput } from 'react-native';
 import * as Device from 'expo-device';
 
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from '@/components/DateTimePicker';
 import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native';
 // when come back from insights to index page the total balance stats not changing and when going back to insights page it still shows graph of old data
 const UserProfileScreen: React.FC = () => {
@@ -288,11 +289,13 @@ const UserProfileScreen: React.FC = () => {
               <SettingsRow label="Manage Accounts" icon="credit-card" onPress={() => router.navigate('/profile/accounts' as any)} />
             )}
             <SettingsRow label="Download Expense Report" icon="download" onPress={() => setShowReportModal(true)} />
-            <SettingsRow
-              label="Daily Reminder"
-              value={reminderEnabled ? formatReminderTime(reminderHour, reminderMinute) : 'Off'}
-              onPress={() => router.navigate('/profile/reminder' as any)}
-            />
+            {supportsNotifications && (
+              <SettingsRow
+                label="Daily Reminder"
+                value={reminderEnabled ? formatReminderTime(reminderHour, reminderMinute) : 'Off'}
+                onPress={() => router.navigate('/profile/reminder' as any)}
+              />
+            )}
             <SettingsRow label="Preferences" onPress={() => router.navigate('/profile/preferences' as any)} />
             <SettingsRow label="Account & Security" onPress={() => router.navigate('/profile/account' as any)} />
             <SettingsRow label="Send Feedback" icon="message-circle" onPress={() => setShowFeedbackModal(true)} />

@@ -7,6 +7,10 @@ import { useReminderStore } from '@/store/reminderStore';
 const CHANNEL_ID = 'daily-reminder';
 export const REMINDER_NOTIFICATION_TYPE = 'daily-reminder';
 
+// Browsers can't schedule local notifications or receive Expo pushes, so the
+// web app leaves out the daily reminder and group notifications.
+export const supportsNotifications = Platform.OS !== 'web';
+
 // Reminders are scheduled one day at a time (instead of a repeating trigger) so that
 // today's can be skipped once an expense is added. The window rolls forward every
 // time the app opens, so it only runs out if the app is untouched for this long.
@@ -36,6 +40,7 @@ const ensureChannel = async () => {
 };
 
 export const hasNotificationPermission = async () => {
+  if (!supportsNotifications) return false;
   const { granted } = await Notifications.getPermissionsAsync();
   return granted;
 };
@@ -45,6 +50,7 @@ export const hasNotificationPermission = async () => {
  * Returns false when it is denied, including when Android will no longer show the prompt.
  */
 export const requestNotificationPermission = async () => {
+  if (!supportsNotifications) return false;
   // Android 13+ only shows the permission prompt once a channel exists
   await ensureChannel();
   const current = await Notifications.getPermissionsAsync();
@@ -134,6 +140,7 @@ const waitForHydration = (store: { persist: { hasHydrated: () => boolean; onFini
  * settings changed, and the app coming back to the foreground.
  */
 export const startDailyReminderSync = () => {
+  if (!supportsNotifications) return () => {};
   const unsubscribers = [
     useAuthStore.subscribe((state, prev) => {
       if (state.accessToken !== prev.accessToken) syncSoon();
@@ -169,6 +176,7 @@ export const startDailyReminderSync = () => {
  * The question itself is ReminderPromptModal, mounted in the root layout.
  */
 export const offerDailyReminder = () => {
+  if (!supportsNotifications) return;
   const { enabled, promptHandled, setPromptHandled, setPromptVisible } = useReminderStore.getState();
   if (enabled || promptHandled) return;
   setPromptHandled();

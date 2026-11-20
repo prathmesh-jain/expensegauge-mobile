@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Animated, Alert } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View, Animated, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import api from '@/api/api';
 
@@ -109,7 +109,7 @@ export default function ForgotCredentials() {
     };
 
     return (
-        <SafeAreaView className="flex-1 p-6 dark:bg-gray-900 justify-center">
+        <View className="flex-1 p-6 dark:bg-gray-900 justify-center">
             <Text className="text-3xl text-center font-bold dark:text-white text-gray-800 mb-8">
                 Reset Password
             </Text>
@@ -236,6 +236,6 @@ export default function ForgotCredentials() {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Modal, ActivityIndicator, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Linking } from 'react-native'
 import React, { useState } from 'react'
 import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
@@ -32,7 +32,7 @@ const AccountSecurity = () => {
     };
 
     return (
-        <SafeAreaView className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
+        <View className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
             <View className='px-6 pt-2'>
                 <SettingsRow label="Change Password" onPress={() => router.navigate('/profile/changePassword')} />
                 <SettingsRow
@@ -92,7 +92,7 @@ const AccountSecurity = () => {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     )
 }
 

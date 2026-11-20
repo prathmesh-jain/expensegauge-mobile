@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
+import { applyColorScheme } from "@/helper/applyColorScheme";
 import "../global.css";
-import { useColorScheme, View, Appearance } from "react-native";
+import { Platform, useColorScheme, View } from "react-native";
 import ToastManager, { Toast } from "toastify-react-native";
 import { useThemeStore } from "@/store/themeStore";
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +24,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { startDailyReminderSync } from "@/helper/reminderService";
 
+// Widest the app gets in a browser; the rest of the window is a plain frame
+const WEB_MAX_WIDTH = 640;
+
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
   console.warn("Missing EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID; Google Sign-In may not work.");
@@ -38,10 +42,11 @@ export default function RootLayout() {
   const { logout, accessToken } = useAuthStore();
   const { reset: resetExpenseStore } = useExpenseStore();
   const { reset: resetAdminStore } = useAdminStore();
-  Appearance.setColorScheme?.(theme);
+  applyColorScheme(theme);
   const colorScheme = useColorScheme();
   const backcolor = colorScheme == "light" ? "white" : "#111827";
   const statusColor = colorScheme == "light" ? "dark" : "light";
+  const webFrameColor = colorScheme == "light" ? "#e5e7eb" : "#030712";
 
   const handleUserNotFound = async () => {
     // First log out the user
@@ -135,7 +140,9 @@ export default function RootLayout() {
 
   return (
     <PaperProvider>
-      <View style={{ flex: 1, backgroundColor: backcolor }}>
+      <View style={{ flex: 1, backgroundColor: Platform.OS === "web" ? webFrameColor : backcolor }}>
+        {/* On a wide browser window, keep the phone layout in a centered column */}
+        <View style={{ flex: 1, width: "100%", maxWidth: Platform.OS === "web" ? WEB_MAX_WIDTH : undefined, alignSelf: "center", backgroundColor: backcolor }}>
         <Stack>
           <Stack.Screen
             name="(auth)"
@@ -175,6 +182,7 @@ export default function RootLayout() {
             }}
           />
         </Stack>
+        </View>
         <ToastManager useModal={false} theme={colorScheme} />
         <UpdatePrompt />
         <ReminderPromptModal />

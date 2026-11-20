@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { Dropdown, IDropdownRef } from "react-native-element-dropdown";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerEvent } from '@/components/DateTimePicker';
 import { Toast } from "toastify-react-native";
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
@@ -537,7 +537,7 @@ const ExpenseForm = () => {
           </TouchableOpacity>
 
           {/* Submit */}
-          <View className="flex flex-row mt-10 mb-5">
+          <View className="flex flex-row justify-center w-full mt-10 mb-5">
             <TouchableOpacity
               className="bg-green-500 w-1/3 h-12 rounded-lg justify-center"
               disabled={submitting}

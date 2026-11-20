@@ -1,7 +1,7 @@
-import { View, Text, SafeAreaView, Switch, Pressable, Linking, AppState, Platform } from 'react-native'
+import { View, Text, Switch, Pressable, Linking, AppState, Platform } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Feather } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@/components/DateTimePicker';
 import { Toast } from 'toastify-react-native';
 import { formatReminderTime, useReminderStore } from '@/store/reminderStore';
 import { hasNotificationPermission, requestNotificationPermission } from '@/helper/reminderService';
@@ -50,7 +50,7 @@ const Reminder = () => {
     const isActive = enabled && permissionGranted
 
     return (
-        <SafeAreaView className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
+        <View className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
             <View className='p-6'>
                 <View className='flex-row items-center justify-between py-4 border-b dark:border-gray-600 border-gray-300'>
                     <View className='flex-1 pr-4'>
@@ -98,7 +98,7 @@ const Reminder = () => {
                     />
                 )}
             </View>
-        </SafeAreaView>
+        </View>
     )
 }
 

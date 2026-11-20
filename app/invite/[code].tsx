@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useGroupStore } from '@/store/groupStore';
 import { parseInviteCode } from '@/helper/groupLimits';
 
@@ -9,14 +9,18 @@ import { parseInviteCode } from '@/helper/groupLimits';
 // the tabs layout then opens the join screen.
 export default function InviteLinkScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
-  const router = useRouter();
   const setPendingInviteCode = useGroupStore((state) => state.setPendingInviteCode);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const parsed = parseInviteCode(String(code ?? ''));
     if (parsed) setPendingInviteCode(parsed);
-    router.replace('/');
-  }, [code, router, setPendingInviteCode]);
+    setSaved(true);
+  }, [code, setPendingInviteCode]);
+
+  // <Redirect> waits for the navigator to mount; router.replace in an effect
+  // can run too early when the app is opened straight on this URL (web).
+  if (saved) return <Redirect href="/" />;
 
   return (
     <View className="flex-1 items-center justify-center bg-white dark:bg-gray-900">
