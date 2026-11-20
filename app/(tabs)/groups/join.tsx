@@ -118,7 +118,7 @@ export default function JoinGroupScreen() {
     if (invite.alreadyMember) {
       return (
         <View className="items-center pt-6">
-          <InitialsAvatar name={invite.groupName} seed={invite.groupId} size={64} />
+          <InitialsAvatar name={invite.groupName} size={64} />
           <Text className="text-xl font-bold dark:text-white text-gray-900 mt-4 text-center">{invite.groupName}</Text>
           <Text className="dark:text-gray-400 text-gray-500 mt-2 text-center">You&apos;re already in this group.</Text>
           <TouchableOpacity onPress={() => openGroup(invite.groupId)} className="bg-indigo-600 p-4 rounded-xl mt-6 w-full">
@@ -131,7 +131,7 @@ export default function JoinGroupScreen() {
     return (
       <>
         <View className="items-center pt-2">
-          <InitialsAvatar name={invite.groupName} seed={invite.groupId} size={64} />
+          <InitialsAvatar name={invite.groupName} size={64} />
           <Text className="text-xl font-bold dark:text-white text-gray-900 mt-4 text-center">{invite.groupName}</Text>
           <Text className="dark:text-gray-400 text-gray-500 mt-1 text-center">
             {invite.invitedBy ? `${invite.invitedBy} invited you` : "You've been invited"}
@@ -164,7 +164,7 @@ export default function JoinGroupScreen() {
                   onPress={() => setChoice(option._id)}
                   activeOpacity={0.8}
                   className={`flex-row items-center rounded-xl p-3 mb-2 border ${selected
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                    ? 'border-indigo-600 dark:border-indigo-400'
                     : 'border-gray-200 dark:border-gray-700'}`}
                 >
                   {option._id === NEW_MEMBER ? (
@@ -227,7 +227,7 @@ export default function JoinGroupScreen() {
           </View>
         ) : error ? (
           <View className="items-center pt-10">
-            <View className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 items-center justify-center">
+            <View className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center">
               <Feather name="link-2" size={26} color="#ef4444" />
             </View>
             <Text className="dark:text-white text-gray-900 font-semibold text-base mt-4 text-center">{error}</Text>

@@ -22,7 +22,7 @@ import {
 import SettleRoute from '@/components/SettleRoute';
 import { getQueue } from '@/store/offlineQueue';
 import {
-  expenseImpact, formatMoney, memberBalanceLabel, memberName, myBalanceLabel, paymentMethodLabel, TONE_TEXT,
+  describeChange, expenseImpact, formatMoney, memberBalanceLabel, memberName, myBalanceLabel, paymentMethodLabel, TONE_TEXT,
 } from '@/helper/groupFormat';
 import { cleanName, inviteLink, looksLikeEmail, MAX_GROUP_NAME_LENGTH } from '@/helper/groupLimits';
 import { useKeyboardHeight } from '@/helper/useKeyboardHeight';
@@ -45,6 +45,11 @@ const roundOffText = (s: GroupSettlement, group: Group) => {
 const formatShortDate = (value: string) => {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
+
+const formatDateTime = (value: string) => {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 };
 
 // clientIds of shared expenses still waiting in the offline queue
@@ -375,7 +380,7 @@ export default function GroupDetailScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />}
       >
         {/* Your balance */}
-        <View className="rounded-2xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
+        <View className="rounded-xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
           <Text className="dark:text-gray-400 text-gray-500 text-xs">Your balance</Text>
           <Text className={`text-xl font-bold mt-0.5 ${TONE_TEXT[myBalance.tone]}`}>{myBalance.text}</Text>
           <View className="flex-row gap-3 mt-4">
@@ -400,19 +405,19 @@ export default function GroupDetailScreen() {
 
         {/* Invite: prominent until everyone has joined */}
         {showInviteCard && (
-          <View className="rounded-2xl p-4 mt-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900">
-            <Text className="font-semibold text-indigo-900 dark:text-indigo-200 text-base">
+          <View className="rounded-xl p-4 mt-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
+            <Text className="font-semibold dark:text-white text-gray-900 text-base">
               {created ? 'Group created! Now invite your friends' : 'Invite friends'}
             </Text>
-            <Text className="text-indigo-700/80 dark:text-indigo-300/80 text-xs mt-1 leading-4">
+            <Text className="dark:text-gray-400 text-gray-500 text-xs mt-1 leading-4">
               {pendingCount > 0
                 ? `${pendingCount} ${pendingCount === 1 ? "person hasn't" : "people haven't"} joined yet. Send them the link so they can claim their name.`
                 : 'Anyone with the link or code can join this group.'}
             </Text>
             <View className="flex-row items-center mt-3">
               <View className="flex-1">
-                <Text className="text-indigo-700/70 dark:text-indigo-300/70 text-xs">Invite code</Text>
-                <Text selectable className="text-indigo-900 dark:text-white text-lg font-bold tracking-widest">
+                <Text className="dark:text-gray-400 text-gray-500 text-xs">Invite code</Text>
+                <Text selectable className="dark:text-white text-gray-900 text-lg font-bold tracking-widest">
                   {group.inviteCode}
                 </Text>
               </View>
@@ -427,7 +432,7 @@ export default function GroupDetailScreen() {
         {/* Expenses */}
         <Text className="text-lg font-bold dark:text-white text-gray-900 mt-6 mb-2">Activity</Text>
         {allActivity.length === 0 ? (
-          <View className="items-center rounded-2xl py-8 px-6 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
+          <View className="items-center rounded-xl py-8 px-6 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
             <Feather name="file-text" size={28} color="#9ca3af" />
             <Text className="dark:text-gray-300 text-gray-600 font-medium mt-3">No shared expenses yet</Text>
             <Text className="dark:text-gray-500 text-gray-400 text-xs text-center mt-1">
@@ -449,22 +454,16 @@ export default function GroupDetailScreen() {
                   <View className="w-11 items-center">
                     <Text className="dark:text-gray-400 text-gray-500 text-xs text-center">{formatShortDate(item.date)}</Text>
                   </View>
-                  <View className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 items-center justify-center ml-2">
-                    <Feather name="check" size={15} color="#16a34a" />
+                  <View className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center ml-2">
+                    <Feather name="check" size={15} color="#6b7280" />
                   </View>
                   <View className="flex-1 ml-2">
                     <Text className={`dark:text-white text-gray-900 ${involvesMe ? 'font-semibold' : 'font-medium'}`} numberOfLines={1}>
                       {memberName(group, item.fromMemberId)} paid {memberName(group, item.toMemberId)} {formatMoney(item.amount, group.currencySymbol)}
                     </Text>
                     <View className="flex-row items-center mt-0.5">
-                      {item.source === 'smart' && (
-                        <View className="flex-row items-center bg-indigo-50 dark:bg-indigo-900/30 rounded-full px-1.5 py-0.5 mr-1.5">
-                          <Feather name="zap" size={10} color="#6366f1" />
-                          <Text className="text-indigo-600 dark:text-indigo-300 text-[10px] font-semibold ml-0.5">Smart settle</Text>
-                        </View>
-                      )}
                       <Text className="dark:text-gray-400 text-gray-500 text-xs flex-1" numberOfLines={1}>
-                        {rounding ?? paymentMethodLabel(item.method)}
+                        {[item.source === 'smart' ? 'Smart settle' : null, rounding ?? paymentMethodLabel(item.method)].filter(Boolean).join(' · ')}
                       </Text>
                     </View>
                   </View>
@@ -489,7 +488,7 @@ export default function GroupDetailScreen() {
                   <Text className="dark:text-gray-400 text-gray-500 text-xs mt-0.5" numberOfLines={1}>
                     {expense.pendingSync
                       ? 'Waiting to sync'
-                      : `${payer} paid ${formatMoney(expense.amount, group.currencySymbol)}`}
+                      : `${payer} paid ${formatMoney(expense.amount, group.currencySymbol)}${expense.edits?.length ? ' · edited' : ''}`}
                   </Text>
                 </View>
                 <View className="items-end ml-2">
@@ -530,7 +529,7 @@ export default function GroupDetailScreen() {
                 <Text className="text-amber-600 dark:text-amber-400 text-xs mt-0.5">Not joined yet</Text>
               )}
               {member.status === 'invited' && (
-                <Text className="text-indigo-600 dark:text-indigo-300 text-xs mt-0.5">Invited · hasn&apos;t accepted yet</Text>
+                <Text className="dark:text-gray-400 text-gray-500 text-xs mt-0.5">Invited · hasn&apos;t accepted yet</Text>
               )}
             </View>
             {(() => {
@@ -580,7 +579,7 @@ export default function GroupDetailScreen() {
                 )}
 
                 {selectedSettlement.route ? (
-                  <View className="mt-5 rounded-2xl p-3 border border-indigo-100 dark:border-indigo-900">
+                  <View className="mt-5 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
                     <Text className="dark:text-white text-gray-900 font-semibold mb-3">
                       How this was settled
                     </Text>
@@ -662,7 +661,7 @@ export default function GroupDetailScreen() {
                 }[selectedExpense.splitType]}
               </Text>
 
-              <ScrollView style={{ maxHeight: 260 }} className="mt-4">
+              <ScrollView style={{ maxHeight: 380 }} className="mt-4">
                 {selectedExpense.splits.map((s) => (
                   <View key={s.memberId} className="flex-row items-center py-2">
                     <InitialsAvatar name={memberName(group, s.memberId, { you: false })} size={32} />
@@ -675,12 +674,31 @@ export default function GroupDetailScreen() {
                     <Text className="dark:text-gray-300 text-gray-700">{formatMoney(s.amount, group.currencySymbol)}</Text>
                   </View>
                 ))}
-              </ScrollView>
 
-              <Text className="dark:text-gray-500 text-gray-400 text-xs mt-3">
-                Added by {memberName(group, selectedExpense.createdByMemberId)}
-                {selectedExpense.addedToPersonal ? ' · also in your expenses' : ''}
-              </Text>
+                <Text className="dark:text-gray-500 text-gray-400 text-xs mt-3">
+                  Added by {memberName(group, selectedExpense.createdByMemberId)} · {formatDateTime(selectedExpense.createdAt)}
+                  {selectedExpense.addedToPersonal ? ' · also in your expenses' : ''}
+                </Text>
+
+                {/* Edit history, newest first, so everyone sees how it changed */}
+                {(selectedExpense.edits ?? []).length > 0 && (
+                  <View className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <Text className="dark:text-gray-300 text-gray-700 font-semibold mb-1">Changes</Text>
+                    {[...(selectedExpense.edits ?? [])].reverse().map((edit) => (
+                      <View key={edit.at} className="py-2">
+                        <Text className="dark:text-gray-400 text-gray-500 text-xs">
+                          {memberName(group, edit.byMemberId)} edited · {formatDateTime(edit.at)}
+                        </Text>
+                        {edit.changes.map((change, index) => (
+                          <Text key={`${change.field}-${change.memberId ?? index}`} className="dark:text-gray-200 text-gray-700 text-sm mt-0.5">
+                            {describeChange(group, change)}
+                          </Text>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </ScrollView>
 
               {selectedExpense.canEdit ? (
                 <TouchableOpacity
@@ -728,7 +746,7 @@ export default function GroupDetailScreen() {
               onSubmitEditing={handleAddMember}
             />
             {foundUser && (
-              <View className="flex-row items-center mt-3 rounded-xl p-3 bg-indigo-50 dark:bg-indigo-900/20">
+              <View className="flex-row items-center mt-3 rounded-xl p-3 dark:bg-gray-800 bg-gray-50">
                 <InitialsAvatar name={foundUser.name} size={36} />
                 <View className="ml-3 flex-1">
                   <Text className="dark:text-white text-gray-900 font-medium">{foundUser.name}</Text>
@@ -738,8 +756,8 @@ export default function GroupDetailScreen() {
               </View>
             )}
             {notFoundEmail && (
-              <View className="mt-3 rounded-xl p-3 bg-amber-50 dark:bg-amber-900/20">
-                <Text className="text-amber-800 dark:text-amber-200 text-xs leading-4">
+              <View className="mt-3 rounded-xl p-3 dark:bg-gray-800 bg-gray-50">
+                <Text className="dark:text-gray-300 text-gray-600 text-xs leading-4">
                   No ExpenseGauge account uses {notFoundEmail}. Type their name instead and share the invite link from this group.
                 </Text>
               </View>

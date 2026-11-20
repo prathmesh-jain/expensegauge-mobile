@@ -32,6 +32,16 @@ export type Portion = { memberId: string; amount: number; weight?: number };
 
 export type SplitType = 'equal' | 'exact' | 'percent' | 'shares';
 
+// Values come as text: amounts like "1500.00", dates "2026-11-10", payer as a memberId
+export type ExpenseChange = {
+  field: 'details' | 'amount' | 'date' | 'category' | 'paidBy' | 'splitType' | 'share';
+  memberId: string | null;
+  from: string | null;
+  to: string | null;
+};
+
+export type ExpenseEdit = { at: string; byMemberId: string; changes: ExpenseChange[] };
+
 export type GroupExpense = {
   _id: string;
   clientId: string | null;
@@ -49,6 +59,8 @@ export type GroupExpense = {
   addedToPersonal: boolean;
   myShare: number;
   myPaid: number;
+  // Every edit, oldest first: who changed what, from → to
+  edits?: ExpenseEdit[];
   // Set on entries saved offline that haven't reached the server yet
   pendingSync?: boolean;
 };

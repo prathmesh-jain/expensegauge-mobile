@@ -56,9 +56,10 @@ export default function RecordPaymentScreen() {
     [params.from, params.to, params.amount]
   );
 
-  // Default for a blank form: you pay whoever you owe the most, or the reverse
+  // You're always one side of a payment you record. Default for a blank form:
+  // you pay whoever you owe the most, or receive from whoever owes you the most.
   const defaultPair = () => {
-    if (suggested) return { from: suggested.from, to: suggested.to };
+    if (suggested && (suggested.from === me || suggested.to === me)) return { from: suggested.from, to: suggested.to };
     const myNet = netByMember.get(me) ?? 0;
     const others = selectable.filter((m) => m._id !== me);
     if (myNet < 0) {
@@ -115,6 +116,8 @@ export default function RecordPaymentScreen() {
   const amountPaise = toPaise(parseFloat(amount) || 0);
   const iPay = from === me;
   const iReceive = to === me;
+  const other = iPay ? to : from;
+  const others = selectable.filter((m) => m._id !== me);
   // Rounding only closes a debt, so it must not clear more than either person's overall balance
   const withinBalances = targetPaise !== null
     && targetPaise <= Math.min(-(netByMember.get(from) ?? 0), netByMember.get(to) ?? 0);
@@ -170,7 +173,7 @@ export default function RecordPaymentScreen() {
   })();
 
   const handleSave = async () => {
-    if (!from || !to || from === to) return Toast.error('Choose who paid and who received');
+    if (!other) return Toast.error(iPay ? 'Choose who you paid' : 'Choose who paid you');
     if (amountPaise <= 0) return Toast.error('Enter the amount paid');
     if (fromPaise(amountPaise) > MAX_AMOUNT) return Toast.error(`Amount cannot be more than ${MAX_AMOUNT.toLocaleString('en-IN')}`);
 
@@ -184,7 +187,7 @@ export default function RecordPaymentScreen() {
       note: note.trim() || undefined,
       date: date.toISOString(),
       source: params.source === 'smart' && suggested?.from === from && suggested?.to === to ? 'smart' : 'manual',
-      addToPersonal: (iPay || iReceive) && addToPersonal,
+      addToPersonal,
       sourceId,
       clientId,
     });
@@ -205,17 +208,7 @@ export default function RecordPaymentScreen() {
     warn: 'text-amber-600 dark:text-amber-400',
   };
 
-  const memberChips = (selected: string, onPick: (id: string) => void, exclude: string) => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-      <View className="flex-row gap-2">
-        {selectable.filter((m) => m._id !== exclude).map((m) => (
-          <TouchableOpacity key={m._id} onPress={() => onPick(m._id)} className={chipClass(selected === m._id)}>
-            <Text className={chipTextClass(selected === m._id)}>{m.isYou ? 'You' : m.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
-  );
+  const pairFor = (paid: boolean, otherId: string) => (paid ? { from: me, to: otherId } : { from: otherId, to: me });
 
   return (
     <SafeAreaView className="flex-1 dark:bg-gray-900 bg-white" edges={['top']}>
@@ -234,10 +227,30 @@ export default function RecordPaymentScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingTop: 8, paddingBottom: (keyboardHeight || 90 + insets.bottom) + 24 }}
       >
-        <Text className="dark:text-gray-300 text-gray-600 mb-2 font-medium">Who paid</Text>
-        {memberChips(from, (id) => choosePair({ from: id, to: id === to ? from : to }), '')}
-        <Text className="dark:text-gray-300 text-gray-600 mt-4 mb-2 font-medium">Paid to</Text>
-        {memberChips(to, (id) => choosePair({ from, to: id }), from)}
+        <View className="flex-row bg-gray-100 dark:bg-gray-800 rounded-full p-1">
+          {[{ paid: true, label: 'I paid' }, { paid: false, label: 'I received' }].map((option) => (
+            <TouchableOpacity
+              key={option.label}
+              onPress={() => option.paid !== iPay && choosePair(pairFor(option.paid, other))}
+              className={`flex-1 py-1.5 rounded-full ${option.paid === iPay ? 'bg-white dark:bg-gray-700' : ''}`}
+            >
+              <Text className={`text-center ${option.paid === iPay ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text className="dark:text-gray-300 text-gray-600 mt-5 mb-2 font-medium">{iPay ? 'Paid to' : 'Received from'}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <View className="flex-row gap-2">
+            {others.map((m) => (
+              <TouchableOpacity key={m._id} onPress={() => choosePair(pairFor(iPay, m._id))} className={chipClass(other === m._id)}>
+                <Text className={chipTextClass(other === m._id)}>{m.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
         <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700 pb-2 mt-6">
           <Text className="text-3xl font-bold dark:text-gray-300 text-gray-500 mr-2">{symbol}</Text>
@@ -264,22 +277,17 @@ export default function RecordPaymentScreen() {
           <View className="flex-row mt-3">
             {canRoundUp && (
               <TouchableOpacity onPress={() => applyRounding('up')} className={`flex-row items-center ${chipClass(rounding === 'up')}`}>
-                <Feather name="arrow-up-circle" size={14} color={rounding === 'up' ? 'white' : '#6366f1'} />
+                <Feather name="arrow-up-circle" size={14} color={rounding === 'up' ? 'white' : '#6b7280'} />
                 <Text className={`ml-1.5 ${chipTextClass(rounding === 'up')}`}>Round up to {formatMoney(fromPaise(roundedUp), symbol)}</Text>
               </TouchableOpacity>
             )}
             {canRoundDown && (
               <TouchableOpacity onPress={() => applyRounding('down')} className={`flex-row items-center ${chipClass(rounding === 'down')}`}>
-                <Feather name="arrow-down-circle" size={14} color={rounding === 'down' ? 'white' : '#6366f1'} />
+                <Feather name="arrow-down-circle" size={14} color={rounding === 'down' ? 'white' : '#6b7280'} />
                 <Text className={`ml-1.5 ${chipTextClass(rounding === 'down')}`}>Accept {formatMoney(fromPaise(roundedDown), symbol)} as full</Text>
               </TouchableOpacity>
             )}
           </View>
-        )}
-        {hasPaise && !iPay && !iReceive && (
-          <Text className="dark:text-gray-500 text-gray-400 text-xs mt-2">
-            Only {memberName(group, from)} or {memberName(group, to)} can round this off.
-          </Text>
         )}
         {summary && <Text className={`text-sm mt-3 ${summaryColor[summary.tone]}`}>{summary.text}</Text>}
 
@@ -319,8 +327,7 @@ export default function RecordPaymentScreen() {
           maxLength={MAX_NOTE_LENGTH}
         />
 
-        {(iPay || iReceive) && (
-          <View className="mt-6 rounded-2xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
+          <View className="mt-6 rounded-xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
             <View className="flex-row items-center">
               <View className="flex-1 pr-3">
                 <Text className="dark:text-white text-gray-900 font-medium">Also add to my expenses</Text>
@@ -347,7 +354,6 @@ export default function RecordPaymentScreen() {
               </ScrollView>
             )}
           </View>
-        )}
 
         <TouchableOpacity onPress={handleSave} disabled={saving} className="bg-indigo-600 p-4 rounded-xl mt-8">
           {saving ? (

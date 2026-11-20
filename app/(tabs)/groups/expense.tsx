@@ -441,7 +441,7 @@ export default function GroupExpenseForm() {
 
         {/* Personal ledger link */}
         {iPaid ? (
-          <View className="mt-6 rounded-2xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
+          <View className="mt-6 rounded-xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200">
             <View className="flex-row items-center">
               <View className="flex-1 pr-3">
                 <Text className="dark:text-white text-gray-900 font-medium">Also add to my expenses</Text>

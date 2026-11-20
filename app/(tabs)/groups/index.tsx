@@ -108,7 +108,7 @@ export default function GroupsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6366f1']} tintColor="#6366f1" />}
         >
           {loadError && groups.length > 0 && (
-            <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 rounded-xl px-3 py-2 mb-3">
+            <View className="flex-row items-center dark:bg-gray-800 bg-gray-50 rounded-xl px-3 py-2 mb-3">
               <Feather name="wifi-off" size={14} color="#d97706" />
               <Text className="text-amber-700 dark:text-amber-300 text-xs ml-2 flex-1">
                 Showing saved groups. Pull down to refresh.
@@ -119,10 +119,10 @@ export default function GroupsScreen() {
           {invitations.map((invitation) => (
             <View
               key={invitation.groupId}
-              className="rounded-2xl p-4 mb-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
+              className="rounded-xl p-4 mb-3 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200"
             >
               <View className="flex-row items-center">
-                <InitialsAvatar name={invitation.groupName} seed={invitation.groupId} size={40} />
+                <InitialsAvatar name={invitation.groupName} size={40} />
                 <View className="flex-1 ml-3">
                   <Text className="dark:text-white text-gray-900 font-semibold" numberOfLines={1}>
                     {invitation.invitedBy ? `${invitation.invitedBy} invited you` : "You're invited"}
@@ -157,7 +157,7 @@ export default function GroupsScreen() {
 
           {groups.length === 0 && invitations.length > 0 ? null : groups.length === 0 ? (
             <View className="flex-1 items-center justify-center px-4 pb-16">
-              <View className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 items-center justify-center mb-5">
+              <View className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center mb-5">
                 <Feather name="users" size={34} color="#6366f1" />
               </View>
               <Text className="text-xl font-bold dark:text-white text-gray-900 text-center">
@@ -187,20 +187,20 @@ export default function GroupsScreen() {
             {(() => {
               const totals = totalsByCurrency(groups);
               return (
-                <View className="rounded-2xl p-4 mb-4 bg-indigo-600">
-                  <Text className="text-indigo-100 text-xs font-medium">Across your groups</Text>
+                <View className="rounded-xl p-5 mb-4 dark:bg-indigo-600 bg-white dark:border-0 border border-gray-300">
+                  <Text className="dark:text-indigo-100 text-gray-500 text-xs font-medium">Across your groups</Text>
                   {totals.length === 0 ? (
-                    <Text className="text-white text-lg font-bold mt-1">You&apos;re all settled up</Text>
+                    <Text className="dark:text-white text-slate-800 text-lg font-bold mt-1">You&apos;re all settled up</Text>
                   ) : (
                     totals.map((t) => (
                       <View key={t.symbol} className="flex-row mt-2">
                         <View className="flex-1">
-                          <Text className="text-indigo-100 text-xs">You are owed</Text>
-                          <Text className="text-white text-lg font-bold">{formatMoney(t.owed, t.symbol)}</Text>
+                          <Text className="dark:text-indigo-100 text-gray-500 text-xs">You are owed</Text>
+                          <Text className="dark:text-white text-slate-800 text-lg font-bold">{formatMoney(t.owed, t.symbol)}</Text>
                         </View>
                         <View className="flex-1">
-                          <Text className="text-indigo-100 text-xs">You owe</Text>
-                          <Text className="text-white text-lg font-bold">{formatMoney(t.owe, t.symbol)}</Text>
+                          <Text className="dark:text-indigo-100 text-gray-500 text-xs">You owe</Text>
+                          <Text className="dark:text-white text-slate-800 text-lg font-bold">{formatMoney(t.owe, t.symbol)}</Text>
                         </View>
                       </View>
                     ))
@@ -217,19 +217,18 @@ export default function GroupsScreen() {
                   key={group._id}
                   onPress={() => router.push({ pathname: '/(tabs)/groups/[id]', params: { id: group._id } })}
                   activeOpacity={0.8}
-                  className="flex-row items-center rounded-2xl p-4 mb-3 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200"
+                  className="flex-row items-center rounded-xl p-4 mb-3 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200"
                 >
                   <View>
-                    <InitialsAvatar name={group.name} seed={group._id} size={44} />
+                    <InitialsAvatar name={group.name} size={44} />
                     {unseen && (
-                      <View className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-indigo-600 border-2 border-white dark:border-gray-800" />
+                      <View className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white dark:border-gray-800" />
                     )}
                   </View>
                   <View className="flex-1 ml-3">
                     <Text className={`text-base dark:text-white text-gray-900 ${unseen ? 'font-bold' : 'font-semibold'}`} numberOfLines={1}>
                       {group.name}
                     </Text>
-                    {unseen && <Text className="text-indigo-600 dark:text-indigo-300 text-xs font-semibold">New activity</Text>}
                     <Text className="dark:text-gray-400 text-gray-500 text-xs mt-0.5" numberOfLines={1}>
                       {memberSummary(group)}
                     </Text>

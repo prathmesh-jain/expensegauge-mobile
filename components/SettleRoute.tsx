@@ -1,6 +1,5 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import { formatMoney, memberName, toPaise } from '@/helper/groupFormat';
 import type { Group, MemberBalance, Transfer } from '@/types/group';
 
@@ -14,11 +13,11 @@ type Props = {
 };
 
 const TransferRow = ({ group, t, strong }: { group: Group; t: Transfer; strong?: boolean }) => (
-  <View className={`flex-row items-center py-1.5 px-2 rounded-lg ${strong ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
-    <Text className={`flex-1 ${strong ? 'font-semibold text-indigo-700 dark:text-indigo-200' : 'dark:text-gray-200 text-gray-700'}`} numberOfLines={1}>
+  <View className={`flex-row items-center py-1.5 px-2 rounded-lg ${strong ? 'bg-gray-100 dark:bg-gray-800' : ''}`}>
+    <Text className={`flex-1 ${strong ? 'font-semibold dark:text-white text-gray-900' : 'dark:text-gray-200 text-gray-700'}`} numberOfLines={1}>
       {memberName(group, t.from)} <Text className="text-gray-400">→</Text> {memberName(group, t.to)}
     </Text>
-    <Text className={strong ? 'font-semibold text-indigo-700 dark:text-indigo-200' : 'dark:text-gray-300 text-gray-600'}>
+    <Text className={strong ? 'font-semibold dark:text-white text-gray-900' : 'dark:text-gray-300 text-gray-600'}>
       {formatMoney(t.amount, group.currencySymbol)}
     </Text>
   </View>
@@ -34,14 +33,14 @@ export default function SettleRoute({ group, before, after, nets, highlight }: P
 
   return (
     <View>
-      <Text className="dark:text-gray-400 text-gray-500 text-xs font-semibold uppercase tracking-wide">
+      <Text className="dark:text-gray-400 text-gray-500 text-xs font-semibold">
         Who owed whom · {before.length} {before.length === 1 ? 'payment' : 'payments'}
       </Text>
       <View className="mt-1">
         {before.map((t) => <TransferRow key={`b-${t.from}-${t.to}`} group={group} t={t} />)}
       </View>
 
-      <Text className="dark:text-gray-400 text-gray-500 text-xs font-semibold uppercase tracking-wide mt-4">
+      <Text className="dark:text-gray-400 text-gray-500 text-xs font-semibold mt-4">
         Overall
       </Text>
       <View className="mt-1 px-2">
@@ -57,12 +56,9 @@ export default function SettleRoute({ group, before, after, nets, highlight }: P
         ))}
       </View>
 
-      <View className="flex-row items-center mt-4">
-        <Feather name="zap" size={13} color="#6366f1" />
-        <Text className="text-indigo-600 dark:text-indigo-300 text-xs font-semibold uppercase tracking-wide ml-1">
-          Smart settle · {after.length} {after.length === 1 ? 'payment' : 'payments'}
-        </Text>
-      </View>
+      <Text className="dark:text-gray-400 text-gray-500 text-xs font-semibold mt-4">
+        Smart settle · {after.length} {after.length === 1 ? 'payment' : 'payments'}
+      </Text>
       <View className="mt-1">
         {after.map((t) => <TransferRow key={`a-${t.from}-${t.to}`} group={group} t={t} strong={isHighlighted(t)} />)}
       </View>

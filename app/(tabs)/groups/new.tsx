@@ -229,8 +229,8 @@ export default function NewGroupScreen() {
           </TouchableOpacity>
         </View>
         {notFoundEmail ? (
-          <View className="mt-2 rounded-lg p-3 bg-amber-50 dark:bg-amber-900/20">
-            <Text className="text-amber-800 dark:text-amber-200 text-xs leading-4">
+          <View className="mt-2 rounded-lg p-3 dark:bg-gray-800 bg-gray-50">
+            <Text className="dark:text-gray-300 text-gray-600 text-xs leading-4">
               No ExpenseGauge account uses {notFoundEmail}. Type their name instead, then share the invite link once the group is created.
             </Text>
           </View>

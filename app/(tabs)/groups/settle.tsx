@@ -100,8 +100,8 @@ export default function SettleUpScreen() {
             </View>
           ) : plan && transfers.length === 0 ? (
             <View className="items-center pt-16 px-6">
-              <View className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 items-center justify-center">
-                <Feather name="check" size={30} color="#16a34a" />
+              <View className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center">
+                <Feather name="check" size={30} color="#6b7280" />
               </View>
               <Text className="dark:text-white text-gray-900 text-lg font-bold mt-4">Everyone is settled up</Text>
               <Text className="dark:text-gray-400 text-gray-500 text-center mt-1">Nobody owes anything in this group.</Text>
@@ -112,18 +112,17 @@ export default function SettleUpScreen() {
                 <TouchableOpacity
                   onPress={() => setExplain('all')}
                   activeOpacity={0.8}
-                  className="rounded-2xl p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900"
+                  className="rounded-xl p-4 dark:bg-gray-800 bg-gray-50 border dark:border-gray-700 border-gray-200"
                 >
                   <View className="flex-row items-center">
-                    <Feather name="zap" size={16} color="#6366f1" />
-                    <Text className="text-indigo-900 dark:text-indigo-100 font-semibold ml-2 flex-1">
+                    <Text className="dark:text-white text-gray-900 font-semibold flex-1">
                       {saved > 0
                         ? `Smart settle: ${plan.before.length} payments → ${plan.transfers.length}`
                         : 'Smart settle'}
                     </Text>
                     <Text className="text-indigo-600 dark:text-indigo-300 text-sm font-semibold">How?</Text>
                   </View>
-                  <Text className="text-indigo-700/80 dark:text-indigo-300/80 text-xs mt-1 leading-4">
+                  <Text className="dark:text-gray-400 text-gray-500 text-xs mt-1 leading-4">
                     Fewer payments, same totals. Everyone ends at zero.
                   </Text>
                 </TouchableOpacity>
@@ -139,7 +138,7 @@ export default function SettleUpScreen() {
                 return (
                   <View
                     key={`${t.from}-${t.to}`}
-                    className={`rounded-2xl p-4 mb-3 border ${mine ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-gray-200 dark:border-gray-700'}`}
+                    className={`rounded-xl p-4 mb-3 border ${mine ? 'border-gray-300 dark:border-gray-600' : 'border-gray-200 dark:border-gray-700'}`}
                   >
                     <View className="flex-row items-center">
                       <InitialsAvatar name={memberName(group, t.from, { you: false })} size={34} />
@@ -160,14 +159,16 @@ export default function SettleUpScreen() {
                         </TouchableOpacity>
                       )}
                       <View className="flex-1" />
-                      <TouchableOpacity
-                        onPress={() => record(t)}
-                        className={`px-4 py-2 rounded-xl ${mine ? 'bg-indigo-600' : 'border border-indigo-600'}`}
-                      >
-                        <Text className={mine ? 'text-white font-semibold' : 'text-indigo-600 dark:text-indigo-300 font-semibold'}>
-                          Record payment
+                      {mine ? (
+                        <TouchableOpacity onPress={() => record(t)} className="px-4 py-2 rounded-lg bg-indigo-600">
+                          <Text className="text-white font-semibold">Record payment</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        // Only the two people involved can record it
+                        <Text className="dark:text-gray-500 text-gray-400 text-xs">
+                          {memberName(group, t.from)} or {memberName(group, t.to)} records this
                         </Text>
-                      </TouchableOpacity>
+                      )}
                     </View>
                   </View>
                 );

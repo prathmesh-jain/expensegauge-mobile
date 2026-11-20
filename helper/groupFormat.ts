@@ -1,5 +1,5 @@
 import { formatCurrency, TWO_DECIMALS } from '@/store/currencyStore';
-import type { Group, GroupExpense, PaymentMethod } from '@/types/group';
+import type { ExpenseChange, Group, GroupExpense, GroupSettlement, PaymentMethod } from '@/types/group';
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'upi', label: 'UPI' },
@@ -58,6 +58,53 @@ export const memberName = (group: Group, memberId: string, { you = true } = {}) 
   if (!member) return 'Someone';
   if (you && member.isYou) return 'You';
   return member.name;
+};
+
+export const formatShortDate = (value: string) => {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+};
+
+export const formatDateTime = (value: string) => {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+};
+
+// "₹0.67 rounded off by Bhavna", or null when the payment wasn't rounded
+export const roundOffText = (settlement: GroupSettlement, group: Group) => {
+  if (settlement.roundOff === 0) return null;
+  const who = memberName(group, settlement.roundOff > 0 ? settlement.fromMemberId : settlement.toMemberId);
+  return `${formatMoney(Math.abs(settlement.roundOff), group.currencySymbol)} rounded off by ${who}`;
+};
+
+const SPLIT_LABEL: Record<string, string> = {
+  equal: 'equally', exact: 'exact amounts', percent: 'percentage', shares: 'shares',
+};
+
+const shortDate = (isoDay: string) =>
+  new Date(`${isoDay}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+// One line of an expense's edit history, e.g. "Amount ₹1,500 → ₹1,200"
+export const describeChange = (group: Group, change: ExpenseChange) => {
+  const money = (value: string | null) => formatMoney(Number(value ?? 0), group.currencySymbol);
+  switch (change.field) {
+    case 'details': return `Details "${change.from}" → "${change.to}"`;
+    case 'amount': return `Amount ${money(change.from)} → ${money(change.to)}`;
+    case 'date': return `Date ${shortDate(change.from ?? '')} → ${shortDate(change.to ?? '')}`;
+    case 'category': return `Category ${change.from} → ${change.to}`;
+    case 'paidBy': return `Paid by ${memberName(group, change.from ?? '')} → ${memberName(group, change.to ?? '')}`;
+    case 'splitType': return `Split ${SPLIT_LABEL[change.from ?? ''] ?? change.from} → ${SPLIT_LABEL[change.to ?? ''] ?? change.to}`;
+    case 'share': {
+      const who = memberName(group, change.memberId ?? '');
+      const whose = who === 'You' ? 'Your' : `${who}'s`;
+      if (toPaise(Number(change.from)) === 0) return `${who} added · ${money(change.to)}`;
+      if (toPaise(Number(change.to)) === 0) return `${who} removed (was ${money(change.from)})`;
+      return `${whose} share ${money(change.from)} → ${money(change.to)}`;
+    }
+    default: return '';
+  }
 };
 
 // How one expense affects you: what you lent or borrowed

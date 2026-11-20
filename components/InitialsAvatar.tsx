@@ -1,15 +1,6 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-const PALETTE = [
-  { bg: '#e0e7ff', fg: '#4338ca' },
-  { bg: '#dcfce7', fg: '#15803d' },
-  { bg: '#fef3c7', fg: '#b45309' },
-  { bg: '#fce7f3', fg: '#be185d' },
-  { bg: '#e0f2fe', fg: '#0369a1' },
-  { bg: '#ede9fe', fg: '#6d28d9' },
-];
-
 const initialsOf = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
@@ -18,23 +9,21 @@ const initialsOf = (name: string) => {
   return (first + last).toUpperCase();
 };
 
-// Same name always gets the same color
-const colorFor = (seed: string) => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-  return PALETTE[Math.abs(hash) % PALETTE.length];
-};
+// `muted` for people who haven't joined yet
+type Props = { name: string; size?: number; muted?: boolean };
 
-type Props = { name: string; size?: number; seed?: string; muted?: boolean };
-
-export default function InitialsAvatar({ name, size = 40, seed, muted = false }: Props) {
-  const color = muted ? { bg: '#e5e7eb', fg: '#6b7280' } : colorFor(seed ?? name);
+export default function InitialsAvatar({ name, size = 40, muted = false }: Props) {
   return (
     <View
-      style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color.bg }}
-      className="items-center justify-center"
+      style={{ width: size, height: size, borderRadius: size / 2 }}
+      className={`items-center justify-center ${muted ? 'bg-gray-100 dark:bg-gray-800' : 'bg-gray-200 dark:bg-gray-700'}`}
     >
-      <Text style={{ color: color.fg, fontSize: size * 0.38, fontWeight: '700' }}>{initialsOf(name)}</Text>
+      <Text
+        style={{ fontSize: size * 0.38, fontWeight: '600' }}
+        className={muted ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-200'}
+      >
+        {initialsOf(name)}
+      </Text>
     </View>
   );
 }
