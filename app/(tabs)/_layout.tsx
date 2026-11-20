@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import * as Notifications from "expo-notifications";
-import { useLastNotificationResponse } from "expo-notifications";
+import { useLastNotificationResponse } from "@/helper/useLastNotificationResponse";
 import { GROUP_ACTIVITY_TYPE, syncPushRegistration } from "@/helper/pushService";
 import api from "@/api/api";
 import { useEffect } from "react";

@@ -9,7 +9,7 @@ const Theme = () => {
     const{setTheme,theme}= useThemeStore()
     const [current, setCurrent] = useState(theme);
     const applyTheme = async (theme: 'light' | 'dark' | null) => {
-        Appearance.setColorScheme(theme);
+        Appearance.setColorScheme?.(theme);
         setCurrent(theme)
         setTheme(theme)
     };

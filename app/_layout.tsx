@@ -38,7 +38,7 @@ export default function RootLayout() {
   const { logout, accessToken } = useAuthStore();
   const { reset: resetExpenseStore } = useExpenseStore();
   const { reset: resetAdminStore } = useAdminStore();
-  Appearance.setColorScheme(theme);
+  Appearance.setColorScheme?.(theme);
   const colorScheme = useColorScheme();
   const backcolor = colorScheme == "light" ? "white" : "#111827";
   const statusColor = colorScheme == "light" ? "dark" : "light";
