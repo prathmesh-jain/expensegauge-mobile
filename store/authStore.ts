@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import * as SecureStore from 'expo-secure-store';
+import { authStorage } from '@/helper/authStorage';
 
 type AuthStore = {
   name: string | null;
@@ -73,7 +73,7 @@ export const useAuthStore = create<AuthStore>()(
         }));
         // Clear persisted data from SecureStore
         try {
-          await SecureStore.deleteItemAsync('auth-storage');
+          await authStorage.removeItem('auth-storage');
         } catch (error) {
           console.error('Error clearing SecureStore:', error);
         }
@@ -81,11 +81,7 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => ({
-        getItem: async (name: string) => await SecureStore.getItemAsync(name),
-        setItem: async (name: string, value: string) => await SecureStore.setItemAsync(name, value),
-        removeItem: async (name: string) => await SecureStore.deleteItemAsync(name),
-      })),
+      storage: createJSONStorage(() => authStorage),
     }
   )
 );
