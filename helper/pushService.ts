@@ -7,7 +7,7 @@ import api from '@/api/api';
 import { setGroupNotificationsApi } from '@/api/groupApi';
 import { useAuthStore } from '@/store/authStore';
 import { useGroupStore } from '@/store/groupStore';
-import { hasNotificationPermission, requestNotificationPermission } from '@/helper/reminderService';
+import { hasNotificationPermission, requestNotificationPermission, supportsNotifications } from '@/helper/reminderService';
 import type { Group } from '@/types/group';
 
 // Group push notifications are opt-in per group. The phone is only registered
@@ -131,6 +131,7 @@ export const useGroupNotifyPrompt = create<GroupNotifyPromptStore>()((set) => ({
  * unless the person already chose for it or muted all groups in Preferences.
  */
 export const askAboutGroupNotifications = (group: Group) => {
+  if (!supportsNotifications) return;
   if (group.myNotify !== null && group.myNotify !== undefined) return;
   if (!useGroupStore.getState().notificationsOn) return;
   // Let the screen transition finish first

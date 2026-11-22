@@ -17,6 +17,7 @@ This repository contains the mobile application that communicates with the Expen
 - Environment Variables
 - Configuration
 - Engineering Highlights
+- Web
 - Scripts
 
 ---
@@ -253,6 +254,24 @@ Expense categories are predicted on-device using a bundled Naive Bayes model, ke
 ## Consistent user experience
 
 Theme persistence, animations, haptics, update prompts and typed API wrappers work together to provide a predictable experience across the application.
+
+---
+
+# Web
+
+The same codebase runs in the browser at **app.expensegauge.prathmeshjain.in**, deployed as its own Vercel project. The landing page, privacy policy, `/.well-known/assetlinks.json` and the `/invite/:code` fallback page stay on expensegauge.prathmeshjain.in (the ExpenseGauge-web repo).
+
+**Vercel project settings:** import this repository; `vercel.json` sets the build (`npx expo export -p web --clear`), the `dist` output and the rewrite that serves `index.html` for every path. Add the environment variables `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and `EXPO_PUBLIC_PRIVACY_POLICY_URL`.
+
+**Build locally:**
+
+```bash
+npx expo export -p web --clear
+```
+
+Keep `--clear`: Metro caches `EXPO_PUBLIC_*` values, so without it a build can keep an old API URL.
+
+**Not on web:** the daily reminder and group notifications (browsers can't schedule local notifications or receive Expo pushes) and Google Sign-In (the native package has no free web support). Platform-specific code lives in `*.web.ts(x)` files next to their native versions, such as `helper/authStorage.web.ts` and `components/DateTimePicker.web.tsx`.
 
 ---
 

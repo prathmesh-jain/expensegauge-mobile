@@ -397,7 +397,8 @@ export default function Login() {
               </Text>
             </TouchableOpacity>
 
-            <GoogleAuthButton setStatus={setLoading} />
+            {/* The Google Sign-In package has no free web support; web gets its own button later */}
+            {Platform.OS !== "web" && <GoogleAuthButton setStatus={setLoading} />}
           </View>
           <LoaderModal
             visible={loading}

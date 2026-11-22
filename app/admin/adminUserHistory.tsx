@@ -195,11 +195,17 @@ export default function TransactionHistory() {
     },
   };
 
-  const chartWidth = Math.max(screenWidth * 0.9, (stats.labels.length - 1) * (screenWidth * 0.3));
+  // Fill the card the chart sits in (measured below); wider when there are many months.
+  const [chartAreaWidth, setChartAreaWidth] = useState(0);
+  const baseChartWidth = chartAreaWidth > 0 ? chartAreaWidth : screenWidth * 0.9;
+  const chartWidth = Math.max(baseChartWidth, (stats.labels.length - 1) * (baseChartWidth * 0.33));
 
 
   const renderHeader = () => (
-    <View className="mb-6" style={{ backgroundColor: colorScheme == 'dark' ? '#1E293B' : 'white', borderRadius: 16, padding: 16 }}>
+    <View className="mb-6" style={{ backgroundColor: colorScheme == 'dark' ? '#1E293B' : 'white', borderRadius: 16, padding: 16 }}
+      // Chart area: the card minus its 16px padding on each side
+      onLayout={(e) => setChartAreaWidth(e.nativeEvent.layout.width - 32)}
+    >
       {!statsLoading && stats.labels.length > 1 ? (
         <>
           <Text className="dark:text-white text-lg font-semibold mb-2">Transaction Trends</Text>
@@ -218,7 +224,7 @@ export default function TransactionHistory() {
                 chartConfig={chartConfig}
                 bezier
                 transparent
-                style={{ borderRadius: 16, marginHorizontal: -13 }}
+                style={{ borderRadius: 16 }}
                 onDataPointClick={({ x, y, value, dataset }) => {
                   const colorVal = dataset.color ? dataset.color(1) : '';
                   const type = colorVal === '#EF4444' ? 'Debit' : 'Credit';

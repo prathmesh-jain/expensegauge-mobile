@@ -1,4 +1,4 @@
-import { View, SafeAreaView, Text, Switch } from 'react-native'
+import { View, Text, Switch } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
 import { Toast } from 'toastify-react-native'
@@ -8,6 +8,7 @@ import { useCurrencySymbol } from '@/store/currencyStore'
 import { useAuthStore } from '@/store/authStore'
 import { useGroupStore } from '@/store/groupStore'
 import api from '@/api/api'
+import { supportsNotifications } from '@/helper/reminderService'
 
 const THEME_LABELS = { light: 'Light', dark: 'Dark' } as const;
 
@@ -47,7 +48,7 @@ const Preferences = () => {
     }
 
     return (
-        <SafeAreaView className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
+        <View className='dark:bg-gray-900 bg-white' style={{ flex: 1 }}>
             <View className='px-6 pt-2'>
                 <SettingsRow
                     label="Theme"
@@ -59,7 +60,7 @@ const Preferences = () => {
                     value={currencySymbol}
                     onPress={() => router.navigate('/profile/currency' as any)}
                 />
-                {!inAdminMode && (
+                {!inAdminMode && supportsNotifications && (
                     <View className="flex-row justify-between items-center border-b dark:border-gray-700 border-gray-300 py-4">
                         <View className="flex-1 pr-4">
                             <Text className="text-base text-gray-700 dark:text-gray-200">Group notifications</Text>
@@ -81,7 +82,7 @@ const Preferences = () => {
                     </View>
                 )}
             </View>
-        </SafeAreaView>
+        </View>
     )
 }
 
