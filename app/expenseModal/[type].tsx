@@ -35,6 +35,7 @@ import { createLocalId } from '@/helper/localId';
 import { getExpenseLimitError, MAX_AMOUNT_DIGITS, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { offerDailyReminder } from '@/helper/reminderService';
+import { useIsDesktop } from '@/helper/useIsDesktop';
 
 // ------------------ Constants ------------------
 const categories = [
@@ -66,6 +67,7 @@ const ExpenseForm = () => {
   const { _id, type, userIdAdmin, ...params } = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
   const colorScheme = useColorScheme();
+  const isDesktop = useIsDesktop();
 
   const { addExpense, editExpense, markAsSynced } = useExpenseStore();
   const { assignBalance, editUserExpenseByAdmin, markAsSyncedAdmin } = useAdminStore();
@@ -371,9 +373,13 @@ const ExpenseForm = () => {
   const textColor = colorScheme === "light" ? "black" : "#d1d5db";
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-700/60 justify-end">
+    <SafeAreaView className={`flex-1 bg-slate-700/60 ${isDesktop ? 'justify-center items-center' : 'justify-end'}`}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="dark:bg-gray-900 bg-white w-full rounded-lg p-5 items-center" style={{ paddingBottom: containerPadding }}>
+        {/* Bottom sheet on phones; a centered dialog in a desktop browser */}
+        <View
+          className="dark:bg-gray-900 bg-white w-full rounded-lg p-5 items-center"
+          style={isDesktop ? { maxWidth: 520, borderRadius: 16, padding: 28 } : { paddingBottom: containerPadding }}
+        >
           <View className="mb-6 relative w-full">
             <Text className="text-center text-xl dark:text-gray-200">
               Enter the {type} details

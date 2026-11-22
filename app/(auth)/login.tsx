@@ -15,7 +15,8 @@ import {
 import api from "@/api/api";
 import { useAuthStore } from "@/store/authStore";
 import LoaderModal from "../expenseModal/LoaderModal";
-import GoogleAuthButton from "./GoogleAuthButton";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { useIsDesktop } from "@/helper/useIsDesktop";
 import { Ionicons } from "@expo/vector-icons";
 
 
@@ -25,6 +26,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { type } = useLocalSearchParams<Record<string, string>>();
   const isLogin = type === 'login';
+  const isDesktop = useIsDesktop();
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -213,8 +215,8 @@ export default function Login() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            padding: 24,
-            paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.5 + 24 : 24,
+            padding: isDesktop ? 56 : 24,
+            paddingBottom: keyboardHeight > 0 ? keyboardHeight * 0.5 + 24 : isDesktop ? 56 : 24,
             justifyContent: "center",
           }}
           keyboardShouldPersistTaps="handled"
@@ -223,7 +225,7 @@ export default function Login() {
           <Text className="text-2xl text-center font-bold dark:text-white text-gray-800 mb-6">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </Text>
-          <View className="flex gap-5 space-y-6">
+          <View className={isDesktop ? "flex gap-4" : "flex gap-5 space-y-6"}>
             {error.serverError && <Text className="text-red-600 -mt-4 -mb-1 px-3 text-center">{error.serverError}</Text>}
 
             {!isLogin &&
@@ -397,8 +399,7 @@ export default function Login() {
               </Text>
             </TouchableOpacity>
 
-            {/* The Google Sign-In package has no free web support; web gets its own button later */}
-            {Platform.OS !== "web" && <GoogleAuthButton setStatus={setLoading} />}
+            <GoogleSignInButton setStatus={setLoading} />
           </View>
           <LoaderModal
             visible={loading}
