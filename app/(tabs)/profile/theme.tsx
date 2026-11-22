@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native'
 import { applyColorScheme } from "@/helper/applyColorScheme";
-import React, { useState } from 'react'
+import React from 'react'
 import { RadioButton } from 'react-native-paper';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 import { useThemeStore } from '@/store/themeStore';
@@ -8,10 +8,10 @@ import { useThemeStore } from '@/store/themeStore';
 
 const Theme = () => {
     const{setTheme,theme}= useThemeStore()
-    const [current, setCurrent] = useState(theme);
+    // From the store, so a change made elsewhere (the web theme switch) shows here too
+    const current = theme;
     const applyTheme = async (theme: 'light' | 'dark' | null) => {
         applyColorScheme(theme);
-        setCurrent(theme)
         setTheme(theme)
     };
     return (

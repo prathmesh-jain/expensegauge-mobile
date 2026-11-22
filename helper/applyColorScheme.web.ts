@@ -20,6 +20,9 @@ const publish = () => {
   const scheme = current();
   if (scheme === applied) return;
   applied = scheme;
+  // Tells the browser the page draws its own theme (scrollbars, form controls,
+  // and no automatic dark mode recoloring on top of ours)
+  if (typeof document !== 'undefined') document.documentElement.style.colorScheme = scheme;
   try {
     colorScheme.set(scheme);
   } catch {

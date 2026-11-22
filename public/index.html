@@ -5,6 +5,10 @@
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <title>%WEB_TITLE%</title>
+    <!-- The app has its own light and dark themes: stop the browser's automatic
+         dark mode and extensions like Dark Reader from recoloring it -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="darkreader-lock" />
 
     <!-- Installable app (PWA): Chrome/Edge "Install app", iOS "Add to Home Screen" -->
     <link rel="manifest" href="/manifest.webmanifest" />

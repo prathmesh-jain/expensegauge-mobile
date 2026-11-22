@@ -42,7 +42,7 @@ export default function Index() {
   }
 
   return (
-    <SafeAreaView className="flex-1 dark:bg-gray-900 p-6">
+    <SafeAreaView className="flex-1 dark:bg-gray-900" style={{ padding: 24 }}>
       <View className="flex-1 justify-center items-center mb-12">
         {colorScheme=='dark'?
         <Image source={require('../../assets/images/icon1.png')} className="mb-10" style={{ width: 240, height: 192 }} resizeMode="contain"/>

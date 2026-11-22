@@ -13,13 +13,13 @@ const FEATURES: { icon: keyof typeof Feather.glyphMap; title: string; text: stri
 /** Left half of the sign-in pages on a desktop browser. */
 export default function AuthBrandPanel() {
   return (
-    <View className="flex-1 bg-indigo-950 justify-between" style={{ paddingHorizontal: 64, paddingVertical: 48 }}>
-      <View className="flex-row items-center gap-3">
+    <View className="flex-1 bg-indigo-950 justify-between" style={{ paddingHorizontal: 64, paddingVertical: 48, alignItems: 'center' }}>
+      <View className="flex-row items-center gap-3" style={{ width: '100%', maxWidth: 520 }}>
         <Image source={require('../../assets/images/icon1.png')} style={{ width: 44, height: 38 }} resizeMode="contain" />
         <Text className="text-white text-xl font-bold">ExpenseGauge</Text>
       </View>
 
-      <View style={{ maxWidth: 520 }}>
+      <View style={{ width: '100%', maxWidth: 520 }}>
         <Text className="text-white font-bold" style={{ fontSize: 44, lineHeight: 52 }}>
           Your money,{'\n'}at a glance.
         </Text>
@@ -42,7 +42,7 @@ export default function AuthBrandPanel() {
         </View>
       </View>
 
-      <Pressable onPress={() => Linking.openURL(PLAY_STORE_URL)} className="flex-row items-center gap-2 self-start">
+      <Pressable onPress={() => Linking.openURL(PLAY_STORE_URL)} className="flex-row items-center gap-2" style={{ width: '100%', maxWidth: 520 }}>
         <Feather name="download" size={16} color="#c7d2fe" />
         <Text className="text-indigo-200 text-sm">Also on Android: get it on Google Play</Text>
       </Pressable>

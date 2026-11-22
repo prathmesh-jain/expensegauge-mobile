@@ -5,6 +5,7 @@ import { Image, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-
 import { useAuthStore } from '@/store/authStore';
 import InitialsAvatar from '@/components/InitialsAvatar';
 import { INSTALL_LABELS, useInstallApp } from '@/helper/installApp';
+import ThemeToggle from '@/components/web/ThemeToggle';
 
 type Item = { label: string; icon: keyof typeof Feather.glyphMap };
 
@@ -111,6 +112,11 @@ export default function DesktopSidebar({ state, descriptors, navigation, items, 
           <Text className="text-[14px] font-medium text-indigo-700 dark:text-indigo-300">{INSTALL_LABELS[installMode]}</Text>
         </Pressable>
       )}
+
+      <View className="flex-row items-center justify-between px-3 py-2 mb-2">
+        <Text className="text-sm text-gray-500 dark:text-gray-400">Theme</Text>
+        <ThemeToggle />
+      </View>
 
       {name && (
         <Pressable

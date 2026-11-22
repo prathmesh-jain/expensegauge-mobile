@@ -225,7 +225,7 @@ export default function Login() {
           <Text className="text-2xl text-center font-bold dark:text-white text-gray-800 mb-6">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </Text>
-          <View className="flex gap-5 space-y-6">
+          <View className={isDesktop ? "flex gap-4" : "flex gap-5 space-y-6"}>
             {error.serverError && <Text className="text-red-600 -mt-4 -mb-1 px-3 text-center">{error.serverError}</Text>}
 
             {!isLogin &&
