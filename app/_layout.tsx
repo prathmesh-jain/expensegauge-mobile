@@ -15,6 +15,7 @@ import ReminderPromptModal from "@/components/ReminderPromptModal";
 import GroupNotifyPromptModal from "@/components/GroupNotifyPromptModal";
 import { addNetworkListener, checkConnection } from "@/api/network";
 import UserNotFoundModal from "@/components/UserNotFoundModal";
+import InstallHelpModal from "@/components/InstallHelpModal";
 import { useAuthStore } from "@/store/authStore";
 import { useExpenseStore } from "@/store/expenseStore";
 import { useAdminStore } from "@/store/adminStore";
@@ -23,17 +24,22 @@ import { clearQueue } from "@/store/offlineQueue";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { startDailyReminderSync } from "@/helper/reminderService";
+import { useIsDesktop } from "@/helper/useIsDesktop";
 
-// Widest the app gets in a browser; the rest of the window is a plain frame
+// Widest the phone layout gets in a mid-size browser window; desktop-width
+// windows use the full width (sidebar and split screens, see useIsDesktop)
 const WEB_MAX_WIDTH = 640;
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 if (!googleWebClientId) {
   console.warn("Missing EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID; Google Sign-In may not work.");
 }
-GoogleSignin.configure({
-  webClientId: googleWebClientId ?? "",
-});
+// The native SDK; the browser uses Google Identity Services (GoogleSignInButton.web.tsx)
+if (Platform.OS !== "web") {
+  GoogleSignin.configure({
+    webClientId: googleWebClientId ?? "",
+  });
+}
 
 export default function RootLayout() {
   const theme = useThemeStore((state) => state.theme);
@@ -47,6 +53,10 @@ export default function RootLayout() {
   const backcolor = colorScheme == "light" ? "white" : "#111827";
   const statusColor = colorScheme == "light" ? "dark" : "light";
   const webFrameColor = colorScheme == "light" ? "#e5e7eb" : "#030712";
+  const isDesktop = useIsDesktop();
+  const capWidth = Platform.OS === "web" && !isDesktop;
+  // Full-page screens outside the tabs (bulk add, admin) in a centered column on desktop
+  const desktopColumn = isDesktop ? { width: "100%" as const, maxWidth: 820, alignSelf: "center" as const } : undefined;
 
   const handleUserNotFound = async () => {
     // First log out the user
@@ -140,9 +150,9 @@ export default function RootLayout() {
 
   return (
     <PaperProvider>
-      <View style={{ flex: 1, backgroundColor: Platform.OS === "web" ? webFrameColor : backcolor }}>
-        {/* On a wide browser window, keep the phone layout in a centered column */}
-        <View style={{ flex: 1, width: "100%", maxWidth: Platform.OS === "web" ? WEB_MAX_WIDTH : undefined, alignSelf: "center", backgroundColor: backcolor }}>
+      <View style={{ flex: 1, backgroundColor: capWidth ? webFrameColor : backcolor }}>
+        {/* In a mid-size browser window, keep the phone layout in a centered column */}
+        <View style={{ flex: 1, width: "100%", maxWidth: capWidth ? WEB_MAX_WIDTH : undefined, alignSelf: "center", backgroundColor: backcolor }}>
         <Stack>
           <Stack.Screen
             name="(auth)"
@@ -156,6 +166,7 @@ export default function RootLayout() {
             name="admin"
             options={{
               headerShown: false,
+              contentStyle: desktopColumn,
               statusBarStyle: statusColor,
               animation: "slide_from_right",
             }}
@@ -177,6 +188,7 @@ export default function RootLayout() {
             name="expenseModal/bulkAdd"
             options={{
               headerShown: false,
+              contentStyle: desktopColumn,
               animation: "slide_from_bottom",
               statusBarStyle: statusColor,
             }}
@@ -187,6 +199,7 @@ export default function RootLayout() {
         <UpdatePrompt />
         <ReminderPromptModal />
         <GroupNotifyPromptModal />
+        <InstallHelpModal />
         <UserNotFoundModal
           show={showUserNotFoundModal}
           onOk={handleUserNotFoundOk}

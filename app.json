@@ -45,7 +45,12 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/images/icon2.png"
+      "favicon": "./assets/images/web-favicon.png",
+      "name": "ExpenseGauge",
+      "shortName": "ExpenseGauge",
+      "description": "Track expenses, accounts and shared group spending.",
+      "themeColor": "#111827",
+      "backgroundColor": "#111827"
     },
     "plugins": [
       "expo-router",

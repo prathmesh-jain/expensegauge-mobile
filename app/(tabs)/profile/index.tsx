@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore';
 import { formatReminderTime, useReminderStore } from '@/store/reminderStore';
 import { supportsNotifications } from '@/helper/reminderService';
+import { INSTALL_LABELS, useInstallApp } from '@/helper/installApp';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -20,6 +21,7 @@ import { useColorScheme, Modal, Platform, ActivityIndicator } from 'react-native
 // when come back from insights to index page the total balance stats not changing and when going back to insights page it still shows graph of old data
 const UserProfileScreen: React.FC = () => {
   const router = useRouter()
+  const { mode: installMode, install } = useInstallApp();
   const reminderEnabled = useReminderStore((state) => state.enabled);
   const reminderHour = useReminderStore((state) => state.hour);
   const reminderMinute = useReminderStore((state) => state.minute);
@@ -299,6 +301,7 @@ const UserProfileScreen: React.FC = () => {
             <SettingsRow label="Preferences" onPress={() => router.navigate('/profile/preferences' as any)} />
             <SettingsRow label="Account & Security" onPress={() => router.navigate('/profile/account' as any)} />
             <SettingsRow label="Send Feedback" icon="message-circle" onPress={() => setShowFeedbackModal(true)} />
+            {installMode && <SettingsRow label={INSTALL_LABELS[installMode]} icon="download" onPress={install} />}
             <TouchableOpacity className="py-6" onPress={() => setShowLogoutModal(true)}>
               <Text className="text-base text-red-600 dark:text-red-400 font-semibold">
                 Log Out

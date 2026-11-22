@@ -13,6 +13,17 @@ import { REMINDER_NOTIFICATION_TYPE } from "@/helper/reminderService";
 import { hasUnseenActivity, useGroupStore } from "@/store/groupStore";
 import { fetchGroupsApi, fetchInvitationsApi } from "@/api/groupApi";
 import { Toast } from "toastify-react-native";
+import { useIsDesktop } from "@/helper/useIsDesktop";
+import DesktopSidebar from "@/components/web/DesktopSidebar";
+
+// Sidebar entries on desktop; same order and names as the bottom tabs
+const SIDEBAR_ITEMS = {
+  home: { label: "Home", icon: "home" },
+  history: { label: "Insights", icon: "bar-chart-2" },
+  groups: { label: "Groups", icon: "users" },
+  profile: { label: "Profile", icon: "user" },
+} as const;
+const DESKTOP_CONTENT_WIDTH = 960;
 
 // The last response survives remounts, so remember which one was already handled
 let handledResponseId: string | null = null;
@@ -22,6 +33,9 @@ export default function RootLayout() {
   const colorScheme = useColorScheme()
   const backcolor = colorScheme == 'light' ? 'white' : '#111827'
   const insets = useSafeAreaInsets();
+  const isDesktop = useIsDesktop();
+  // Matches the screens' own background, so the page column blends into it
+  const desktopPageColor = colorScheme == 'light' ? '#f2f2f2' : '#111827';
   const router = useRouter();
   const role = useAuthStore((state) => state.role);
   const viewMode = useAuthStore((state) => state.viewMode);
@@ -103,8 +117,24 @@ export default function RootLayout() {
   }, [lastNotificationResponse, inAdminMode, router]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#111827' }}>
-      <Tabs screenOptions={{
+    <View style={{ flex: 1, backgroundColor: isDesktop ? desktopPageColor : '#111827' }}>
+      <Tabs
+        tabBar={isDesktop
+          ? (props) => (
+            <DesktopSidebar
+              {...props}
+              items={SIDEBAR_ITEMS}
+              onItemPress={{ history: () => router.navigate(historyHref) }}
+              showQuickAdd={!inAdminMode}
+            />
+          )
+          : undefined}
+        screenOptions={{
+        tabBarPosition: isDesktop ? 'left' : 'bottom',
+        // Desktop: pages sit in a centered column beside the sidebar
+        sceneStyle: isDesktop
+          ? { width: '100%', maxWidth: DESKTOP_CONTENT_WIDTH, marginHorizontal: 'auto', paddingHorizontal: 32, backgroundColor: 'transparent' }
+          : undefined,
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: backcolor,
