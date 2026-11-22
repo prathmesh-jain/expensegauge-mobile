@@ -9,6 +9,7 @@ import { processQueue } from "@/api/syncQueue";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import api from "@/api/api";
 import { Provider as PaperProvider } from 'react-native-paper';
+import { ShareIntentProvider } from 'expo-share-intent';
 import UpdateService from "@/helper/UpdateService";
 import UpdatePrompt from "@/components/UpdatePrompt";
 import ReminderPromptModal from "@/components/ReminderPromptModal";
@@ -139,6 +140,8 @@ export default function RootLayout() {
   }, []);
 
   return (
+    // Holds anything shared to the app until the signed-in tabs can handle it
+    <ShareIntentProvider>
     <PaperProvider>
       <View style={{ flex: 1, backgroundColor: Platform.OS === "web" ? webFrameColor : backcolor }}>
         {/* On a wide browser window, keep the phone layout in a centered column */}
@@ -193,5 +196,6 @@ export default function RootLayout() {
         />
       </View>
     </PaperProvider>
+    </ShareIntentProvider>
   );
 }

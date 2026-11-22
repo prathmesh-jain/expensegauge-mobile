@@ -14,6 +14,10 @@ import { useAccountStore } from "@/store/accountStore";
 import { fetchAccountsApi } from "@/api/accountApi";
 import { formatCurrency, TWO_DECIMALS, useCurrencySymbol } from '@/store/currencyStore';
 import { useGroupStore } from '@/store/groupStore';
+import ScanBillSheet from '@/components/ScanBillSheet';
+import { canRecognizeText } from '@/helper/textRecognition';
+import { prefillParams } from '@/helper/scanBill';
+import { Feather } from '@expo/vector-icons';
 
 export default function Index() {
   const currencySymbol = useCurrencySymbol();
@@ -32,6 +36,7 @@ export default function Index() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false)
+  const [showScan, setShowScan] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [accountBalance, setAccountBalance] = useState<number | null>(null);
 
@@ -223,6 +228,21 @@ export default function Index() {
           </TouchableOpacity>
         </Link>
       </View>
+      {canRecognizeText && (
+        <TouchableOpacity
+          onPress={() => setShowScan(true)}
+          className="flex-row items-center justify-center -mt-3 mb-4 py-2.5 rounded-lg border dark:border-gray-700 border-gray-300"
+        >
+          <Feather name="camera" size={16} color={colorScheme === 'dark' ? '#d1d5db' : '#4b5563'} />
+          <Text className="ml-2 dark:text-gray-200 text-gray-700">Scan a bill</Text>
+        </TouchableOpacity>
+      )}
+      <ScanBillSheet
+        visible={showScan}
+        onClose={() => setShowScan(false)}
+        onScanned={(parsed, category) =>
+          router.push({ pathname: '/expenseModal/[type]', params: { ...prefillParams(parsed, category), preselectedSourceId: selectedAccountId || '' } })}
+      />
       <View className="flex-row justify-between items-center my-4 mb-2">
         <Text className="dark:text-white text-gray-800 text-lg font-semibold">Recent Transactions</Text>
         {expenses.length > 7 && <TouchableOpacity onPress={() => router.navigate('/(tabs)/history')}>

@@ -35,6 +35,10 @@ import { createLocalId } from '@/helper/localId';
 import { getExpenseLimitError, MAX_AMOUNT_DIGITS, MAX_DETAILS_LENGTH } from '@/helper/expenseLimits';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { offerDailyReminder } from '@/helper/reminderService';
+import ScanBillSheet from '@/components/ScanBillSheet';
+import { canRecognizeText } from '@/helper/textRecognition';
+import { scanNote } from '@/helper/scanBill';
+import type { ParsedExpense } from '@/helper/expenseParser';
 
 // ------------------ Constants ------------------
 const categories = [
@@ -146,6 +150,41 @@ const ExpenseForm = () => {
       });
     }
   }, [_id]);
+
+  // Bill scanning (phone only) and the note shown after a scan or a share
+  const [showScan, setShowScan] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(params.prefillNote || null);
+
+  // Fills the form from a scanned bill or shared message. Amounts here are
+  // whole rupees, so paise are rounded (the note shows the exact figure).
+  const applyScan = (parsed: ParsedExpense, category?: string) => {
+    const amount = parsed.amount ? String(Math.round(Number(parsed.amount))) : undefined;
+    setForm((prev) => ({
+      ...prev,
+      amount: amount ?? prev.amount,
+      details: parsed.details ? parsed.details.slice(0, MAX_DETAILS_LENGTH) : prev.details,
+      date: parsed.date ? new Date(`${parsed.date}T12:00:00`) : prev.date,
+      category: type === 'debit' && category ? category : prev.category,
+    }));
+    setScanMessage(
+      parsed.incoming && type === 'debit'
+        ? 'This looks like money you received. Use Add Credit if so.'
+        : scanNote(parsed, amount)
+    );
+  };
+
+  // New expense started from Home's scan or a shared message: fill in what was read
+  useEffect(() => {
+    if (_id || (!params.prefillAmount && !params.prefillDetails)) return;
+    setForm((prev) => ({
+      ...prev,
+      amount: params.prefillAmount ? String(Math.round(Number(params.prefillAmount))) : prev.amount,
+      details: params.prefillDetails || prev.details,
+      date: params.prefillDate ? new Date(`${params.prefillDate}T12:00:00`) : prev.date,
+      category: type === 'debit' && params.prefillCategory ? params.prefillCategory : prev.category,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_id, params.prefillAmount, params.prefillDetails]);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -383,18 +422,35 @@ const ExpenseForm = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Bulk Add Link — only for regular user credit/debit */}
+          {/* Bulk add and bill scanning — only for regular user credit/debit */}
           {!userIdAdmin && !_id && (
-            <TouchableOpacity
-              onPress={() => router.push({ pathname: '/expenseModal/bulkAdd' as any, params: { type, preselectedSourceId: form.sourceId || '' } })}
-              className="flex-row items-center justify-center mb-4 py-2 px-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 w-full"
-            >
-              <Feather name="layers" size={16} color="#6366f1" />
-              <Text className="text-indigo-600 dark:text-indigo-300 font-semibold text-sm ml-2">
-                Bulk {type === 'credit' ? 'Credit' : 'Debit'}
-              </Text>
-              <Feather name="chevron-right" size={14} color="#6366f1" style={{ marginLeft: 4 }} />
-            </TouchableOpacity>
+            <View className="flex-row gap-3 mb-4 w-full">
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/expenseModal/bulkAdd' as any, params: { type, preselectedSourceId: form.sourceId || '' } })}
+                className="flex-1 flex-row items-center justify-center py-2 px-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700"
+              >
+                <Feather name="layers" size={16} color="#6366f1" />
+                <Text className="text-indigo-600 dark:text-indigo-300 font-semibold text-sm ml-2">
+                  Bulk {type === 'credit' ? 'Credit' : 'Debit'}
+                </Text>
+              </TouchableOpacity>
+              {canRecognizeText && (
+                <TouchableOpacity
+                  onPress={() => setShowScan(true)}
+                  className="flex-1 flex-row items-center justify-center py-2 px-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700"
+                >
+                  <Feather name="camera" size={16} color="#6366f1" />
+                  <Text className="text-indigo-600 dark:text-indigo-300 font-semibold text-sm ml-2">Scan bill</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {scanMessage && (
+            <View className="flex-row items-start w-full mb-3 px-3 py-2 rounded-lg dark:bg-gray-900 bg-white">
+              <Feather name="info" size={14} color="#6b7280" style={{ marginTop: 2 }} />
+              <Text className="flex-1 ml-2 dark:text-gray-300 text-gray-600 text-sm">{scanMessage}</Text>
+            </View>
           )}
 
           {/* Details */}
@@ -661,6 +717,8 @@ const ExpenseForm = () => {
           </View>
         </View>
       </Modal>
+
+      <ScanBillSheet visible={showScan} onClose={() => setShowScan(false)} onScanned={applyScan} />
     </SafeAreaView>
   );
 };

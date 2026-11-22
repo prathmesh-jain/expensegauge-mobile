@@ -20,6 +20,10 @@ import { useKeyboardHeight } from '@/helper/useKeyboardHeight';
 import { predictCategory } from '@/helper/categoryDetector';
 import InitialsAvatar from '@/components/InitialsAvatar';
 import ConfirmModal from '@/components/ConfirmModal';
+import ScanBillSheet from '@/components/ScanBillSheet';
+import { canRecognizeText } from '@/helper/textRecognition';
+import { scanNote } from '@/helper/scanBill';
+import type { ParsedExpense } from '@/helper/expenseParser';
 import type { GroupExpense, GroupExpenseInput, GroupMember, SplitType } from '@/types/group';
 
 const CATEGORIES = [
@@ -92,6 +96,16 @@ export default function GroupExpenseForm() {
   const [sourceId, setSourceId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showScan, setShowScan] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+
+  const applyScan = (parsed: ParsedExpense, scannedCategory?: string) => {
+    if (parsed.amount) setAmount(parsed.amount);
+    if (parsed.details) setDetails(parsed.details);
+    if (parsed.date) setDate(new Date(`${parsed.date}T12:00:00`));
+    if (scannedCategory && CATEGORIES.includes(scannedCategory)) setCategory(scannedCategory);
+    setScanMessage(scanNote(parsed));
+  };
   const clientId = useRef(createLocalId()).current;
 
   useEffect(() => {
@@ -262,6 +276,11 @@ export default function GroupExpenseForm() {
           <Text className="text-xl font-bold dark:text-white text-gray-900">{isEdit ? 'Edit expense' : 'Add expense'}</Text>
           <Text className="dark:text-gray-400 text-gray-500 text-xs" numberOfLines={1}>{group.name}</Text>
         </View>
+        {!isEdit && canRecognizeText && (
+          <TouchableOpacity onPress={() => setShowScan(true)} hitSlop={8}>
+            <Feather name="camera" size={21} color={isDark ? '#d1d5db' : '#4b5563'} />
+          </TouchableOpacity>
+        )}
         {isEdit && (
           <TouchableOpacity onPress={() => setConfirmDelete(true)} hitSlop={8}>
             <Feather name="trash-2" size={20} color="#ef4444" />
@@ -274,6 +293,13 @@ export default function GroupExpenseForm() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingTop: 8, paddingBottom: (keyboardHeight || 90 + insets.bottom) + 24 }}
       >
+        {scanMessage && (
+          <View className="flex-row items-start mb-3 px-3 py-2 rounded-lg dark:bg-gray-800 bg-gray-50">
+            <Feather name="info" size={14} color="#6b7280" style={{ marginTop: 2 }} />
+            <Text className="flex-1 ml-2 dark:text-gray-300 text-gray-600 text-sm">{scanMessage}</Text>
+          </View>
+        )}
+
         {/* Amount + details */}
         <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700 pb-2">
           <Text className="text-3xl font-bold dark:text-gray-300 text-gray-500 mr-2">{symbol}</Text>
@@ -482,6 +508,8 @@ export default function GroupExpenseForm() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      <ScanBillSheet visible={showScan} onClose={() => setShowScan(false)} onScanned={applyScan} />
 
       <ConfirmModal
         visible={confirmDelete}

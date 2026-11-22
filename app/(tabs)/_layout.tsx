@@ -13,6 +13,7 @@ import { REMINDER_NOTIFICATION_TYPE } from "@/helper/reminderService";
 import { hasUnseenActivity, useGroupStore } from "@/store/groupStore";
 import { fetchGroupsApi, fetchInvitationsApi } from "@/api/groupApi";
 import { Toast } from "toastify-react-native";
+import ShareIntakeHandler from "@/components/ShareIntakeHandler";
 
 // The last response survives remounts, so remember which one was already handled
 let handledResponseId: string | null = null;
@@ -104,6 +105,7 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#111827' }}>
+      <ShareIntakeHandler />
       <Tabs screenOptions={{
         tabBarShowLabel: false,
         tabBarStyle: {
