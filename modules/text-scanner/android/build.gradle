@@ -1,0 +1,24 @@
+apply plugin: 'com.android.library'
+
+group = 'expo.modules.textscanner'
+version = '1.0.0'
+
+def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+useCoreDependencies()
+useDefaultAndroidSdkVersions()
+
+android {
+  namespace "expo.modules.textscanner"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // ML Kit text recognition from Google Play services: the model is downloaded by Play services,
+  // so the app stays small. withMlKitTextModel asks for it at install time.
+  implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.1'
+}

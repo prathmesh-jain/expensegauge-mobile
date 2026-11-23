@@ -2,7 +2,7 @@ const { AndroidConfig, withAndroidManifest } = require("@expo/config-plugins");
 
 const META_NAME = "com.google.mlkit.vision.DEPENDENCIES";
 
-// expo-text-extractor uses ML Kit's text model from Google Play services, which
+// Bill scanning (modules/text-scanner) uses ML Kit's text model from Google Play services, which
 // is otherwise downloaded the first time someone scans. This asks Play services
 // to fetch it when the app is installed, so the first scan works straight away
 // (and offline).

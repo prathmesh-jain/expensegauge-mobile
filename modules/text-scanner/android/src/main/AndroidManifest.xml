@@ -1,0 +1,3 @@
+<!-- Nothing to declare: reading text needs no permissions, and the package name is set by
+     "namespace" in build.gradle. The ML Kit model download is set up by plugins/withMlKitTextModel.js. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />

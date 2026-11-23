@@ -1,9 +1,9 @@
 // Turns text read from a bill, receipt or UPI payment screen into expense fields.
-// Everything here is a suggestion: the user always checks the form before saving.
+// Everything here is a suggestion: the user picks from the options and checks the form before saving.
 
 export type ParsedExpense = {
   kind: 'receipt' | 'upi' | 'unknown';
-  // Rupees as a plain number string, e.g. "378.50"
+  // A plain number string, e.g. "378.50"
   amount?: string;
   // How sure we are about the amount: "low" means it was a best guess
   amountConfidence?: 'high' | 'low';
@@ -15,11 +15,29 @@ export type ParsedExpense = {
   incoming?: boolean;
 };
 
+// An amount found in the text, with the row it came from so the user can tell them apart
+export type AmountOption = { value: string; row: string; isTotal: boolean };
+
+// Everything a scan found, best guesses first, for the user to choose from
+export type ScanAnalysis = {
+  kind: ParsedExpense['kind'];
+  amounts: AmountOption[];
+  details: string[];
+  date?: string;
+  incoming?: boolean;
+  // The text as read, row by row
+  rows: string[];
+};
+
+// A row of text; height (text size in pixels) is known for scanned images
+export type TextRow = { text: string; height?: number };
+
 // ---------- amounts ----------
 
 // 1,234.50 · 1234.5 · 1,23,456 · 99
 const NUMBER = /\d{1,3}(?:,\d{2,3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?/g;
-const CURRENCY = /(?:₹|rs\.?|inr|`)\s*/i;
+// ₹ is often read as a backtick
+const CURRENCY = /(?:[₹$€£¥`]|\b(?:rs|inr|usd|eur|gbp|chf|aed|sgd|aud|cad|sar)\b\.?)/i;
 
 const toAmount = (raw: string): number | null => {
   const value = Number(raw.replace(/,/g, ''));
@@ -28,12 +46,27 @@ const toAmount = (raw: string): number | null => {
 
 const format = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2));
 
-// Numbers on a line that look like money: not phone numbers, GSTINs, times or quantities like "2 x"
+/** Fixes how OCR and foreign bills write numbers, so "2245. 50", "2'245.50" and "12,50" all read as money */
+const normalizeNumbers = (line: string) =>
+  line
+    .replace(/(\d)\s*\.\s+(\d{2})(?![\d.,])/g, '$1.$2') // 2245. 50 → 2245.50
+    .replace(/(\d)\s+\.(\d{2})(?![\d.,])/g, '$1.$2') // 2245 .50 → 2245.50
+    .replace(/(\d)'(?=\d{3}\b)/g, '$1') // Swiss 2'245.50
+    .replace(/(?<![\d,.])(\d{1,3}(?:\.\d{3})+),(\d{2})(?![\d,])/g, (_, whole: string, cents: string) => `${whole.replace(/\./g, '')}.${cents}`) // 1.234,50
+    .replace(/(?<![\d,.])(\d+),(\d{2})(?![\d,])/g, '$1.$2'); // 12,50 (but not 1,23,456)
+
+// Labels whose number is an id, not money: "Bill No 5874", "Rech. Nr. 5874", "Table 12"
+const REFERENCE = /\b(?:no|nr|num|number|invoice|bill|rech(?:nung)?|receipt|table|tbl|token|kot|order|tel|ph|phone|mob(?:ile)?|gst(?:in)?|vat\s*(?:no|reg(?:istration)?)|cust(?:omer)?|card|a\/c|acc(?:ount|t)?|ref(?:erence)?|txn|transaction|id|pin|qty|quantity|covers?|pax|guests?|items?)\b\.?\s*[:#.]?\s*[\w/-]*\d[\w/-]*(?![\w/-]|[.,]\d)/gi;
+
+// Numbers on a line that look like money: not phone numbers, ids, dates, times or percentages
 const moneyOnLine = (line: string): number[] => {
-  const cleaned = line
+  const cleaned = normalizeNumbers(line)
     .replace(/\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?\b/gi, ' ') // times
     .replace(/\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g, ' ') // dates
-    .replace(/\b[0-9A-Z]{15}\b/g, ' '); // GSTIN
+    .replace(/\b(?:19|20)\d{2}[/.-]\d{1,2}[/.-]\d{1,2}\b/g, ' ')
+    .replace(/\b[0-9A-Z]{15}\b/g, ' ') // GSTIN
+    .replace(/\d+(?:\.\d+)?\s*%/g, ' ') // tax rates
+    .replace(REFERENCE, ' ');
   const values: number[] = [];
   for (const match of cleaned.matchAll(NUMBER)) {
     const digits = match[0].replace(/[,.]/g, '');
@@ -66,7 +99,7 @@ export const findDate = (text: string): string | undefined => {
   const patterns: [RegExp, (m: RegExpMatchArray) => string | null][] = [
     // 2026-11-21
     [/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/g, (m) => iso(+m[1], +m[2], +m[3])],
-    // 21/11/2026 · 21-11-26 · 21.11.2026 (Indian day-first)
+    // 21/11/2026 · 21-11-26 · 21.11.2026 (day first)
     [/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b/g, (m) => iso(+m[3], +m[2], +m[1])],
     // 21 Nov 2026 · 21-Nov-26 · 21st November, 2026
     [/\b(\d{1,2})(?:st|nd|rd|th)?[\s-]+([A-Za-z]{3,9})[\s,-]+(\d{2,4})\b/g, (m) => {
@@ -108,19 +141,20 @@ const nameFromVpa = (vpa: string) => titleCase(vpa.split('@')[0].replace(/[._-]+
 const clean = (s: string) => s.replace(/\s+/g, ' ').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9).]+$/g, '').trim();
 
 // Lines at the top of a bill that aren't the shop's name
-const NOT_MERCHANT = /gst|gstin|cin\b|fssai|invoice|bill\s*no|receipt|tax|phone|ph[\s.:]|tel|mob|mobile|www\.|https?:|@|date|time|cashier|table|token|order|kot|road|rd\b|street|st\.|nagar|near|floor|opp\b|sector|pin\b|welcome|thank|original|duplicate|copy/i;
+const NOT_MERCHANT = /gst|gstin|cin\b|fssai|invoice|bill\s*no|receipt|tax|phone|ph[\s.:]|tel|mob|mobile|www\.|https?:|@|date|time|cashier|table|token|order|kot|road|rd\b|street|st\.|nagar|near|floor|opp\b|sector|pin\b|welcome|thank|original|duplicate|copy|total|amount/i;
 
-const findMerchant = (lines: string[]) => {
-  for (const line of lines.slice(0, 6)) {
-    const candidate = clean(line);
-    if (candidate.length < 3 || candidate.length > 40) continue;
-    if (NOT_MERCHANT.test(candidate)) continue;
-    const letters = (candidate.match(/[A-Za-z]/g) ?? []).length;
-    if (letters < 3 || letters / candidate.length < 0.6) continue;
-    return titleCase(candidate);
-  }
-  return undefined;
-};
+// Likely shop names from the top of a bill: bigger text first, then top to bottom
+const merchantOptions = (rows: TextRow[]) =>
+  rows
+    .slice(0, 8)
+    .map((row, index) => ({ name: clean(row.text), index, height: row.height ?? 0 }))
+    .filter(({ name }) => {
+      if (name.length < 3 || name.length > 40 || NOT_MERCHANT.test(name)) return false;
+      const letters = (name.match(/[A-Za-z]/g) ?? []).length;
+      return letters >= 3 && letters / name.length >= 0.6;
+    })
+    .sort((a, b) => b.height - a.height || a.index - b.index)
+    .map(({ name }) => titleCase(name));
 
 // ---------- UPI payment screens (GPay, PhonePe, Paytm, BHIM, bank apps) ----------
 
@@ -132,7 +166,7 @@ const parseUpi = (lines: string[], text: string): ParsedExpense => {
   // The big amount: a ₹ amount, or a line that is only a number
   let amount: number | null = null;
   for (const line of lines) {
-    const marked = line.match(new RegExp(`${CURRENCY.source}(${NUMBER.source})`, 'i'));
+    const marked = normalizeNumbers(line).match(new RegExp(`${CURRENCY.source}\\s*(${NUMBER.source})`, 'i'));
     if (marked) { amount = toAmount(marked[1]); if (amount) break; }
   }
   if (!amount) {
@@ -169,62 +203,115 @@ const parseUpi = (lines: string[], text: string): ParsedExpense => {
 
 // Strongest first: a "grand total" beats a plain "total"
 const TOTAL_LABELS: RegExp[] = [
-  /grand\s*total/i,
+  /grand\s*total|gesamt\w*|total\s*ttc/i,
   /net\s*(?:amount|payable|total|amt)/i,
-  /(?:amount|amt|total)\s*(?:payable|due|to\s*pay)/i,
+  /(?:amount|amt|total)\s*(?:payable|due|to\s*pay|paid)/i,
   /bill\s*(?:amount|amt|total)/i,
   /invoice\s*(?:amount|total)/i,
   /total\s*(?:amount|amt|rs|inr|₹)/i,
-  /\btotal\b/i,
+  /\btotal\b|\bsumme\b|\bto\s*pay\b|\bbalance\s*due\b/i,
 ];
-// Lines with "total" that aren't what was paid
-const NOT_TOTAL = /sub\s*-?\s*total|total\s*(?:qty|quantity|items?|tax|gst|discount|savings?|saved)|tendered|change|cash\s*received|round\s*off|you\s*saved|mrp/i;
+// Rows with "total" that aren't what was paid
+const NOT_TOTAL = /sub\s*-?\s*total|total\s*(?:qty|quantity|items?|tax|gst|discount|savings?|saved)/i;
+// Rows that are clearly not the bill amount
+const NOT_PAID = /\b(?:tendered|change|cash\s*received|round\s*off|you\s*saved|savings|discount|mrp|tax|gst|vat|mwst|cgst|sgst|igst|service\s*charge|tip)\b/i;
 
-const parseReceipt = (lines: string[], text: string): ParsedExpense => {
-  let amount: number | null = null;
-  let confidence: 'high' | 'low' | undefined;
+type Scored = { value: number; row: string; isTotal: boolean; score: number };
 
-  for (const label of TOTAL_LABELS) {
-    // The last matching line: totals come after subtotals and taxes
-    for (let i = lines.length - 1; i >= 0 && amount === null; i--) {
-      if (!label.test(lines[i]) || NOT_TOTAL.test(lines[i])) continue;
-      const onLine = moneyOnLine(lines[i]);
-      // OCR often puts the label and its value on separate lines
-      const value = onLine.length ? onLine[onLine.length - 1] : moneyOnLine(lines[i + 1] ?? '')[0];
-      if (value) amount = value;
+/** Every money-looking number on the bill, scored by how likely it is to be the amount paid */
+const receiptAmounts = (rows: string[]): Scored[] => {
+  const found: Scored[] = [];
+  let carriedLabel = -1; // a total label alone on its row: its value is often on the next row
+
+  rows.forEach((row, index) => {
+    const values = moneyOnLine(row);
+    const labelRank = NOT_TOTAL.test(row) ? -1 : TOTAL_LABELS.findIndex((label) => label.test(row));
+    if (!values.length) {
+      carriedLabel = labelRank;
+      return;
     }
-    if (amount !== null) {
-      confidence = 'high';
-      break;
+    const rank = labelRank >= 0 ? labelRank : carriedLabel;
+    carriedLabel = -1;
+
+    const notPaid = rank < 0 && NOT_PAID.test(row);
+    values.forEach((value, i) => {
+      let score = 10;
+      if (rank >= 0) score += 60 - rank * 3;
+      if (/sub\s*-?\s*total/i.test(row)) score += 15;
+      if (notPaid) score -= 25;
+      if (CURRENCY.test(row)) score += 15;
+      if (!Number.isInteger(value) || /\.\d{2}\b/.test(row)) score += 10;
+      // Totals sit low on the bill, and the last number on a row is its value
+      score += (index / Math.max(rows.length - 1, 1)) * 10;
+      if (i === values.length - 1) score += 3;
+      found.push({ value, row: row.trim(), isTotal: rank >= 0, score });
+    });
+  });
+
+  if (!found.length) return [];
+  // The largest clear amount is usually the total when nothing is labelled
+  const largest = Math.max(...found.filter((f) => f.score > 20).map((f) => f.value), 0);
+  for (const f of found) if (f.value === largest) f.score += 12;
+  return found;
+};
+
+// One option per value, keeping its best row; a value that appears more than once is more likely
+const rankAmounts = (found: Scored[]): AmountOption[] => {
+  const byValue = new Map<number, Scored & { count: number }>();
+  for (const f of found) {
+    const seen = byValue.get(f.value);
+    if (!seen) byValue.set(f.value, { ...f, count: 1 });
+    else {
+      seen.count += 1;
+      if (f.score > seen.score) Object.assign(seen, { row: f.row, isTotal: f.isTotal, score: f.score });
     }
   }
+  return [...byValue.values()]
+    .map((f) => ({ ...f, score: f.score + Math.min(f.count - 1, 2) * 4 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(({ value, row, isTotal }) => ({ value: format(value), row, isTotal }));
+};
 
-  // No total line: the largest money-looking number that isn't cash tendered or change
-  if (amount === null) {
-    const candidates = lines
-      .filter((l) => !/tendered|change|cash\s*received|phone|mob|gstin/i.test(l))
-      .flatMap((l) => {
-        const values = moneyOnLine(l);
-        // Prefer numbers with a currency sign or paise, which are clearly money
-        return CURRENCY.test(l) || /\.\d{2}\b/.test(l) ? values : [];
-      });
-    if (candidates.length) {
-      amount = Math.max(...candidates);
-      confidence = 'low';
-    }
+const unique = (values: (string | undefined)[]) =>
+  values.filter((v, i, all): v is string => !!v && all.findIndex((o) => o?.toLowerCase() === v.toLowerCase()) === i);
+
+/** Everything a scan found, for the user to pick from */
+export const analyzeText = (input: TextRow[]): ScanAnalysis => {
+  const rows = input.map((r) => ({ ...r, text: r.text.trim() })).filter((r) => r.text);
+  const lines = rows.map((r) => r.text);
+  if (!lines.length) return { kind: 'unknown', amounts: [], details: [], rows: [] };
+  const text = lines.join('\n');
+  const amounts = rankAmounts(receiptAmounts(lines));
+
+  if (UPI_SIGNAL.test(text)) {
+    const upi = parseUpi(lines, text);
+    const main = upi.amount ? [{ value: upi.amount, row: 'Amount paid', isTotal: true }] : [];
+    return {
+      kind: 'upi',
+      amounts: [...main, ...amounts.filter((a) => a.value !== upi.amount)],
+      details: unique([upi.details, ...merchantOptions(rows)]).slice(0, 4),
+      date: upi.date,
+      incoming: upi.incoming,
+      rows: lines,
+    };
   }
 
+  return { kind: 'receipt', amounts, details: merchantOptions(rows).slice(0, 4), date: findDate(text), rows: lines };
+};
+
+/** The best guess from an analysis, as form fields */
+export const bestGuess = (analysis: ScanAnalysis): ParsedExpense => {
+  const top = analysis.amounts[0];
   return {
-    kind: 'receipt',
-    amount: amount !== null ? format(amount) : undefined,
-    amountConfidence: confidence,
-    details: findMerchant(lines),
-    date: findDate(text),
+    kind: analysis.kind,
+    amount: top?.value,
+    amountConfidence: top ? (top.isTotal ? 'high' : 'low') : undefined,
+    details: analysis.details[0],
+    date: analysis.date,
+    incoming: analysis.incoming,
   };
 };
 
-export const parseExpenseText = (text: string): ParsedExpense => {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return { kind: 'unknown' };
-  return UPI_SIGNAL.test(text) ? parseUpi(lines, text) : parseReceipt(lines, text);
-};
+export const parseExpenseText = (text: string): ParsedExpense =>
+  bestGuess(analyzeText(text.split(/\r?\n/).map((line) => ({ text: line }))));
